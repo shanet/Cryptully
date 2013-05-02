@@ -8,3 +8,6 @@ class NetworkError(Exception):
 
 class ProtocolError(Exception):
     pass
+
+class CryptoError(Exception):
+    pass
