@@ -1,7 +1,8 @@
 import socket
 import Exceptions
 
-from EncSocket   import EncSocket
+from EncSocket import EncSocket
+from Crypto    import Crypto
 
 class Server:
 
@@ -21,6 +22,11 @@ class Server:
             self.sock.listen(5)
         except socket.error as se:
             raise Exceptions.NetworkError(str(se))
+
+
+    def stopServer(self):
+        self.sock.shutdown(socket.SHUT_RDWR)
+        self.sock.close()
 
 
     def accept(self):
