@@ -4,8 +4,10 @@ import sys
 import time
 import signal
 
-import Exceptions
+import utils
+import threads
 import Crypto
+import Exceptions
 
 from Server    import Server
 from EncSocket import EncSocket
@@ -29,52 +31,37 @@ def main():
 
     doHandshake(client)
 
-    while(1):
-        sys.stdout.write(">>> ")
-        send(client, raw_input())
-        print "Response: " + recv(client)
+    threads.SendThread(client).start()
+    threads.RecvThread(client).start()
 
-    client.disconnect()
-    stopServer()
+    #while(1):
+    #    sys.stdout.write(">>> ")
+    #    send(client, raw_input())
+    #    print "Response: " + recv(client)
+
+    #client.disconnect()
+    #stopServer()
 
 
 def doHandshake(client):
     # Send the server's public key
     localPubKey = client.crypto.getLocalPubKeyAsString()
-    send(client, localPubKey)
+    utils.send(client, localPubKey)
 
     # Receive the client's public key
-    remotePubKey = recv(client)
+    remotePubKey = utils.recv(client)
     client.crypto.setRemotePubKey(remotePubKey)
 
     # Switch to RSA encryption to exchange the AES key, IV, and salt
     client.setEncryptionType(EncSocket.RSA)
 
     # Send the AES key, IV, and salt
-    send(client, client.crypto.aesKey)
-    send(client, client.crypto.aesIv)
-    send(client, client.crypto.aesSalt)
+    utils.send(client, client.crypto.aesKey)
+    utils.send(client, client.crypto.aesIv)
+    utils.send(client, client.crypto.aesSalt)
 
     # Switch to AES encryption for the remainder of the connection
     client.setEncryptionType(EncSocket.AES)
-
-
-def send(client, data):
-    try:
-        client.send(data)
-    except Exceptions.NetworkError as ne:
-        print ne
-        client.disconnect()
-        stopServer()
-
-
-def recv(client):
-    try:
-        return client.recv()
-    except Exceptions.NetworkError as ne:
-        print ne
-        client.disconnect()
-        stopServer()
 
 
 def stopServer():

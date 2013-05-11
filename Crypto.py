@@ -23,7 +23,7 @@ class Crypto:
         M2Crypto.Rand.rand_seed(os.urandom(bits/8))
 
         # Generate the keypair (65537 as the public exponent)
-        self.localKeypair = M2Crypto.RSA.gen_key(bits, 65537)
+        self.localKeypair = M2Crypto.RSA.gen_key(bits, 65537, self.__callback)
 
         # Generate the AES key and IV
         self.aesKey  = os.urandom(32)
@@ -64,6 +64,7 @@ class Crypto:
             return encMessage + cipher.final()
         except M2Crypto.EVP.EVPError as evpe:
             raise CryptoError(str(evpe))
+
 
     def aesDecrypt(self, message):
         try:
@@ -127,3 +128,7 @@ class Crypto:
     def __checkRemoteKeypair(self):
         if self.remoteKeypair is None:
             raise CryptoError("Remote public key not set.")
+
+
+    def __callback(self):
+        return

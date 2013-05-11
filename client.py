@@ -4,6 +4,8 @@ import sys
 import signal
 import Exceptions
 
+import utils
+import threads
 from EncSocket import EncSocket
 
 sock = None
@@ -21,32 +23,35 @@ def main():
         sys.exit(1)
 
     print "Connected to " + sock.getHostName()
-    doHandshake(sock)
+    utils.doClientHandshake(sock)
 
-    while(1):
-        print "Response: " + recv(sock)
-        sys.stdout.write(">>> ")
-        send(sock, raw_input())
+    threads.SendThread(sock).start()
+    threads.RecvThread(sock).start()
 
-    sock.disconnect()
+    #while(1):
+    #    print "Response: " + recv(sock)
+    #    sys.stdout.write(">>> ")
+    #    send(sock, raw_input())
+
+    #sock.disconnect()
 
 
 def doHandshake(client):
     # Receive the server's public key
-    remotePubKey = recv(sock)
+    remotePubKey = utils.recv(sock)
     sock.crypto.setRemotePubKey(remotePubKey)
 
     # Send the client's public key
     localPubKey = sock.crypto.getLocalPubKeyAsString()
-    send(sock, localPubKey)
+    utils.send(sock, localPubKey)
 
     # Switch to RSA encryption to receive the AES key, IV, and salt
     sock.setEncryptionType(EncSocket.RSA)
 
     # Receive the AES key, IV, and salt
-    sock.crypto.aesKey  = recv(sock)
-    sock.crypto.aesIv   = recv(sock)
-    sock.crypto.aesSalt = recv(sock)
+    sock.crypto.aesKey  = utils.recv(sock)
+    sock.crypto.aesIv   = utils.recv(sock)
+    sock.crypto.aesSalt = utils.recv(sock)
 
     # Switch to AES encryption for the remainder of the connection
     sock.setEncryptionType(EncSocket.AES)
