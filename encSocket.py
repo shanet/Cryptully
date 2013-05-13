@@ -1,9 +1,9 @@
-import socket
+import sys
 import time
+import socket
 
-import Exceptions
-from Crypto import Crypto
-
+import _exceptions
+from crypto import Crypto
 
 
 class EncSocket:
@@ -24,8 +24,10 @@ class EncSocket:
 
         if sock is None:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.isConnected = False
         else:
             self.sock = sock
+            self.isConnected = True
 
 
     def setEncryptionType(self, type=None):
@@ -35,14 +37,16 @@ class EncSocket:
     def connect(self):
         try:
             self.sock.connect(self.addr)
+            self.isConnected = True
         except socket.error as se:
-            raise Exceptions.GenericError(str(se))
+            raise _exceptions.GenericError(str(se))
 
 
     def disconnect(self):
         try:
             self.sock.shutdown(socket.SHUT_RDWR)
             self.sock.close()
+            self.isConnected = False
         except socket.error:
             pass
 
@@ -58,10 +62,9 @@ class EncSocket:
             elif self.encryptType == self.AES:
                 data = self.crypto.aesEncrypt(data)
             else:
-                raise ServerError("Unknown encryption type.")
+                raise _exceptions.ServerError("Unknown encryption type.")
 
-        # Add a newline to all outgoing data so that any
-        # line buffers are flushed
+        # Add a newline to all outgoing data so that any line buffers are flushed
         data += '\n'
         length = len(data)
 
@@ -71,7 +74,7 @@ class EncSocket:
             amountSent = self.sock.send(data[sentLen:])
 
             if amountSent == 0:
-                raise Exceptions.NetworkError("Remote unexpectedly closed connection")
+                raise _exceptions.NetworkError("Remote unexpectedly closed connection")
             
             sentLen += amountSent
 
@@ -86,7 +89,7 @@ class EncSocket:
             data = self.sock.recv(4096)
 
             if data == '':
-                raise Exceptions.NetworkError("Remote unexpectedly closed connection")
+                raise _exceptions.NetworkError("Remote unexpectedly closed connection")
 
             # Remove the newline at the end of the data
             data = data[:-1]
@@ -98,12 +101,12 @@ class EncSocket:
                 elif self.encryptType == self.AES:
                     data = self.crypto.aesDecrypt(data)
                 else:
-                    raise ServerError("Unknown encryption type.")
+                    raise _exceptions.ServerError("Unknown encryption type.")
 
             return data
         except socket.error as se:
-            raise Exceptions.NetworkError(str(se))
+            raise _exceptions.NetworkError(str(se))
 
 
-    def getHostName(self):
+    def getHostname(self):
         return self.addr[0]

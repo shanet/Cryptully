@@ -1,8 +1,5 @@
 import os
-import sys
 import M2Crypto
-
-from Exceptions import CryptoError
 
 
 class Crypto:
