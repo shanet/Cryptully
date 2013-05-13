@@ -24,11 +24,6 @@ class CursesSendThread(Thread):
         (height, width) = self.chatWindow.getmaxyx()
 
         while True:
-            mutex.acquire()
-            self.chatWindow.refresh()
-            self.textboxWindow.refresh()
-            mutex.release()
-
             chatInput = self.textbox.edit(self.inputValidator)
 
             mutex.acquire()
@@ -52,6 +47,9 @@ class CursesSendThread(Thread):
             # Move the cursor back to the chat input window
             self.textboxWindow.move(0, 0)
             
+            self.chatWindow.refresh()
+            self.textboxWindow.refresh()
+
             mutex.release()
 
 
@@ -81,28 +79,27 @@ class CursesRecvThread(Thread):
         (height, width) = self.chatWindow.getmaxyx()
 
         while True:
-            mutex.acquire()
-            self.chatWindow.refresh()
-            self.textboxWindow.refresh()
-            mutex.release()
-
             try:
                 response = self.sock.recv()
             except _exceptions.NetworkError as ne:
                 self.sock.disconnect()
                 utils.showDialog(self.chatWindow, "Network Error", str(ne), True)
 
+            mutex.acquire()
+            
             # Check if the client requested to end the connection
             if response == "__END__":
                 self.sock.disconnect()
                 utils.showDialog(self.chatWindow, "Connection Terminated", "The client requested to end the connection", True)
 
             # Put the received data in the chat window
-            mutex.acquire()
             self.chatWindow.scroll(1)
             self.chatWindow.addstr(height-1, 0, response, curses.color_pair(3))
 
             # Move the cursor back to the chat input window
             self.textboxWindow.move(0, 0)
 
+            self.chatWindow.refresh()
+            self.textboxWindow.refresh()
+            
             mutex.release()
