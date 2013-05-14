@@ -28,9 +28,13 @@ class Server:
 
 
     def stop(self):
-        self.sock.shutdown(socket.SHUT_RDWR)
-        self.sock.close()
-        self.isStarted = False
+        try:
+            self.sock.shutdown(socket.SHUT_RDWR)
+            self.sock.close()
+        except socket.error:
+            pass
+        finally:
+            self.isStarted = False
 
 
     def accept(self):

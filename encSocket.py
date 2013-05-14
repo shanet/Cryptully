@@ -46,9 +46,10 @@ class EncSocket:
         try:
             self.sock.shutdown(socket.SHUT_RDWR)
             self.sock.close()
-            self.isConnected = False
         except socket.error:
             pass
+        finally:
+            self.isConnected = False
 
 
     def send(self, data):
