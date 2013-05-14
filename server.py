@@ -15,11 +15,14 @@ class Server:
         except socket.error as se:
             raise _exceptions.NetworkError(str(se))
 
+        self.isStarted = False
+
 
     def startServer(self, port):
         try:
             self.sock.bind(('localhost', port))
             self.sock.listen(5)
+            self.isStarted = True
         except socket.error as se:
             raise _exceptions.NetworkError(str(se))
 
@@ -27,6 +30,7 @@ class Server:
     def stopServer(self):
         self.sock.shutdown(socket.SHUT_RDWR)
         self.sock.close()
+        self.isStarted = False
 
 
     def accept(self):
