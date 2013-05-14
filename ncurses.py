@@ -249,7 +249,7 @@ def startServer(screen):
     try:
         global server
         server = Server()
-        server.startServer(9000)
+        server.start(9000)
     except _exceptions.NetworkError as ne:
         utils.showDialog(screen, "Error starting server", str(ne), True)
 
@@ -275,7 +275,7 @@ def signalHandler(signal, frame):
             sock.send("__END__")
             sock.disconnect()
 
-        server.stopServer()
+        server.stop()
     except NameError:
         pass
     sys.exit(0)

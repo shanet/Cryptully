@@ -18,7 +18,7 @@ class Server:
         self.isStarted = False
 
 
-    def startServer(self, port):
+    def start(self, port):
         try:
             self.sock.bind(('localhost', port))
             self.sock.listen(5)
@@ -27,7 +27,7 @@ class Server:
             raise _exceptions.NetworkError(str(se))
 
 
-    def stopServer(self):
+    def stop(self):
         self.sock.shutdown(socket.SHUT_RDWR)
         self.sock.close()
         self.isStarted = False
