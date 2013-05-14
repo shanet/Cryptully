@@ -90,7 +90,7 @@ def main(screen):
 
     # Keep the main thread alive so the daemon threads don't die
     while True:
-        time.sleep(0)
+        time.sleep(10)
 
 
 def setColors(screen):
