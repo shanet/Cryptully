@@ -9,20 +9,18 @@ import curses.textpad
 
 import utils
 import threads
+import constants
 import _exceptions
 
 from server    import Server
 from encSocket import EncSocket
 
 
-SERVER = 0
-CLIENT = 1
-
 ACCEPT = 0
 REJECT = 1
 
 
-def main(screen):
+def main(screen, mode, port, host):
     (height, width) = screen.getmaxyx()
 
     # Change the colors, clear the screen and set the overall border
@@ -35,11 +33,13 @@ def main(screen):
     statusWindow             = makeStatusWindow(screen)
     (textboxWindow, textbox) = makeChatInputWindow(screen)
 
-    type = showOptionsWindow(screen)
+    # Get the server/client mode if not given
+    if mode == None:
+        mode = showOptionsWindow(screen)
 
-    if type == SERVER:
-        server = startServer(screen)
-        
+    if mode == constants.SERVER:
+        server = startServer(screen, port)
+
         while True:
             # Show the waiting for connections dialog
             dialogWindow = utils.showDialog(screen, "Waiting for connection...", "", False)
@@ -63,9 +63,12 @@ def main(screen):
         except _exceptions.NetworkError as ne:
             sock.disconnect()
             showDialog(chatWindow, "Network Error", str(ne), True)
-    elif type == CLIENT:
+    elif mode == constants.CLIENT:
+        # Get the host if not given
+        if host == None:
+            host = getHost(screen)
         # Get the host to connect to and try to connect to it
-        (sock, dialogWindow) = connectToServer(screen, getHost(screen))
+        (sock, dialogWindow) = connectToServer(screen, host, port)
 
         # Do the handshake with the client
         try:
@@ -112,13 +115,13 @@ def showOptionsWindow(screen):
 
     # Disable the cursor
     curses.curs_set(0)
-    
+
     optionsWindow.addstr(1, 1, "Run as:")
 
-    pos = SERVER
+    pos = constants.SERVER
 
     while True:
-        if pos == SERVER:
+        if pos == constants.SERVER:
             optionsWindow.addstr(3, 2, "Server", curses.color_pair(4))
             optionsWindow.addstr(4, 2, "Client")
         else:
@@ -127,10 +130,10 @@ def showOptionsWindow(screen):
 
         screen.refresh()
         key = optionsWindow.getch()
-        if key == curses.KEY_DOWN and pos == SERVER:
-            pos = CLIENT
-        elif key == curses.KEY_UP and pos == CLIENT:
-            pos = SERVER
+        if key == curses.KEY_DOWN and pos == constants.SERVER:
+            pos = constants.CLIENT
+        elif key == curses.KEY_UP and pos == constants.CLIENT:
+            pos = constants.SERVER
         # Enter key
         elif key == ord('\n'):
             break
@@ -156,7 +159,7 @@ def showAcceptWindow(screen, hostname):
 
     # Disable the cursor
     curses.curs_set(0)
-    
+
     acceptWindow.addstr(1, 1, "Got connection from %s" % hostname)
 
     pos = ACCEPT
@@ -226,7 +229,7 @@ def getHost(screen):
     curses.nocbreak()
 
     host = hostWindow.getstr(1, 7)
-    
+
     # Turn off echo and disable buffering
     curses.cbreak()
     curses.noecho()
@@ -245,22 +248,22 @@ def setStatusWindow(statusWindow, hostname):
     statusWindow.refresh()
 
 
-def startServer(screen):
+def startServer(screen, port):
     try:
         global server
         server = Server()
-        server.start(9000)
+        server.start(int(port))
     except _exceptions.NetworkError as ne:
         utils.showDialog(screen, "Error starting server", str(ne), True)
 
     return server
 
 
-def connectToServer(screen, host):
-    try:        
+def connectToServer(screen, host, port):
+    try:
         dialogWindow = utils.showDialog(screen, "Connecting to server...", "", False)
-        
-        sock = EncSocket((host, 9000))
+
+        sock = EncSocket((host, port))
         sock.connect()
     except _exceptions.GenericError as ge:
         utils.showDialog(screen, "Error connecting to server", str(ge), True)
@@ -281,5 +284,7 @@ def signalHandler(signal, frame):
     sys.exit(0)
 
 
-signal.signal(signal.SIGINT, signalHandler)
-curses.wrapper(main)
+def start(mode, port, host):
+    print mode
+    signal.signal(signal.SIGINT, signalHandler)
+    curses.wrapper(main, mode, port, host)

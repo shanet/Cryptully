@@ -9,7 +9,7 @@ from crypto import Crypto
 class EncSocket:
     RSA = 0
     AES = 1
-    
+
     def __init__(self, addr, sock=None, crypto=None):
         self.addr        = addr
         self.isEncrypted = False
