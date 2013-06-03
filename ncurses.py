@@ -12,9 +12,10 @@ import threads
 import constants
 import _exceptions
 
-from server    import Server
-from encSocket import EncSocket
-
+from crypto       import Crypto
+from server       import Server
+from encSocket    import EncSocket
+from cursesDialog import CursesDialog
 
 ACCEPT = 0
 REJECT = 1
@@ -32,75 +33,109 @@ def main(screen, mode, port, host):
     chatWindow               = makeChatWindow(screen)
     statusWindow             = makeStatusWindow(screen)
     (textboxWindow, textbox) = makeChatInputWindow(screen)
+    screen.refresh()
+
+    # Try to load a keypair if one was saved or generate a new keypair
+    crypto = utils.loadOrGenerateKepair(screen)
+
+    # Show the options menu
+    utils.showOptionsMenuWindow(screen, crypto, showStartOption=True)
 
     # Get the server/client mode if not given
     if mode == None:
         mode = showOptionsWindow(screen)
 
+    context = {'host': host, 'port': port, 'mode': mode, 'chatWindow': chatWindow,
+               'statusWindow': statusWindow, 'textboxWindow': textboxWindow,
+               'textbox': textbox, 'screen': screen, 'crypto': crypto}
+
     if mode == constants.SERVER:
-        server = startServer(screen, port)
-
-        while True:
-            # Show the waiting for connections dialog
-            dialogWindow = utils.showDialog(screen, "Waiting for connection...", "", False)
-
-            global sock
-            sock = server.accept()
-
-            # Clear the waiting for connections dialog window
-            curses.curs_set(2)
-            dialogWindow.clear()
-
-            # Show the accept dialog
-            if showAcceptWindow(screen, sock.getHostname()) == ACCEPT:
-                break
-            else:
-                sock.disconnect()
-
-        # Do the handshake with the client
-        try:
-            utils.doServerHandshake(sock)
-        except _exceptions.NetworkError as ne:
-            sock.disconnect()
-            showDialog(chatWindow, "Network Error", str(ne), True)
+        context['server'] = startServer(screen, port)
+        waitForClient(context)
     elif mode == constants.CLIENT:
         # Get the host if not given
-        if host == None:
-            host = getHost(screen)
-        # Get the host to connect to and try to connect to it
-        (sock, dialogWindow) = connectToServer(screen, host, port)
+        if context['host'] == None:
+            context['host'] = getHost(screen)
+        connectToServer(context)
 
-        # Do the handshake with the client
-        try:
-            utils.doClientHandshake(sock)
-        except _exceptions.NetworkError as ne:
+
+def waitForClient(context):
+    while True:
+        # Show the waiting for connections dialog
+        dialogWindow = CursesDialog(context['screen'], "Waiting for connection...")
+        dialogWindow.show()
+
+        global sock
+        sock = context['server'].accept(context['crypto'])
+        context['sock'] = sock
+
+        dialogWindow.hide()
+
+        # Show the accept dialog
+        if showAcceptWindow(context['screen'], sock.getHostname()) == ACCEPT:
+            break
+        else:
             sock.disconnect()
-            dialogWindow.clear()
-            utils.showDialog(chatWindow, "Network Error", str(ne), True)
 
-        # Remove the connecting dialog after we're connected and re-enable the cursor
-        curses.curs_set(2)
-        dialogWindow.clear()
-        dialogWindow.refresh()
+    # Do the handshake with the client
+    try:
+        utils.doServerHandshake(sock)
+    except _exceptions.NetworkError as ne:
+        sock.disconnect()
+        CursesDialog(context['chatWindow'], "Network Error", str(ne), isError=True).show()
 
+    handleNewConnection(context)
+
+
+def connectToServer(context):
+    try:
+        dialogWindow = CursesDialog(context['screen'], "Connecting to server...", "", False)
+        dialogWindow.show()
+
+        sock = EncSocket((context['host'], context['port']), crypto=context['crypto'])
+        sock.connect()
+        context['sock'] = sock
+    except _exceptions.GenericError as ge:
+        CursesDialog(screen, "Error connecting to server", str(ge), isError=True).show()
+
+    # Do the handshake with the client
+    try:
+        utils.doClientHandshake(sock)
+        dialogWindow.hide()
+    except _exceptions.NetworkError as ne:
+        sock.disconnect()
+        dialogWindow.hide()
+        CursesDialog(context['chatWindow'], "Network Error", str(ne), isError=True).show()
+
+    handleNewConnection(context)
+
+
+def handleNewConnection(context):
     # Set the hostname of who we're connected to in the status window
-    setStatusWindow(statusWindow, sock.getHostname())
-    screen.refresh()
+    setStatusWindow(context['statusWindow'], context['sock'].getHostname())
+
+    # Add a hint on how to display the options menu
+    context['screen'].addstr(0, 5, "Ctrl+U for options")
+    context['screen'].refresh()
 
     # Start the sending and receiving threads
-    threads.CursesSendThread(sock, screen, chatWindow, textboxWindow, textbox).start()
-    threads.CursesRecvThread(sock, screen, chatWindow, textboxWindow).start()
+    startThreads(context['screen'], context['sock'], context['chatWindow'], context['textboxWindow'], context['textbox'])
 
     # Keep the main thread alive so the daemon threads don't die
     while True:
         time.sleep(10)
 
 
+def startThreads(screen, sock, chatWindow, textboxWindow, textbox):
+    threads.CursesSendThread(sock, screen, chatWindow, textboxWindow, textbox).start()
+    threads.CursesRecvThread(sock, screen, chatWindow, textboxWindow).start()
+
+
 def setColors(screen):
     if curses.has_colors():
         curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
         curses.init_pair(2, curses.COLOR_RED,   curses.COLOR_BLACK)
-        curses.init_pair(3, curses.COLOR_BLUE,  curses.COLOR_BLACK)
+        curses.init_pair(3, curses.COLOR_CYAN,  curses.COLOR_BLACK)
         curses.init_pair(4, curses.COLOR_BLACK, curses.COLOR_GREEN)
         screen.bkgd(curses.color_pair(1))
 
@@ -254,37 +289,29 @@ def startServer(screen, port):
         server = Server()
         server.start(int(port))
     except _exceptions.NetworkError as ne:
-        utils.showDialog(screen, "Error starting server", str(ne), True)
+        CursesDialog(screen, "Error starting server", str(ne), isError=True).show()
 
     return server
 
 
-def connectToServer(screen, host, port):
-    try:
-        dialogWindow = utils.showDialog(screen, "Connecting to server...", "", False)
-
-        sock = EncSocket((host, port))
-        sock.connect()
-    except _exceptions.GenericError as ge:
-        utils.showDialog(screen, "Error connecting to server", str(ge), True)
-
-    return (sock, dialogWindow)
-
-
 def signalHandler(signal, frame):
+    exit()
+
+
+def exit():
     try:
         # If a client is connected, try to end the connection gracefully
         if sock.isConnected:
             sock.send("__END__")
             sock.disconnect()
 
-        server.stop()
+        if server.isStarted:
+            server.stop()
     except NameError:
         pass
     sys.exit(0)
 
 
 def start(mode, port, host):
-    print mode
     signal.signal(signal.SIGINT, signalHandler)
     curses.wrapper(main, mode, port, host)

@@ -37,6 +37,6 @@ class Server:
             self.isStarted = False
 
 
-    def accept(self):
+    def accept(self, crypto=None):
         (clientSock, clientAddr) = self.sock.accept()
-        return EncSocket(clientAddr, clientSock)
+        return EncSocket(clientAddr, clientSock, crypto)

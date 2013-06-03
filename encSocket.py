@@ -2,6 +2,7 @@ import sys
 import time
 import socket
 
+import utils
 import _exceptions
 from crypto import Crypto
 
@@ -15,19 +16,20 @@ class EncSocket:
         self.isEncrypted = False
         self.encryptType = None
 
-        # Init a crypto object if one was not given
-        if crypto is None:
-            self.crypto = Crypto()
-            self.crypto.generateKeys()
-        else:
-            self.crypto = crypto
-
+        # Create a new socket if one was not given
         if sock is None:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.isConnected = False
         else:
             self.sock = sock
             self.isConnected = True
+
+        # Create a crypto object if one was not given
+        if crypto is None:
+            self.crypto = Crypto()
+            self.crypto.generateKeys()
+        else:
+            self.crypto = crypto
 
 
     def setEncryptionType(self, type=None):
@@ -76,7 +78,7 @@ class EncSocket:
 
             if amountSent == 0:
                 raise _exceptions.NetworkError("Remote unexpectedly closed connection")
-            
+
             sentLen += amountSent
 
         # Sleep for 10ms to ensure that the system has time to send the data

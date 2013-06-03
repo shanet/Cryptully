@@ -1,9 +1,12 @@
+import os
+import signal
 import curses
 
 import utils
 import _exceptions
 from threading import Thread, Lock
 
+from cursesDialog import CursesDialog
 
 mutex = Lock()
 
@@ -42,11 +45,11 @@ class CursesSendThread(Thread):
                 self.sock.send(chatInput[:-1])
             except _exceptions.NetworkError as ne:
                 self.sock.disconnect()
-                utils.showDialog(self.chatWindow, "Network Error", str(ne), True)
-                
+                CursesDialog(self.chatWindow, str(ne), "Network Error", isError=True).show()
+
             # Move the cursor back to the chat input window
             self.textboxWindow.move(0, 0)
-            
+
             self.chatWindow.refresh()
             self.textboxWindow.refresh()
 
@@ -54,7 +57,10 @@ class CursesSendThread(Thread):
 
 
     def inputValidator(self, char):
-        if char == curses.KEY_HOME:
+        if char == 21: # Ctrl+U
+            utils.showOptionsMenuWindow(self.screen, self.sock.crypto)
+            return 0
+        elif char == curses.KEY_HOME:
             return curses.ascii.SOH
         elif char == curses.KEY_END:
             return curses.ascii.ENQ
@@ -63,7 +69,6 @@ class CursesSendThread(Thread):
         return char
 
 
-    
 class CursesRecvThread(Thread):
     def __init__(self, sock, screen, chatWindow, textboxWindow):
         self.sock          = sock
@@ -83,14 +88,14 @@ class CursesRecvThread(Thread):
                 response = self.sock.recv()
             except _exceptions.NetworkError as ne:
                 self.sock.disconnect()
-                utils.showDialog(self.chatWindow, "Network Error", str(ne), True)
+                CursesDialog(self.chatWindow, str(ne), "Network Error", isError=True).show()
 
             mutex.acquire()
-            
+
             # Check if the client requested to end the connection
             if response == "__END__":
                 self.sock.disconnect()
-                utils.showDialog(self.chatWindow, "Connection Terminated", "The client requested to end the connection", True)
+                CursesDialog(self.chatWindow, "Connection Terminated", "The client requested to end the connection", isError=True).show()
 
             # Put the received data in the chat window
             self.chatWindow.scroll(1)
@@ -101,5 +106,5 @@ class CursesRecvThread(Thread):
 
             self.chatWindow.refresh()
             self.textboxWindow.refresh()
-            
+
             mutex.release()
