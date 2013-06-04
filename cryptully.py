@@ -1,17 +1,21 @@
 #! /usr/bin/env python
 
 import sys
+import signal
 import argparse
 
-import ncurses
 import constants
+
+from ncurses import NcursesUI
 
 
 def main():
     args = parse_cmdline_args()
 
+    signal.signal(signal.SIGINT, signalHandler)
+
     if args.ncurses:
-        ncurses.start(args.mode, args.port, args.host)
+        ncurses = NcursesUI(args.mode, args.port, args.host)
     else:
         print "GUI not implemented yet"
 
@@ -42,6 +46,11 @@ def parse_cmdline_args():
         sys.exit(1)
 
     return args
+
+
+def signalHandler(signal, frame):
+    ncurses.end()
+    sys.exit(0)
 
 
 if __name__ == "__main__":
