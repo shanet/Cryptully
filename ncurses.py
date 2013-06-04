@@ -26,9 +26,12 @@ class NcursesUI():
         self.port   = port
         self.host   = host
 
-        curses.wrapper(self.start)
 
-    def start(self, screen):
+    def start(self):
+        curses.wrapper(self.run)
+
+
+    def run(self, screen):
         self.screen = screen
         (self.height, self.width) = self.screen.getmaxyx()
 

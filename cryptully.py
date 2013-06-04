@@ -4,6 +4,8 @@ import sys
 import signal
 import argparse
 
+#import qt
+import ncurses
 import constants
 
 from ncurses import NcursesUI
@@ -15,9 +17,12 @@ def main():
     signal.signal(signal.SIGINT, signalHandler)
 
     if args.ncurses:
+        global ncurses
         ncurses = NcursesUI(args.mode, args.port, args.host)
+        ncurses.start()
     else:
         print "GUI not implemented yet"
+        #qt.ui(args.mode, args.port, args.host).exec_()
 
     sys.exit(0)
 
@@ -49,7 +54,7 @@ def parse_cmdline_args():
 
 
 def signalHandler(signal, frame):
-    ncurses.end()
+    ncurses.stop()
     sys.exit(0)
 
 
