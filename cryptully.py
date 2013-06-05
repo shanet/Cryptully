@@ -1,14 +1,15 @@
-#! /usr/bin/env python
+#! /usr/bin/env python2.7
 
 import sys
 import signal
 import argparse
 
-#import qt
+import qt
 import ncurses
 import constants
 
 from ncurses import NcursesUI
+from qt      import QtUI
 
 
 def main():
@@ -16,13 +17,17 @@ def main():
 
     signal.signal(signal.SIGINT, signalHandler)
 
+    global ncursesUI
+    global qtUI
+    ncursesUI = None
+    qtUI = None
+
     if args.ncurses:
-        global ncurses
-        ncurses = NcursesUI(args.mode, args.port, args.host)
-        ncurses.start()
+        ncursesUI = NcursesUI(args.mode, args.port, args.host)
+        ncursesUI.start()
     else:
-        print "GUI not implemented yet"
-        #qt.ui(args.mode, args.port, args.host).exec_()
+        qtUI = QtUI(sys.argv, args.mode, args.port, args.host)
+        qtUI.start()
 
     sys.exit(0)
 
@@ -54,7 +59,10 @@ def parse_cmdline_args():
 
 
 def signalHandler(signal, frame):
-    ncurses.stop()
+    if ncursesUI is not None:
+        ncursesUI.stop()
+    if qtUI is not None:
+        qtUI.stop()
     sys.exit(0)
 
 

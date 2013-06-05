@@ -1,7 +1,9 @@
 #! /usr/bin/env python
 
+import os
 import sys
 import time
+import signal
 import curses
 import curses.ascii
 import curses.textpad
@@ -20,7 +22,7 @@ from cursesDialog import CursesDialog
 ACCEPT = 0
 REJECT = 1
 
-class NcursesUI():
+class NcursesUI(object):
     def __init__(self, mode, port, host):
         self.mode   = mode
         self.port   = port
@@ -29,6 +31,16 @@ class NcursesUI():
 
     def start(self):
         curses.wrapper(self.run)
+
+
+    def stop(self):
+        # If a client is connected, try to end the connection gracefully
+        if hasattr(self, 'sock') and self.sock.isConnected:
+            self.sock.send("__END__")
+            self.sock.disconnect()
+
+        if hasattr(self, 'server') and self.server.isStarted:
+            self.server.stop()
 
 
     def run(self, screen):
@@ -412,16 +424,3 @@ class NcursesUI():
             self.crypto.generateAESKey()
         else:
             self.crypto.generateKeys()
-
-
-    def stop(self):
-        try:
-            # If a client is connected, try to end the connection gracefully
-            if self.sock.isConnected:
-                self.sock.send("__END__")
-                self.sock.disconnect()
-
-            if self.server.isStarted:
-                self.server.stop()
-        except NameError:
-            pass

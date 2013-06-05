@@ -46,6 +46,9 @@ def doClientHandshake(sock):
 
 
 def saveKeypair(crypto, passphrase):
+    # Cast passphrase to a stringto avoid any strange types
+    passphrase = str(passphrase)
+
     storeDir = os.path.join(os.path.expanduser('~'), '.cryptully')
 
     # Create the path if it doesn't already exist
@@ -77,6 +80,9 @@ def clearKeypair():
 
 
 def loadKeypair(crypto, passphrase):
+    # Cast passphrase to a stringto avoid any strange types
+    passphrase = str(passphrase)
+
     storeDir = os.path.join(os.path.expanduser('~'), '.cryptully')
     keypairFile = os.path.join(storeDir, 'keypair.pem')
 

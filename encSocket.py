@@ -7,7 +7,7 @@ import _exceptions
 from crypto import Crypto
 
 
-class EncSocket:
+class EncSocket(object):
     RSA = 0
     AES = 1
 

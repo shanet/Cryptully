@@ -3,7 +3,7 @@ import M2Crypto
 
 import _exceptions
 
-class Crypto:
+class Crypto(object):
     ENCRYPT = 1;
     DECRYPT = 0;
 

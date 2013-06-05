@@ -4,7 +4,7 @@ import _exceptions
 from encSocket import EncSocket
 
 
-class Server:
+class Server(object):
 
     def __init__(self):
         try:
