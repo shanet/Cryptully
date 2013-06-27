@@ -1,25 +1,26 @@
 import sys
 
-import constants
-import _exceptions
+from ..network.server import Server
+from ..network.encSocket import EncSocket
+from ..network import threads
+
+from qAcceptDialog import QAcceptDialog
+from qChatWindow import QChatWindow
+from qModeDialog import QModeDialog
 import qtUtils
-import threads
-import utils
-
-from PySide.QtCore  import QTimer
-from PySide.QtCore  import Slot
-from PySide.QtGui   import QApplication
-from PySide.QtGui   import QInputDialog
-from PySide.QtGui   import QMessageBox
-from PySide.QtGui   import QPalette
-
-from crypto         import Crypto
-from encSocket      import EncSocket
-from server         import Server
-from qAcceptDialog  import QAcceptDialog
-from qChatWindow    import QChatWindow
-from qModeDialog    import QModeDialog
 from qWaitingDialog import QWaitingDialog
+
+from PySide.QtCore import QTimer
+from PySide.QtCore import Slot
+from PySide.QtGui import QApplication
+from PySide.QtGui import QInputDialog
+from PySide.QtGui import QMessageBox
+from PySide.QtGui import QPalette
+
+from ..utils import constants
+from ..utils.crypto import Crypto
+from ..utils import exceptions
+from ..utils import utils
 
 
 class QtUI(QApplication):
@@ -109,7 +110,7 @@ class QtUI(QApplication):
                 try:
                     utils.loadKeypair(self.crypto, passphrase)
                     break
-                except _exceptions.CryptoError:
+                except exceptions.CryptoError:
                     QMessageBox.critical(self.chatWindow, "Wrong passphrase", "An incorrect passphrase was entered")
 
             # We still need to generate an AES key
@@ -122,7 +123,7 @@ class QtUI(QApplication):
         try:
             self.server = Server()
             self.server.start(int(self.port))
-        except _exceptions.NetworkError as ne:
+        except exceptions.NetworkError as ne:
             QMessageBox.critical(self.chatWindow, "Error starting server", "Error starting server: " + str(ne))
 
 
@@ -167,7 +168,7 @@ class QtUI(QApplication):
         # Do the handshake with the client
         try:
             utils.doServerHandshake(self.sock)
-        except _exceptions.NetworkError as ne:
+        except exceptions.NetworkError as ne:
             self.sock.disconnect()
             self.__waitForClient()
 

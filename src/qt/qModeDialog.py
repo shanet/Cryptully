@@ -1,14 +1,14 @@
 import os
 import signal
 
-import constants
 import qtUtils
+from qModeButton import QModeButton
 
 from PySide.QtGui import QDialog
 from PySide.QtGui import QHBoxLayout
 from PySide.QtGui import QIcon
 
-from qModeButton import QModeButton
+from ..utils import constants
 
 class QModeDialog(QDialog):
     def __init__(self, isLightTheme):

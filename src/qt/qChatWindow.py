@@ -2,28 +2,28 @@ import os
 import signal
 import sys
 
-import constants
 import qtUtils
-import utils
-
 from qFingerprintDialog import QFingerprintDialog
 
 from PySide.QtCore import Qt
-from PySide.QtGui  import QFontMetrics
-from PySide.QtGui  import QAction
-from PySide.QtGui  import QHBoxLayout
-from PySide.QtGui  import QIcon
-from PySide.QtGui  import QLabel
-from PySide.QtGui  import QLineEdit
-from PySide.QtGui  import QMainWindow
-from PySide.QtGui  import QMenu
-from PySide.QtGui  import QMessageBox
-from PySide.QtGui  import QPushButton
-from PySide.QtGui  import QSplitter
-from PySide.QtGui  import QTextEdit
-from PySide.QtGui  import QToolButton
-from PySide.QtGui  import QVBoxLayout
-from PySide.QtGui  import QWidget
+from PySide.QtGui import QFontMetrics
+from PySide.QtGui import QAction
+from PySide.QtGui import QHBoxLayout
+from PySide.QtGui import QIcon
+from PySide.QtGui import QLabel
+from PySide.QtGui import QLineEdit
+from PySide.QtGui import QMainWindow
+from PySide.QtGui import QMenu
+from PySide.QtGui import QMessageBox
+from PySide.QtGui import QPushButton
+from PySide.QtGui import QSplitter
+from PySide.QtGui import QTextEdit
+from PySide.QtGui import QToolButton
+from PySide.QtGui import QVBoxLayout
+from PySide.QtGui import QWidget
+
+from ..utils import constants
+from ..utils import utils
 
 
 class QChatWindow(QMainWindow):

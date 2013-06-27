@@ -3,8 +3,6 @@ import os
 from time import localtime
 from time import strftime
 
-from encSocket import EncSocket
-
 
 def doServerHandshake(sock):
     # Send the server's public key
@@ -16,7 +14,7 @@ def doServerHandshake(sock):
     sock.crypto.setRemotePubKey(remotePubKey)
 
     # Switch to RSA encryption to exchange the AES key, IV, and salt
-    sock.setEncryptionType(EncSocket.RSA)
+    sock.setEncryptionType(sock.RSA)
 
     # Send the AES key, IV, and salt
     sock.send(sock.crypto.aesKey)
@@ -24,7 +22,7 @@ def doServerHandshake(sock):
     sock.send(sock.crypto.aesSalt)
 
     # Switch to AES encryption for the remainder of the connection
-    sock.setEncryptionType(EncSocket.AES)
+    sock.setEncryptionType(sock.AES)
 
 
 def doClientHandshake(sock):
@@ -37,7 +35,7 @@ def doClientHandshake(sock):
     sock.send(localPubKey)
 
     # Switch to RSA encryption to receive the AES key, IV, and salt
-    sock.setEncryptionType(EncSocket.RSA)
+    sock.setEncryptionType(sock.RSA)
 
     # Receive the AES key, IV, and salt
     sock.crypto.aesKey  = sock.recv()
@@ -45,7 +43,7 @@ def doClientHandshake(sock):
     sock.crypto.aesSalt = sock.recv()
 
     # Switch to AES encryption for the remainder of the connection
-    sock.setEncryptionType(EncSocket.AES)
+    sock.setEncryptionType(sock.AES)
 
 
 def saveKeypair(crypto, passphrase):
@@ -102,6 +100,7 @@ def doesSavedKeypairExist():
 
     # Check that the path and keypair file both exist
     return (os.path.exists(storeDir) and os.path.exists(keypairFile))
+
 
 def getTimestamp():
     return strftime('%H:%M:%S', localtime()) + ': '

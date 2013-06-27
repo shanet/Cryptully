@@ -4,12 +4,10 @@ import sys
 import signal
 import argparse
 
-import qt
-import ncurses
-import constants
+from src.utils import constants
 
-from ncurses import NcursesUI
-from qt      import QtUI
+from src.ncurses.ncurses import NcursesUI
+from src.qt.qt import QtUI
 
 
 def main():

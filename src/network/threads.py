@@ -7,19 +7,22 @@ import socket
 from PySide.QtCore import QCoreApplication
 from PySide.QtCore import QThread
 from PySide.QtCore import Signal
-from PySide.QtGui  import QMessageBox
-from PySide.QtGui  import QWidget
+from PySide.QtGui import QMessageBox
+from PySide.QtGui import QWidget
 
-from threading     import Thread
-from threading     import Lock
+from threading  import Thread
+from threading  import Lock
 
-import constants
-import _exceptions
-import qtUtils
-import utils
+from encSocket import EncSocket
 
-from cursesDialog import CursesDialog
-from encSocket    import EncSocket
+from ..ncurses.cursesDialog import CursesDialog
+
+from ..qt import qtUtils
+
+from ..utils import constants
+from ..utils import exceptions
+from ..utils import utils
+
 
 mutex = Lock()
 
@@ -48,7 +51,7 @@ class QtRecvThread(QThread):
 
                 # Send the message to the given callback
                 self.recvCallback(message, constants.RECEIVER)
-            except _exceptions.NetworkError as ne:
+            except exceptions.NetworkError as ne:
                 self.sock.disconnect()
                 self.errorSignal.emit("Network Error", str(ne))
                 return
@@ -72,7 +75,7 @@ class QtSendThread(QThread):
 
             try:
                 self.sock.send(message)
-            except _exceptions.NetworkError as ne:
+            except exceptions.NetworkError as ne:
                 self.sock.disconnect()
                 self.errorSignal.emit("NetworkError", str(ne))
                 return
@@ -120,9 +123,9 @@ class QtServerConnectThread(QThread):
             utils.doClientHandshake(self.sock)
 
             self.successSignal.emit()
-        except _exceptions.GenericError as ge:
+        except exceptions.GenericError as ge:
             self.onFailure(str(ge))
-        except _exceptions.NetworkError as ne:
+        except exceptions.NetworkError as ne:
             self.onFailure(str(ne))
 
 
@@ -162,7 +165,7 @@ class CursesSendThread(Thread):
             # Send the input to the client
             try:
                 self.ncurses.sock.send(chatInput[:-1])
-            except _exceptions.NetworkError as ne:
+            except exceptions.NetworkError as ne:
                 self.ncurses.sock.disconnect()
                 CursesDialog(self.ncurses.chatWindow, str(ne), "Network Error", isError=True).show()
 
@@ -202,7 +205,7 @@ class CursesRecvThread(Thread):
         while True:
             try:
                 response = self.ncurses.sock.recv()
-            except _exceptions.NetworkError as ne:
+            except exceptions.NetworkError as ne:
                 self.ncurses.sock.disconnect()
                 CursesDialog(self.ncurses.chatWindow, str(ne), "Network Error", isError=True).show()
 

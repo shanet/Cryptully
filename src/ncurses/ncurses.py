@@ -8,18 +8,19 @@ import signal
 import sys
 import time
 
-import _exceptions
-import constants
-import threads
-import utils
+from getpass import getpass
 
-from getpass                 import getpass
+from ..ncurses.cursesFingerprintDialog import CursesFingerprintDialog
+from ..ncurses.cursesDialog import CursesDialog
 
-from cursesDialog            import CursesDialog
-from cursesFingerprintDialog import CursesFingerprintDialog
-from crypto                  import Crypto
-from encSocket               import EncSocket
-from server                  import Server
+from ..network.encSocket import EncSocket
+from ..network.server import Server
+from ..network import threads
+
+from ..utils import constants
+from ..utils import exceptions
+from ..utils import utils
+from ..utils.crypto import Crypto
 
 ACCEPT = 0
 REJECT = 1
@@ -101,7 +102,7 @@ class NcursesUI(object):
         # Do the handshake with the client
         try:
             utils.doServerHandshake(self.sock)
-        except _exceptions.NetworkError as ne:
+        except exceptions.NetworkError as ne:
             self.sock.disconnect()
             CursesDialog(self.screen, "Network Error", str(ne), isError=True).show()
 
@@ -113,14 +114,14 @@ class NcursesUI(object):
 
             self.sock = EncSocket((self.host, self.port), crypto=self.crypto)
             self.sock.connect()
-        except _exceptions.GenericError as ge:
+        except exceptions.GenericError as ge:
             CursesDialog(self.screen, "Error connecting to server", str(ge), isError=True).show()
 
         # Do the handshake with the client
         try:
             utils.doClientHandshake(self.sock)
             dialogWindow.hide()
-        except _exceptions.NetworkError as ne:
+        except exceptions.NetworkError as ne:
             self.sock.disconnect()
             dialogWindow.hide()
             CursesDialog(self.screen, "Network Error", str(ne), isError=True).show()
@@ -292,7 +293,7 @@ class NcursesUI(object):
         try:
             self.server = Server()
             self.server.start(int(self.port))
-        except _exceptions.NetworkError as ne:
+        except exceptions.NetworkError as ne:
             CursesDialog(screen, "Error starting server", str(ne), isError=True).show()
 
 
@@ -346,7 +347,7 @@ class NcursesUI(object):
             if pos == 2:
                 try:
                     CursesFingerprintDialog(self.screen, self.crypto.getLocalFingerprint(), self.crypto.getRemoteFingerprint()).show()
-                except _exceptions.CryptoError:
+                except exceptions.CryptoError:
                     CursesDialog(self.screen, "Public key(s) not available yet.", isBlocking=True).show()
             elif pos == 3:
                 passphrase = self.getKeypairPassphrase(True)
@@ -422,7 +423,7 @@ class NcursesUI(object):
                 try:
                     utils.loadKeypair(self.crypto, passphrase)
                     break
-                except _exceptions.CryptoError:
+                except exceptions.CryptoError:
                     CursesDialog(self.screen, "Wrong passphrase", '', isBlocking=True).show()
 
             # We still need to generate an AES key

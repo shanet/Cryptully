@@ -2,9 +2,9 @@ import sys
 import time
 import socket
 
-import utils
-import _exceptions
-from crypto import Crypto
+from ..utils.crypto import Crypto
+from ..utils import exceptions
+from ..utils import utils
 
 
 class EncSocket(object):
@@ -41,7 +41,7 @@ class EncSocket(object):
             self.sock.connect(self.addr)
             self.isConnected = True
         except socket.error as se:
-            raise _exceptions.GenericError(str(se))
+            raise exceptions.GenericError(str(se))
 
 
     def disconnect(self):
@@ -65,7 +65,7 @@ class EncSocket(object):
             elif self.encryptType == self.AES:
                 data = self.crypto.aesEncrypt(data)
             else:
-                raise _exceptions.ServerError("Unknown encryption type.")
+                raise exceptions.ServerError("Unknown encryption type.")
 
         # Add a newline to all outgoing data so that any line buffers are flushed
         data += '\n'
@@ -77,7 +77,7 @@ class EncSocket(object):
             amountSent = self.sock.send(data[sentLen:])
 
             if amountSent == 0:
-                raise _exceptions.NetworkError("Remote unexpectedly closed connection")
+                raise exceptions.NetworkError("Remote unexpectedly closed connection")
 
             sentLen += amountSent
 
@@ -92,7 +92,7 @@ class EncSocket(object):
             data = self.sock.recv(4096)
 
             if data == '':
-                raise _exceptions.NetworkError("Remote unexpectedly closed connection")
+                raise exceptions.NetworkError("Remote unexpectedly closed connection")
 
             # Remove the newline at the end of the data
             data = data[:-1]
@@ -104,11 +104,11 @@ class EncSocket(object):
                 elif self.encryptType == self.AES:
                     data = self.crypto.aesDecrypt(data)
                 else:
-                    raise _exceptions.ServerError("Unknown encryption type.")
+                    raise exceptions.ServerError("Unknown encryption type.")
 
             return data
         except socket.error as se:
-            raise _exceptions.NetworkError(str(se))
+            raise exceptions.NetworkError(str(se))
 
 
     def getHostname(self):

@@ -1,7 +1,7 @@
 import os
 import M2Crypto
 
-import _exceptions
+import exceptions
 
 class Crypto(object):
     ENCRYPT = 1;
@@ -41,7 +41,7 @@ class Crypto(object):
         elif bitsString == '256':
             bits = 32
         else:
-            raise _exceptions.CryptoError("Invalid AES mode")
+            raise exceptions.CryptoError("Invalid AES mode")
 
         self.aesKey  = os.urandom(bits)
         self.aesIv   = os.urandom(bits)
@@ -55,7 +55,7 @@ class Crypto(object):
         elif type(pubKey) is M2Crypto.RSA:
             self.remoteKeypair = pubKey
         else:
-            raise _exceptions.CryptoError("Public key is not a string or RSA key object.")
+            raise exceptions.CryptoError("Public key is not a string or RSA key object.")
 
 
     def rsaEncrypt(self, message):
@@ -63,7 +63,7 @@ class Crypto(object):
         try:
             return self.remoteKeypair.public_encrypt(message, M2Crypto.RSA.pkcs1_oaep_padding)
         except M2Crypto.RSA.RSAError as rsae:
-            raise _exceptions.CryptoError(str(rsae))
+            raise exceptions.CryptoError(str(rsae))
 
 
     def rsaDecrypt(self, message):
@@ -71,7 +71,7 @@ class Crypto(object):
         try:
             return self.localKeypair.private_decrypt(message, M2Crypto.RSA.pkcs1_oaep_padding)
         except M2Crypto.RSA.RSAError as rsae:
-            raise _exceptions.CryptoError(str(rsae))
+            raise exceptions.CryptoError(str(rsae))
 
 
     def aesEncrypt(self, message):
@@ -80,7 +80,7 @@ class Crypto(object):
             encMessage = cipher.update(message)
             return encMessage + cipher.final()
         except M2Crypto.EVP.EVPError as evpe:
-            raise _exceptions.CryptoError(str(evpe))
+            raise exceptions.CryptoError(str(evpe))
 
 
     def aesDecrypt(self, message):
@@ -89,7 +89,7 @@ class Crypto(object):
             decMessage = cipher.update(message)
             return decMessage + cipher.final()
         except M2Crypto.EVP.EVPError as evpe:
-            raise _exceptions.CryptoError(str(evpe))
+            raise exceptions.CryptoError(str(evpe))
 
 
     def __aesGetCipher(self, op):
@@ -101,7 +101,7 @@ class Crypto(object):
         try:
             self.localKeypair = M2Crypto.RSA.load_key(file, self.__passphraseCallback)
         except M2Crypto.RSA.RSAError as rsae:
-            raise _exceptions.CryptoError(str(rsae))
+            raise exceptions.CryptoError(str(rsae))
 
 
     def readRemotePubKeyFromFile(self, file):
@@ -180,12 +180,12 @@ class Crypto(object):
 
     def __checkLocalKeypair(self):
         if self.localKeypair is None:
-            raise _exceptions.CryptoError("Local keypair not set.")
+            raise exceptions.CryptoError("Local keypair not set.")
 
 
     def __checkRemoteKeypair(self):
         if self.remoteKeypair is None:
-            raise _exceptions.CryptoError("Remote public key not set.")
+            raise exceptions.CryptoError("Remote public key not set.")
 
 
     def __generateKeypairCallback(self):

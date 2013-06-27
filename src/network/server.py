@@ -1,7 +1,8 @@
 import socket
 
-import _exceptions
 from encSocket import EncSocket
+
+from ..utils import exceptions
 
 
 class Server(object):
@@ -13,7 +14,7 @@ class Server(object):
             # Allow reuse of port
             self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         except socket.error as se:
-            raise _exceptions.NetworkError(str(se))
+            raise exceptions.NetworkError(str(se))
 
         self.isStarted = False
 
@@ -24,7 +25,7 @@ class Server(object):
             self.sock.listen(5)
             self.isStarted = True
         except socket.error as se:
-            raise _exceptions.NetworkError(str(se))
+            raise exceptions.NetworkError(str(se))
 
 
     def stop(self):
