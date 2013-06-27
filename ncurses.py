@@ -13,11 +13,12 @@ import threads
 import constants
 import _exceptions
 
-from getpass      import getpass
-from crypto       import Crypto
-from server       import Server
-from encSocket    import EncSocket
-from cursesDialog import CursesDialog
+from getpass                 import getpass
+from crypto                  import Crypto
+from server                  import Server
+from encSocket               import EncSocket
+from cursesDialog            import CursesDialog
+from cursesFingerprintDialog import CursesFingerprintDialog
 
 ACCEPT = 0
 REJECT = 1
@@ -312,7 +313,7 @@ class NcursesUI(object):
                 if showStartOption:
                     menuWindow.addstr(menuItem, 1, str(menuItem) + ".| Start chat", curses.color_pair(4) if pos == menuItem else curses.color_pair(1))
                     menuItem += 1
-                menuWindow.addstr(menuItem, 1, str(menuItem) + ".| Show server fingerprint", curses.color_pair(4) if pos == menuItem else curses.color_pair(1))
+                menuWindow.addstr(menuItem, 1, str(menuItem) + ".| Show public key fingerprints", curses.color_pair(4) if pos == menuItem else curses.color_pair(1))
                 menuItem += 1
                 menuWindow.addstr(menuItem, 1, str(menuItem) + ".| Save current keypair", curses.color_pair(4) if pos == menuItem else curses.color_pair(1))
                 menuItem += 1
@@ -342,7 +343,10 @@ class NcursesUI(object):
             if pos == 1:
                 break
             if pos == 2:
-                CursesDialog(self.screen, self.crypto.getLocalFingerprint(), "Server fingerprint", isBlocking=True).show()
+                try:
+                    CursesFingerprintDialog(self.screen, self.crypto.getLocalFingerprint(), self.crypto.getRemoteFingerprint()).show()
+                except _exceptions.CryptoError:
+                    CursesDialog(self.screen, "Public key(s) not available yet.", isBlocking=True).show()
             elif pos == 3:
                 passphrase = self.getKeypairPassphrase(True)
                 utils.saveKeypair(self.crypto, passphrase)
