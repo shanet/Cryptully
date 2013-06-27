@@ -82,9 +82,11 @@ class QChatWindow(QMainWindow):
 
 
     def showNowChattingMessage(self):
-        self.appendMessage("You are now securely chatting with " + self.sock.getHostname() + " :)")
+        self.appendMessage("You are now securely chatting with " + self.sock.getHostname() + " :)",
+                           constants.SERVICE, showTimestamp=False)
+
         self.appendMessage("It's a good idea to verify the communcation is secure by selecting"
-                           "\"verify identity\" in the options menu.", showTimestamp=False)
+                           "\"verify identity\" in the options menu.", constants.SERVICE, showTimestamp=False)
 
 
     def chatInputTextChanged(self):
