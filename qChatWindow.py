@@ -95,7 +95,7 @@ class QChatWindow(QMainWindow):
 
 
     def sendMessage(self):
-        message = str(self.chatInput.toPlainText())
+        message = str(self.chatInput.toPlainText())[:-1]
 
         # Don't send empty messages
         if message == '':
