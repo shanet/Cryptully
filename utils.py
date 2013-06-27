@@ -1,5 +1,8 @@
 import os
 
+from time import localtime
+from time import strftime
+
 from encSocket import EncSocket
 
 
@@ -99,3 +102,6 @@ def doesSavedKeypairExist():
 
     # Check that the path and keypair file both exist
     return (os.path.exists(storeDir) and os.path.exists(keypairFile))
+
+def getTimestamp():
+    return strftime('%H:%M:%S', localtime()) + ': '

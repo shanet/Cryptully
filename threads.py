@@ -154,8 +154,10 @@ class CursesSendThread(Thread):
             self.ncurses.textboxWindow.deleteln()
 
             # Add the new input to the chat window
+            timestamp = utils.getTimestamp()
             self.ncurses.chatWindow.scroll(1)
-            self.ncurses.chatWindow.addstr(height-1, 0, chatInput[:-1], curses.color_pair(2))
+            self.ncurses.chatWindow.addstr(height-1, 0, timestamp)
+            self.ncurses.chatWindow.addstr(height-1, len(timestamp), chatInput[:-1], curses.color_pair(2))
 
             # Send the input to the client
             try:
@@ -212,8 +214,10 @@ class CursesRecvThread(Thread):
                 CursesDialog(self.ncurses.chatWindow, "Connection Terminated", "The client requested to end the connection", isError=True).show()
 
             # Put the received data in the chat window
+            timestamp = utils.getTimestamp()
             self.ncurses.chatWindow.scroll(1)
-            self.ncurses.chatWindow.addstr(height-1, 0, response, curses.color_pair(3))
+            self.ncurses.chatWindow.addstr(height-1, 0, timestamp)
+            self.ncurses.chatWindow.addstr(height-1, len(timestamp), response, curses.color_pair(3))
 
             # Move the cursor back to the chat input window
             self.ncurses.textboxWindow.move(0, 0)
