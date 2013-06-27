@@ -207,7 +207,7 @@ class NcursesUI(object):
         # Disable the cursor
         curses.curs_set(0)
 
-        acceptWindow.addstr(1, 1, "Got connection from %s" % self.host)
+        acceptWindow.addstr(1, 1, "Got connection from %s" % self.sock.getHostname())
 
         pos = ACCEPT
 
