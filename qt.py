@@ -1,13 +1,17 @@
 import sys
 
-from PySide.QtGui  import *
-from PySide.QtCore import *
-
 import constants
 import _exceptions
 import qtUtils
 import threads
 import utils
+
+from PySide.QtCore  import QTimer
+from PySide.QtCore  import Slot
+from PySide.QtGui   import QApplication
+from PySide.QtGui   import QInputDialog
+from PySide.QtGui   import QMessageBox
+from PySide.QtGui   import QPalette
 
 from crypto         import Crypto
 from encSocket      import EncSocket
@@ -16,6 +20,7 @@ from qAcceptDialog  import QAcceptDialog
 from qChatWindow    import QChatWindow
 from qModeDialog    import QModeDialog
 from qWaitingDialog import QWaitingDialog
+
 
 class QtUI(QApplication):
     def __init__(self, argv, mode, port, host):

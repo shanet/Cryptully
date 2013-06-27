@@ -1,24 +1,25 @@
 #! /usr/bin/env python
 
-import os
-import sys
-import time
-import signal
 import curses
 import curses.ascii
 import curses.textpad
+import os
+import signal
+import sys
+import time
 
-import utils
-import threads
-import constants
 import _exceptions
+import constants
+import threads
+import utils
 
 from getpass                 import getpass
-from crypto                  import Crypto
-from server                  import Server
-from encSocket               import EncSocket
+
 from cursesDialog            import CursesDialog
 from cursesFingerprintDialog import CursesFingerprintDialog
+from crypto                  import Crypto
+from encSocket               import EncSocket
+from server                  import Server
 
 ACCEPT = 0
 REJECT = 1
