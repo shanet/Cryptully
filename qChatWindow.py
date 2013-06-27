@@ -8,8 +8,6 @@ import utils
 
 from qFingerprintDialog import QFingerprintDialog
 
-from time          import gmtime
-from time          import strftime
 from PySide.QtCore import Qt
 from PySide.QtGui  import QFontMetrics
 from PySide.QtGui  import QAction
@@ -112,7 +110,7 @@ class QChatWindow(QMainWindow):
 
     def appendMessage(self, message, source, showTimestamp=True):
         if showTimestamp:
-            timestamp = strftime('%H.%M.%S', gmtime()) + ': '
+            timestamp = utils.getTimestamp()
         else:
             timestamp = ''
 
