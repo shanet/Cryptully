@@ -5,25 +5,25 @@ import sys
 import qtUtils
 from qFingerprintDialog import QFingerprintDialog
 
-from PySide.QtCore import Qt
-from PySide.QtGui import QFontMetrics
-from PySide.QtGui import QAction
-from PySide.QtGui import QHBoxLayout
-from PySide.QtGui import QIcon
-from PySide.QtGui import QLabel
-from PySide.QtGui import QLineEdit
-from PySide.QtGui import QMainWindow
-from PySide.QtGui import QMenu
-from PySide.QtGui import QMessageBox
-from PySide.QtGui import QPushButton
-from PySide.QtGui import QSplitter
-from PySide.QtGui import QTextEdit
-from PySide.QtGui import QToolButton
-from PySide.QtGui import QVBoxLayout
-from PySide.QtGui import QWidget
+from PyQt4.QtCore import Qt
+from PyQt4.QtGui import QFontMetrics
+from PyQt4.QtGui import QAction
+from PyQt4.QtGui import QHBoxLayout
+from PyQt4.QtGui import QIcon
+from PyQt4.QtGui import QLabel
+from PyQt4.QtGui import QLineEdit
+from PyQt4.QtGui import QMainWindow
+from PyQt4.QtGui import QMenu
+from PyQt4.QtGui import QMessageBox
+from PyQt4.QtGui import QPushButton
+from PyQt4.QtGui import QSplitter
+from PyQt4.QtGui import QTextEdit
+from PyQt4.QtGui import QToolButton
+from PyQt4.QtGui import QVBoxLayout
+from PyQt4.QtGui import QWidget
 
-from ..utils import constants
-from ..utils import utils
+from utils import constants
+from utils import utils
 
 
 class QChatWindow(QMainWindow):
@@ -57,7 +57,7 @@ class QChatWindow(QMainWindow):
         # Put the chatinput and send button in a wrapper widget so they may be added to the splitter
         chatInputWrapper = QWidget()
         chatInputWrapper.setLayout(hboxLayout)
-        chatInputWrapper.setMinimumHeight(chatInputFontMetrics.lineSpacing() * 3.2)
+        chatInputWrapper.setMinimumHeight(chatInputFontMetrics.lineSpacing() * 3.7)
 
         # Put the chat log and chat input into a splitter so the user can resize them at will
         splitter = QSplitter(Qt.Vertical)
@@ -77,7 +77,7 @@ class QChatWindow(QMainWindow):
 
         # Title and icon
         self.setWindowTitle("Cryptully")
-        self.setWindowIcon(QIcon('images/' + ('light' if isLightTheme else 'dark') + '/icon.png'))
+        self.setWindowIcon(QIcon(utils.getAbosluteResourcePath('images/' + ('light' if isLightTheme else 'dark') + '/icon.png')))
         self.statusBar().showMessage("Connected to 127.0.0.1")
 
 
@@ -151,12 +151,12 @@ class QChatWindow(QMainWindow):
         else:
             iconPath = iconPath + 'dark/'
 
-        fingerprintIcon = QIcon(iconPath + 'fingerprint.png')
-        saveIcon        = QIcon(iconPath + 'save.png')
-        clearIcon       = QIcon(iconPath + 'delete.png')
-        helpIcon        = QIcon(iconPath + 'help.png')
-        exitIcon        = QIcon(iconPath + 'exit.png')
-        menuIcon        = QIcon(iconPath + 'menu.png')
+        fingerprintIcon = QIcon(utils.getAbosluteResourcePath(iconPath + 'fingerprint.png'))
+        saveIcon        = QIcon(utils.getAbosluteResourcePath(iconPath + 'save.png'))
+        clearIcon       = QIcon(utils.getAbosluteResourcePath(iconPath + 'delete.png'))
+        helpIcon        = QIcon(utils.getAbosluteResourcePath(iconPath + 'help.png'))
+        exitIcon        = QIcon(utils.getAbosluteResourcePath(iconPath + 'exit.png'))
+        menuIcon        = QIcon(utils.getAbosluteResourcePath(iconPath + 'menu.png'))
 
         fingerprintAction  = QAction(fingerprintIcon, 'Verify &Identity', self)
         saveKeypairAction  = QAction(saveIcon, '&Save current encryption keys', self)

@@ -1,5 +1,5 @@
-from PySide.QtGui import QMessageBox
-from PySide.QtGui import QPushButton
+from PyQt4.QtGui import QMessageBox
+from PyQt4.QtGui import QPushButton
 
 class QAcceptDialog(QMessageBox):
     def __init__(self, parent, hostname):

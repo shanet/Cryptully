@@ -4,10 +4,10 @@ import sys
 import signal
 import argparse
 
-from src.utils import constants
+from utils import constants
 
-from src.ncurses.ncurses import NcursesUI
-from src.qt.qt import QtUI
+from ncurses.ncurses import NcursesUI
+from qt.qt import QtUI
 
 
 def main():
@@ -51,6 +51,11 @@ def parse_cmdline_args():
     # Check the port range
     if args.port <= 0 or args.port > 65536:
         print "The port must be between 1 and 65536 inclusive."
+        sys.exit(1)
+
+    # Ncurses is not supported on Windows
+    if sys.platform is 'win32' and args.ncurses:
+        print "Ncurses is not supported on Windows."
         sys.exit(1)
 
     return args

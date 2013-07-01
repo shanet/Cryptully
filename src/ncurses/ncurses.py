@@ -10,17 +10,17 @@ import time
 
 from getpass import getpass
 
-from ..ncurses.cursesFingerprintDialog import CursesFingerprintDialog
-from ..ncurses.cursesDialog import CursesDialog
+from cursesFingerprintDialog import CursesFingerprintDialog
+from cursesDialog import CursesDialog
 
-from ..network.encSocket import EncSocket
-from ..network.server import Server
-from ..network import threads
+from network.encSocket import EncSocket
+from network.server import Server
+from network import threads
 
-from ..utils import constants
-from ..utils import exceptions
-from ..utils import utils
-from ..utils.crypto import Crypto
+from utils import constants
+from utils import exceptions
+from utils import utils
+from utils.crypto import Crypto
 
 ACCEPT = 0
 REJECT = 1

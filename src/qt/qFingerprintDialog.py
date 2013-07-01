@@ -1,13 +1,13 @@
 import qtUtils
 
-from PySide.QtCore import Qt
-from PySide.QtGui  import QDialog
-from PySide.QtGui  import QHBoxLayout
-from PySide.QtGui  import QIcon
-from PySide.QtGui  import QLabel
-from PySide.QtGui  import QVBoxLayout
+from PyQt4.QtCore import Qt
+from PyQt4.QtGui  import QDialog
+from PyQt4.QtGui  import QHBoxLayout
+from PyQt4.QtGui  import QIcon
+from PyQt4.QtGui  import QLabel
+from PyQt4.QtGui  import QVBoxLayout
 
-from ..utils import constants
+from utils import constants
 
 
 class QFingerprintDialog(QDialog):

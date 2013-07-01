@@ -1,8 +1,8 @@
 import sys
 
-from ..network.server import Server
-from ..network.encSocket import EncSocket
-from ..network import threads
+from network.server import Server
+from network.encSocket import EncSocket
+from network import threads
 
 from qAcceptDialog import QAcceptDialog
 from qChatWindow import QChatWindow
@@ -10,17 +10,17 @@ from qModeDialog import QModeDialog
 import qtUtils
 from qWaitingDialog import QWaitingDialog
 
-from PySide.QtCore import QTimer
-from PySide.QtCore import Slot
-from PySide.QtGui import QApplication
-from PySide.QtGui import QInputDialog
-from PySide.QtGui import QMessageBox
-from PySide.QtGui import QPalette
+from PyQt4.QtCore import QTimer
+from PyQt4.QtCore import pyqtSlot
+from PyQt4.QtGui import QApplication
+from PyQt4.QtGui import QInputDialog
+from PyQt4.QtGui import QMessageBox
+from PyQt4.QtGui import QPalette
 
-from ..utils import constants
-from ..utils.crypto import Crypto
-from ..utils import exceptions
-from ..utils import utils
+from utils import constants
+from utils.crypto import Crypto
+from utils import exceptions
+from utils import utils
 
 
 class QtUI(QApplication):
@@ -150,7 +150,7 @@ class QtUI(QApplication):
         self.waitingDialog.exec_()
 
 
-    @Slot(EncSocket)
+    @pyqtSlot(EncSocket)
     def __postAccept(self, sock):
         self.connectedToClient = True
         self.sock = sock
@@ -175,20 +175,20 @@ class QtUI(QApplication):
         self.__startChat()
 
 
-    @Slot(EncSocket)
+    @pyqtSlot(EncSocket)
     def __postConnect(self):
         self.connectedToClient = True
         self.waitingDialog.close()
         self.__startChat()
 
 
-    @Slot(str)
+    @pyqtSlot(str)
     def __connectFailure(self, errorMessage):
         QMessageBox.critical(self.chatWindow, "Error connecting to server", errorMessage)
         self.__restart()
 
 
-    @Slot()
+    @pyqtSlot()
     def __userClosedWaitingDialog(self):
         self.waitingDialog.hide()
         # If the waiting dialog was closed before we connected to the client,
@@ -209,7 +209,7 @@ class QtUI(QApplication):
         self.chatWindow.showNowChattingMessage()
 
 
-    @Slot(str, str)
+    @pyqtSlot(str, str)
     def __threadError(self, title, message):
         QMessageBox.critical(self.chatWindow, title, message)
         self.__restart()

@@ -1,11 +1,11 @@
-from PySide.QtCore import Qt
-from PySide.QtGui import QGroupBox
-from PySide.QtGui import QHBoxLayout
-from PySide.QtGui import QLabel
-from PySide.QtGui import QPixmap
-from PySide.QtGui import QPushButton
-from PySide.QtGui import QVBoxLayout
-from PySide.QtGui import QWidget
+from PyQt4.QtCore import Qt
+from PyQt4.QtGui import QGroupBox
+from PyQt4.QtGui import QHBoxLayout
+from PyQt4.QtGui import QLabel
+from PyQt4.QtGui import QPixmap
+from PyQt4.QtGui import QPushButton
+from PyQt4.QtGui import QVBoxLayout
+from PyQt4.QtGui import QWidget
 
 class QModeButton(QWidget):
     def __init__(self, buttonText, imagePath, buttonCallback, imageSize, parent=None):

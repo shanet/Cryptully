@@ -2,9 +2,9 @@ import sys
 import time
 import socket
 
-from ..utils.crypto import Crypto
-from ..utils import exceptions
-from ..utils import utils
+from utils.crypto import Crypto
+from utils import exceptions
+from utils import utils
 
 
 class EncSocket(object):

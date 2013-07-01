@@ -1,5 +1,5 @@
-from PySide.QtCore import QEvent
-from PySide.QtCore import QObject
+from PyQt4.QtCore import QEvent
+from PyQt4.QtCore import QObject
 
 class InvokeEvent(QEvent):
     EVENT_TYPE = QEvent.Type(QEvent.registerEventType())

@@ -1,4 +1,5 @@
 import os
+import sys
 
 from time import localtime
 from time import strftime
@@ -104,3 +105,17 @@ def doesSavedKeypairExist():
 
 def getTimestamp():
     return strftime('%H:%M:%S', localtime()) + ': '
+
+
+def getAbosluteResourcePath(relativePath):
+    try:
+        # PyInstaller stores data files in a tmp folder refered to as _MEIPASS
+        basePath = sys._MEIPASS
+    except Exception:
+        basePath = os.path.abspath('.')
+        # If the resource does not exist in the current directory, try the src directory
+        # This should only apply to running the application non-packaged
+        if not os.path.exists(os.path.join(basePath, relativePath)):
+            relativePath = 'src/' + relativePath
+
+    return os.path.join(basePath, relativePath)

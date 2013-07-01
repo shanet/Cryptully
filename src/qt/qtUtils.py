@@ -3,12 +3,12 @@ import signal
 
 import qInvoker
 
-from PySide.QtCore import QCoreApplication
-from PySide.QtGui  import QDesktopWidget
-from PySide.QtGui  import QIcon
-from PySide.QtGui  import QInputDialog
-from PySide.QtGui  import QPixmap
-from PySide.QtGui  import QWidget
+from PyQt4.QtCore import QCoreApplication
+from PyQt4.QtGui  import QDesktopWidget
+from PyQt4.QtGui  import QIcon
+from PyQt4.QtGui  import QInputDialog
+from PyQt4.QtGui  import QPixmap
+from PyQt4.QtGui  import QWidget
 
 
 invoker = qInvoker.Invoker()

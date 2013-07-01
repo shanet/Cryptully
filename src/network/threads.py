@@ -4,31 +4,31 @@ import Queue
 import signal
 import socket
 
-from PySide.QtCore import QCoreApplication
-from PySide.QtCore import QThread
-from PySide.QtCore import Signal
-from PySide.QtGui import QMessageBox
-from PySide.QtGui import QWidget
+from PyQt4.QtCore import QCoreApplication
+from PyQt4.QtCore import QThread
+from PyQt4.QtCore import pyqtSignal
+from PyQt4.QtGui import QMessageBox
+from PyQt4.QtGui import QWidget
 
 from threading  import Thread
 from threading  import Lock
 
 from encSocket import EncSocket
 
-from ..ncurses.cursesDialog import CursesDialog
+from ncurses.cursesDialog import CursesDialog
 
-from ..qt import qtUtils
+from qt import qtUtils
 
-from ..utils import constants
-from ..utils import exceptions
-from ..utils import utils
+from utils import constants
+from utils import exceptions
+from utils import utils
 
 
 mutex = Lock()
 
 
 class QtRecvThread(QThread):
-    errorSignal = Signal(str, str)
+    errorSignal = pyqtSignal(str, str)
 
     def __init__(self, sock, recvCallback, errorSlot):
         QThread.__init__(self)
@@ -58,7 +58,7 @@ class QtRecvThread(QThread):
 
 
 class QtSendThread(QThread):
-    errorSignal = Signal(str, str)
+    errorSignal = pyqtSignal(str, str)
 
     def __init__(self, sock, errorSlot):
         QThread.__init__(self)
@@ -85,7 +85,7 @@ class QtSendThread(QThread):
 
 
 class QtServerAcceptThread(QThread):
-    successSignal = Signal(EncSocket)
+    successSignal = pyqtSignal(EncSocket)
 
     def __init__(self, server, crypto, successSlot):
         QThread.__init__(self)
@@ -104,8 +104,8 @@ class QtServerAcceptThread(QThread):
 
 
 class QtServerConnectThread(QThread):
-    successSignal = Signal()
-    failureSignal = Signal(str)
+    successSignal = pyqtSignal()
+    failureSignal = pyqtSignal(str)
 
     def __init__(self, sock, successSlot, failureSlot):
         QThread.__init__(self)

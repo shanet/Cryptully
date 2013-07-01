@@ -2,7 +2,7 @@ import socket
 
 from encSocket import EncSocket
 
-from ..utils import exceptions
+from utils import exceptions
 
 
 class Server(object):

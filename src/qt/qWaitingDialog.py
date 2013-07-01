@@ -1,20 +1,22 @@
 import qtUtils
 
-from PySide.QtCore import Signal
-from PySide.QtGui  import QDialog
-from PySide.QtGui  import QHBoxLayout
-from PySide.QtGui  import QLabel
-from PySide.QtGui  import QMovie
+from PyQt4.QtCore import pyqtSignal
+from PyQt4.QtGui  import QDialog
+from PyQt4.QtGui  import QHBoxLayout
+from PyQt4.QtGui  import QLabel
+from PyQt4.QtGui  import QMovie
+
+from utils import utils
 
 class QWaitingDialog(QDialog):
-    onCloseSignal = Signal()
+    onCloseSignal = pyqtSignal()
 
     def __init__(self, parent, text="", isLightTheme=True, onCloseSlot=None):
         QDialog.__init__(self, parent)
         self.onCloseSignal.connect(onCloseSlot)
 
         # Create connecting image
-        connMov = QMovie('images/' + ('light' if isLightTheme else 'dark') + '/waiting.gif')
+        connMov = QMovie(utils.getAbosluteResourcePath('images/' + ('light' if isLightTheme else 'dark') + '/waiting.gif'))
         connMov.start()
         self.connImg = QLabel(self)
         self.connImg.setMovie(connMov)

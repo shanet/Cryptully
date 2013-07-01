@@ -1,6 +1,6 @@
+import curses
 import os
 import signal
-import curses
 
 from cursesDialog import CursesDialog
 
