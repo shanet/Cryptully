@@ -21,7 +21,7 @@ class Server(object):
 
     def start(self, port):
         try:
-            self.sock.bind(('localhost', port))
+            self.sock.bind(('0.0.0.0', port))
             self.sock.listen(5)
             self.isStarted = True
         except socket.error as se:
