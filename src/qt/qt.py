@@ -106,12 +106,12 @@ class QtUI(QApplication):
         self.crypto = Crypto()
         if utils.doesSavedKeypairExist():
             while(True):
-                passphrase = qtUtils.getKeypairPassphrase()
+                passphrase = qtUtils.getKeypairPassphrase(self.isLightTheme, self.__restart)
                 try:
                     utils.loadKeypair(self.crypto, passphrase)
                     break
                 except exceptions.CryptoError:
-                    QMessageBox.critical(self.chatWindow, "Wrong passphrase", "An incorrect passphrase was entered")
+                    QMessageBox.warning(self.chatWindow, "Wrong passphrase", "An incorrect passphrase was entered")
 
             # We still need to generate an AES key
             self.crypto.generateAESKey()

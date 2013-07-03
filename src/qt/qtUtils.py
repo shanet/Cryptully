@@ -7,9 +7,13 @@ from PyQt4.QtCore import QCoreApplication
 from PyQt4.QtGui  import QDesktopWidget
 from PyQt4.QtGui  import QIcon
 from PyQt4.QtGui  import QInputDialog
+from PyQt4.QtGui  import QMessageBox
 from PyQt4.QtGui  import QPixmap
 from PyQt4.QtGui  import QWidget
 
+from qPassphraseDialog import QPassphraseDialog
+from utils import constants
+from utils import utils
 
 invoker = qInvoker.Invoker()
 
@@ -21,26 +25,43 @@ def centerWindow(window, width, height):
     window.move(geo.topLeft())
 
 
-def getKeypairPassphrase(parent=None, verify=False):
+def getKeypairPassphrase(isLightTheme, cancelCallback, parent=None, verify=False):
     if parent is None:
         parent = QWidget()
 
     while True:
-        passphrase, ok = QInputDialog.getText(QWidget(), "Keypair Passphrase", "Passphrase:")
-        if not ok:
-            exitApp()
+        passphrase, button = QPassphraseDialog.getPassphrase(isLightTheme, verify)
+        if button == constants.BUTTON_CANCEL:
+            cancelCallback()
+        if button == constants.BUTTON_FORGOT:
+            clearKeypair(parent)
+            cancelCallback()
 
         if not verify:
             return passphrase
 
-        verifyPassphrase, ok = QInputDialog.getText(QWidget(), "Keypair Passphrase", "Verify:")
-        if not ok:
+        verifyPassphrase, button = QPassphraseDialog.getPassphrase(isLightTheme, verify)
+        if button == constants.BUTTON_CANCEL:
             exitApp()
 
         if passphrase == verifyPassphrase:
             return passphrase
         else:
-            QMessageBox.critical(self, "Keypair Passphrase", "Passphrases do not match")
+            QMessageBox.critical(parent, "Keypair Passphrase", "Passphrases do not match")
+
+
+def clearKeypair(parent=None):
+    if parent == None:
+        parent = QWidget()
+
+    if not utils.doesSavedKeypairExist():
+        QMessageBox.warning(parent, "No Keys Saved", "No encryption keys have been saved yet.")
+        return
+
+    confirm = QMessageBox.question(parent, 'Clear Keys', "Are you sure you want to clear your saved encryption keys?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+    if confirm == QMessageBox.Yes:
+        utils.clearKeypair()
+        QMessageBox.information(parent, "Keys Cleared", "Encryption keys cleared. New keys will be generated the next time the app is started.")
 
 
 def isLightTheme(color):

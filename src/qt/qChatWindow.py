@@ -11,7 +11,6 @@ from PyQt4.QtGui import QAction
 from PyQt4.QtGui import QHBoxLayout
 from PyQt4.QtGui import QIcon
 from PyQt4.QtGui import QLabel
-from PyQt4.QtGui import QLineEdit
 from PyQt4.QtGui import QMainWindow
 from PyQt4.QtGui import QMenu
 from PyQt4.QtGui import QMessageBox
@@ -205,18 +204,10 @@ class QChatWindow(QMainWindow):
 
 
     def __clearKeypair(self):
-        if not utils.doesSavedKeypairExist():
-            QMessageBox.warning(self, "No Keys Saved", "No encryption keys have been saved yet.")
-            return
-
-        confirm = QMessageBox.question(self, 'Clear Keys', "Are you sure you want to clear your saved encryption keys?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-        if confirm == QMessageBox.Yes:
-            utils.clearKeypair()
-            QMessageBox.information(self, "Keys Cleared", "Encryption keys cleared. New keys will be generated the next time the app is started.")
-
+        qtUtils.clearKeypair(self)
 
     def __showHelpDialog(self):
         QMessageBox.information(QWidget(), "Help", "Help not implemented yet.")
 
     def __exit(self):
-        os.kill(os.getpid(), signal.SIGINT)
+        qtUtils.exitApp()
