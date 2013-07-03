@@ -1,4 +1,6 @@
 import curses
+import httplib
+import json
 import os
 import Queue
 import signal
@@ -133,6 +135,32 @@ class QtServerConnectThread(QThread):
         self.sock.disconnect()
         self.failureSignal.emit(errorMessage)
 
+
+class GetIPAddressThread(QThread):
+    successSignal = pyqtSignal(str)
+    failureSignal = pyqtSignal(str)
+
+    def __init__(self, successSlot, failureSlot):
+        QThread.__init__(self)
+
+        self.successSignal.connect(successSlot)
+        self.failureSignal.connect(failureSlot)
+
+
+    def run(self):
+        try:
+            httpConnection = httplib.HTTPConnection("jsonip.com")
+            httpConnection.request("GET", "/index.html")
+            response = httpConnection.getresponse()
+            if response.status == 200:
+                data = response.read()[11:-1]
+                jsonData = json.loads(data)
+                self.successSignal.emit(jsonData["ip"])
+            else:
+                self.failureSignal.emit("Bad HTTP status: " + str(response.status))
+            httpConnection.close()
+        except Exception as e:
+            self.failureSignal.emit(e)
 
 
 class CursesSendThread(Thread):

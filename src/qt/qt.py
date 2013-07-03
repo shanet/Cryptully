@@ -133,7 +133,7 @@ class QtUI(QApplication):
         self.acceptThread.start()
 
         # Show the waiting dialog
-        self.waitingDialog = QWaitingDialog(self.chatWindow, "Waiting for connection...", self.isLightTheme, self.__userClosedWaitingDialog)
+        self.waitingDialog = QWaitingDialog(self.chatWindow, "Waiting for connection...", self.isLightTheme, self.__userClosedWaitingDialog, showIP=True)
         self.waitingDialog.exec_()
 
 
