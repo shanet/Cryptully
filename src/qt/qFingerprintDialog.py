@@ -15,7 +15,7 @@ class QFingerprintDialog(QDialog):
         QDialog.__init__(self)
 
         # Set the title and icon
-        self.setWindowTitle("Verify Identity")
+        self.setWindowTitle("Verify Key Integrity")
         self.setWindowIcon(QIcon("images/placeholder.png"))
 
         helpLabel = QLabel("In order to ensure that no one is listening in on your conversation it's\n"

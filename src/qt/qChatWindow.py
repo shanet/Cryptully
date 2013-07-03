@@ -86,7 +86,7 @@ class QChatWindow(QMainWindow):
                            constants.SERVICE, showTimestamp=False)
 
         self.appendMessage("It's a good idea to verify the communcation is secure by selecting"
-                           "\"verify identity\" in the options menu.", constants.SERVICE, showTimestamp=False)
+                           "\"verify key integrity\" in the options menu.", constants.SERVICE, showTimestamp=False)
 
 
     def chatInputTextChanged(self):
@@ -158,7 +158,7 @@ class QChatWindow(QMainWindow):
         exitIcon        = QIcon(utils.getAbosluteResourcePath(iconPath + 'exit.png'))
         menuIcon        = QIcon(utils.getAbosluteResourcePath(iconPath + 'menu.png'))
 
-        fingerprintAction  = QAction(fingerprintIcon, 'Verify &Identity', self)
+        fingerprintAction  = QAction(fingerprintIcon, '&Verify key integrity', self)
         saveKeypairAction  = QAction(saveIcon, '&Save current encryption keys', self)
         clearKeypairAction = QAction(clearIcon, 'C&lear saved encryption keys', self)
         helpAction         = QAction(helpIcon, 'Show &help', self)
@@ -200,14 +200,14 @@ class QChatWindow(QMainWindow):
     def __showSaveKeypairDialog(self):
         passphrase = qtUtils.getKeypairPassphrase(self, verify=True)
         utils.saveKeypair(self.sock.crypto, passphrase)
-        QMessageBox.information(QWidget(), "Keypair saved", "Keypair saved. The current keypair will be used for all subsequent connections.")
+        QMessageBox.information(QWidget(), "Keys saved", "Encryption keys saved. The current keys will be used for all subsequent connections.")
 
 
     def __clearKeypair(self):
         confirm = QMessageBox.question(self, 'Clear Keys', "Are you sure you want to clear your saved encryption keys?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if confirm == QMessageBox.Yes:
             utils.clearKeypair()
-            QMessageBox.information(QWidget(), "Keypair cleared", "Keypair cleared. A new keypair will be generated the next time the app is started.")
+            QMessageBox.information(QWidget(), "Keys cleared", "Encryption keys cleared. New keys will be generated the next time the app is started.")
 
 
     def __showHelpDialog(self):
