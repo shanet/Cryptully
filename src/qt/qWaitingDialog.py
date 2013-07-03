@@ -66,7 +66,7 @@ class QWaitingDialog(QDialog):
         if showIP:
             # Start the thread to get the IP address and update the IP label when finished
             self.ipThread = threads.GetIPAddressThread(self.__setIPAddress, self.__getIPAddressFailure)
-            #self.ipThread.start()
+            self.ipThread.start()
 
 
     def closeEvent(self, event):

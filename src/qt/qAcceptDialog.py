@@ -1,3 +1,4 @@
+from PyQt4.QtGui import QIcon
 from PyQt4.QtGui import QMessageBox
 from PyQt4.QtGui import QPushButton
 
@@ -11,8 +12,8 @@ class QAcceptDialog(QMessageBox):
         self.setText("Got connection from " + hostname)
         self.setIcon(QMessageBox.Question)
 
-        self.acceptButton = QPushButton("Accept")
-        self.rejectButton = QPushButton("Reject")
+        self.acceptButton = QPushButton(QIcon.fromTheme('dialog-ok'), "Accept")
+        self.rejectButton = QPushButton(QIcon.fromTheme('dialog-cancel'), "Reject")
         self.addButton(self.acceptButton, QMessageBox.YesRole)
         self.addButton(self.rejectButton, QMessageBox.NoRole)
 

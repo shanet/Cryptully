@@ -206,8 +206,10 @@ class QChatWindow(QMainWindow):
     def __clearKeypair(self):
         qtUtils.clearKeypair(self)
 
+
     def __showHelpDialog(self):
         QMessageBox.information(QWidget(), "Help", "Help not implemented yet.")
+
 
     def __exit(self):
         qtUtils.exitApp()
