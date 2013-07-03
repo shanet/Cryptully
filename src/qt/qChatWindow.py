@@ -204,8 +204,10 @@ class QChatWindow(QMainWindow):
 
 
     def __clearKeypair(self):
-        utils.clearKeypair()
-        QMessageBox.information(QWidget(), "Keypair cleared", "Keypair cleared. A new keypair will be generated the next time the app is started.")
+        confirm = QMessageBox.question(self, 'Clear Keys', "Are you sure you want to clear your saved encryption keys?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if confirm == QMessageBox.Yes:
+            utils.clearKeypair()
+            QMessageBox.information(QWidget(), "Keypair cleared", "Keypair cleared. A new keypair will be generated the next time the app is started.")
 
 
     def __showHelpDialog(self):
