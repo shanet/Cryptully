@@ -15,29 +15,29 @@ from utils import constants
 from utils import utils
 
 class QPassphraseDialog(QDialog):
-    def __init__(self, isLightTheme, verify=False):
+    def __init__(self, isLightTheme, verify=False, showForgotButton=True):
         QDialog.__init__(self)
 
         self.passphrase = None
         self.clickedButton = constants.BUTTON_CANCEL
 
         # Set the title and icon
-        self.setWindowTitle("Saved Keys Passphrase")
+        self.setWindowTitle("Save Keys Passphrase")
         self.setWindowIcon(QIcon(utils.getAbsoluteResourcePath('images/' + ('light' if isLightTheme else 'dark') + '/icon.png')))
 
-        label = QLabel("Saved encryption keys passphrase:", self)
+        label = QLabel("Encryption keys passphrase:" if not verify else "Verify:", self)
         self.passphraseInput = QLineEdit(self)
+        self.passphraseInput.setEchoMode(QLineEdit.Password)
         okayButton = QPushButton(QIcon.fromTheme('dialog-ok'), "OK", self)
         cancelButton = QPushButton(QIcon.fromTheme('dialog-cancel'), "Cancel", self)
 
-        # Don't show the forgot button on verify
-        if not verify:
+        if showForgotButton:
             forgotButton = QPushButton(QIcon.fromTheme('edit-undo'), "Forgot Passphrase", self)
 
         okayButton.clicked.connect(lambda: self.buttonClicked(constants.BUTTON_OKAY))
         cancelButton.clicked.connect(lambda: self.buttonClicked(constants.BUTTON_CANCEL))
 
-        if not verify:
+        if showForgotButton:
             forgotButton.clicked.connect(lambda: self.buttonClicked(constants.BUTTON_FORGOT))
 
         # Float the buttons to the right
@@ -46,7 +46,7 @@ class QPassphraseDialog(QDialog):
         hbox.addWidget(okayButton)
         hbox.addWidget(cancelButton)
 
-        if not verify:
+        if showForgotButton:
             hbox.addWidget(forgotButton)
 
         vbox = QVBoxLayout()
@@ -62,13 +62,13 @@ class QPassphraseDialog(QDialog):
 
 
     def buttonClicked(self, button):
-        self.passphrase = self.passphraseInput.text
+        self.passphrase = self.passphraseInput.text()
         self.clickedButton = button
         self.close()
 
 
     @staticmethod
-    def getPassphrase(isLightTheme, verify=False):
-        passphraseDialog = QPassphraseDialog(isLightTheme, verify)
+    def getPassphrase(isLightTheme, verify=False, showForgotButton=True):
+        passphraseDialog = QPassphraseDialog(isLightTheme, verify, showForgotButton)
         passphraseDialog.exec_()
         return passphraseDialog.passphrase, passphraseDialog.clickedButton

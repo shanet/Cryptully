@@ -25,12 +25,12 @@ def centerWindow(window, width, height):
     window.move(geo.topLeft())
 
 
-def getKeypairPassphrase(isLightTheme, cancelCallback, parent=None, verify=False):
+def getKeypairPassphrase(isLightTheme, cancelCallback, parent=None, verify=False, showForgotButton=True):
     if parent is None:
         parent = QWidget()
 
     while True:
-        passphrase, button = QPassphraseDialog.getPassphrase(isLightTheme, verify)
+        passphrase, button = QPassphraseDialog.getPassphrase(isLightTheme, verify, showForgotButton)
         if button == constants.BUTTON_CANCEL:
             cancelCallback()
         if button == constants.BUTTON_FORGOT:
@@ -40,7 +40,7 @@ def getKeypairPassphrase(isLightTheme, cancelCallback, parent=None, verify=False
         if not verify:
             return passphrase
 
-        verifyPassphrase, button = QPassphraseDialog.getPassphrase(isLightTheme, verify)
+        verifyPassphrase, button = QPassphraseDialog.getPassphrase(isLightTheme, verify, showForgotButton)
         if button == constants.BUTTON_CANCEL:
             exitApp()
 
@@ -61,7 +61,7 @@ def clearKeypair(parent=None):
     confirm = QMessageBox.question(parent, 'Clear Keys', "Are you sure you want to clear your saved encryption keys?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
     if confirm == QMessageBox.Yes:
         utils.clearKeypair()
-        QMessageBox.information(parent, "Keys Cleared", "Encryption keys cleared. New keys will be generated the next time the app is started.")
+        QMessageBox.information(parent, "Keys Cleared", "Encryption keys cleared. New keys will be generated. You should verify key integrity for all new connections now.")
 
 
 def isLightTheme(color):
