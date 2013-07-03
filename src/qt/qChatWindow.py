@@ -200,14 +200,18 @@ class QChatWindow(QMainWindow):
     def __showSaveKeypairDialog(self):
         passphrase = qtUtils.getKeypairPassphrase(self, verify=True)
         utils.saveKeypair(self.sock.crypto, passphrase)
-        QMessageBox.information(QWidget(), "Keys saved", "Encryption keys saved. The current keys will be used for all subsequent connections.")
+        QMessageBox.information(QWidget(), "Keys Saved", "Encryption keys saved. The current keys will be used for all subsequent connections.")
 
 
     def __clearKeypair(self):
+        if not utils.doesSavedKeypairExist():
+            QMessageBox.warning(self, "No Keys Saved", "No encryption keys have been saved yet.")
+            return
+
         confirm = QMessageBox.question(self, 'Clear Keys', "Are you sure you want to clear your saved encryption keys?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if confirm == QMessageBox.Yes:
             utils.clearKeypair()
-            QMessageBox.information(QWidget(), "Keys cleared", "Encryption keys cleared. New keys will be generated the next time the app is started.")
+            QMessageBox.information(self, "Keys Cleared", "Encryption keys cleared. New keys will be generated the next time the app is started.")
 
 
     def __showHelpDialog(self):

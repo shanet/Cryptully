@@ -67,6 +67,11 @@ def saveKeypair(crypto, passphrase):
     os.chmod(keypairFile, 0700)
 
 
+def doesSavedKeypairExist():
+    storeDir = os.path.join(os.path.expanduser('~'), '.cryptully')
+    return os.path.exists(storeDir)
+
+
 def clearKeypair():
     storeDir = os.path.join(os.path.expanduser('~'), '.cryptully')
 
