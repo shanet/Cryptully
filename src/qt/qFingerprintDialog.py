@@ -7,6 +7,8 @@ from PyQt4.QtGui  import QIcon
 from PyQt4.QtGui  import QLabel
 from PyQt4.QtGui  import QVBoxLayout
 
+from qLine import QLine
+
 from utils import constants
 
 
@@ -32,7 +34,9 @@ class QFingerprintDialog(QDialog):
         vbox = QVBoxLayout()
         vbox.addStretch(1)
         vbox.addWidget(helpLabel)
-        vbox.addSpacing(45)
+        vbox.addSpacing(15)
+        vbox.addWidget(QLine())
+        vbox.addSpacing(15)
         vbox.addWidget(localLabel)
         vbox.addWidget(localFingerprintLabel, alignment=Qt.AlignHCenter)
         vbox.addSpacing(45)
