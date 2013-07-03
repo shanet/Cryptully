@@ -77,7 +77,7 @@ class QChatWindow(QMainWindow):
 
         # Title and icon
         self.setWindowTitle("Cryptully")
-        self.setWindowIcon(QIcon(utils.getAbosluteResourcePath('images/' + ('light' if isLightTheme else 'dark') + '/icon.png')))
+        self.setWindowIcon(QIcon(utils.getAbsoluteResourcePath('images/' + ('light' if isLightTheme else 'dark') + '/icon.png')))
         self.statusBar().showMessage("Connected to 127.0.0.1")
 
 
@@ -151,12 +151,12 @@ class QChatWindow(QMainWindow):
         else:
             iconPath = iconPath + 'dark/'
 
-        fingerprintIcon = QIcon(utils.getAbosluteResourcePath(iconPath + 'fingerprint.png'))
-        saveIcon        = QIcon(utils.getAbosluteResourcePath(iconPath + 'save.png'))
-        clearIcon       = QIcon(utils.getAbosluteResourcePath(iconPath + 'delete.png'))
-        helpIcon        = QIcon(utils.getAbosluteResourcePath(iconPath + 'help.png'))
-        exitIcon        = QIcon(utils.getAbosluteResourcePath(iconPath + 'exit.png'))
-        menuIcon        = QIcon(utils.getAbosluteResourcePath(iconPath + 'menu.png'))
+        fingerprintIcon = QIcon(utils.getAbsoluteResourcePath(iconPath + 'fingerprint.png'))
+        saveIcon        = QIcon(utils.getAbsoluteResourcePath(iconPath + 'save.png'))
+        clearIcon       = QIcon(utils.getAbsoluteResourcePath(iconPath + 'delete.png'))
+        helpIcon        = QIcon(utils.getAbsoluteResourcePath(iconPath + 'help.png'))
+        exitIcon        = QIcon(utils.getAbsoluteResourcePath(iconPath + 'exit.png'))
+        menuIcon        = QIcon(utils.getAbsoluteResourcePath(iconPath + 'menu.png'))
 
         fingerprintAction  = QAction(fingerprintIcon, '&Verify key integrity', self)
         saveKeypairAction  = QAction(saveIcon, '&Save current encryption keys', self)

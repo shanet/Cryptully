@@ -112,7 +112,7 @@ def getTimestamp():
     return strftime('%H:%M:%S', localtime()) + ': '
 
 
-def getAbosluteResourcePath(relativePath):
+def getAbsoluteResourcePath(relativePath):
     try:
         # PyInstaller stores data files in a tmp folder refered to as _MEIPASS
         basePath = sys._MEIPASS

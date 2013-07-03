@@ -19,10 +19,10 @@ class QModeDialog(QDialog):
 
         # Set the title and icon
         self.setWindowTitle("Cryptully")
-        self.setWindowIcon(QIcon(utils.getAbosluteResourcePath('images/' + ('light' if isLightTheme else 'dark') + '/icon.png')))
+        self.setWindowIcon(QIcon(utils.getAbsoluteResourcePath('images/' + ('light' if isLightTheme else 'dark') + '/icon.png')))
 
-        clientButton = QModeButton("Connect to friend", utils.getAbosluteResourcePath('images/client.png'), lambda: self.modeSelected(constants.CLIENT), 150, self)
-        serverButton = QModeButton("Wait for connection", utils.getAbosluteResourcePath('images/server.png'), lambda: self.modeSelected(constants.SERVER), 150, self)
+        clientButton = QModeButton("Connect to friend", utils.getAbsoluteResourcePath('images/client.png'), lambda: self.modeSelected(constants.CLIENT), 150, self)
+        serverButton = QModeButton("Wait for connection", utils.getAbsoluteResourcePath('images/server.png'), lambda: self.modeSelected(constants.SERVER), 150, self)
 
         # Center the buttons horizontally
         hbox = QHBoxLayout()

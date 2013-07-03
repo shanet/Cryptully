@@ -16,7 +16,7 @@ class QWaitingDialog(QDialog):
         self.onCloseSignal.connect(onCloseSlot)
 
         # Create connecting image
-        connMov = QMovie(utils.getAbosluteResourcePath('images/' + ('light' if isLightTheme else 'dark') + '/waiting.gif'))
+        connMov = QMovie(utils.getAbsoluteResourcePath('images/' + ('light' if isLightTheme else 'dark') + '/waiting.gif'))
         connMov.start()
         self.connImg = QLabel(self)
         self.connImg.setMovie(connMov)
