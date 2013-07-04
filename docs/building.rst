@@ -100,12 +100,13 @@ OS X
 1. Install Homebrew from http://mxcl.github.io/homebrew (it's the easiest way to get the dependencies)
 2. Run ``$ brew doctor`` to make sure everything is okay. You'll probably need to install the
    OS X Command Line Tools.
-3. `$ brew install python` (OS X comes with a version of Python, but it's best to use the homebrew version)
-4. `$ brew install pyqt`
+3. ``$ brew install python`` (OS X comes with a version of Python, but it's best to use the homebrew version)
+4. ``$ brew install pyqt``
 5. Download the relevant M2Crpyto .egg for your version of OS X from http://chandlerproject.org/Projects/MeTooCrypto#Downloads
-6. Copy the M2Crypto .egg to `/usr/local/bin/python2.7/site-packages`
+6. Copy the M2Crypto .egg to ``/usr/local/bin/python2.7/site-packages``
 7. Download and extract PyInstaller from http://www.pyinstaller.org **At the time of this writing
-   the development version of PyInstaller must be used!**
+   the development version of PyInstaller must be used!** Stable version 2.0 will not work. Future stable
+   versions may or may not.
 
 It's probably a good idea to do the sanity check as described in the sanity check above at this point.
 
