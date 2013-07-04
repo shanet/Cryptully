@@ -65,7 +65,7 @@ From here you may either build a standalone executable, or a deb file.
 
 Standalone executable:
 
-4. ``$ python make.py package /path/to/pyinstaller/``
+4. ``$ python make.py dist /path/to/pyinstaller/``
 
 deb package:
 
@@ -91,7 +91,7 @@ Windows
 It's probably a good idea to do the sanity check as described in the sanity check above at this point.
 
 8. ``cd \path\to\cryptully\``
-9. ``python make.py package \path\to\pyinstaller\``
+9. ``python make.py dist \path\to\pyinstaller\``
 
 If everything went as intended, the packaged application should be in ``dist\``.
 
@@ -113,7 +113,7 @@ OS X
 It's probably a good idea to do the sanity check as described in the sanity check above at this point.
 
 8. ``cd /path/to/cryptully/``
-9. ``python make.py package /path/to/pyinstaller/``
+9. ``python make.py dist /path/to/pyinstaller/``
 
 If everything went as intended, the packaged application should be in ``dist\``.
 

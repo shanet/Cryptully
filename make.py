@@ -15,7 +15,7 @@ def clean():
 
 arg = sys.argv[1] if len(sys.argv) >= 2 else None
 
-if arg == 'package':
+if arg == 'dist':
     if len(sys.argv) == 3:
         pyinstallerPath = sys.argv[2]
     else:
