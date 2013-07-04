@@ -60,16 +60,7 @@ will most likely be different.
 1. ``$ apt-get install python-dev python-qt4-dev python-m2crypto python-stdeb``
 2. Download and extract PyInstaller from http://www.pyinstaller.org.
 3. ``$ cd /path/to/cryptully/``
-
-From here you may either build a standalone executable, or a deb file.
-
-Standalone executable:
-
 4. ``$ python make.py dist /path/to/pyinstaller/``
-
-deb package:
-
-4. ``$ python make.py deb``
 
 If everything went as intended, the packaged application should be in ``dist/``.
 
