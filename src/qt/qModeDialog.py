@@ -1,12 +1,15 @@
 import os
 import signal
 
-import qtUtils
+from qLinkLabel import QLinkLabel
 from qModeButton import QModeButton
+import qtUtils
 
+from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QDialog
 from PyQt4.QtGui import QHBoxLayout
 from PyQt4.QtGui import QIcon
+from PyQt4.QtGui import QVBoxLayout
 
 from utils import constants
 from utils import utils
@@ -24,6 +27,8 @@ class QModeDialog(QDialog):
         clientButton = QModeButton("Connect to friend", utils.getAbsoluteResourcePath('images/client.png'), lambda: self.modeSelected(constants.CLIENT), 150, self)
         serverButton = QModeButton("Wait for connection", utils.getAbsoluteResourcePath('images/server.png'), lambda: self.modeSelected(constants.SERVER), 150, self)
 
+        helpLink = QLinkLabel("Confused? Read the docs.", "https://cryptully.readthedocs.org/en/latest/", self)
+
         # Center the buttons horizontally
         hbox = QHBoxLayout()
         hbox.addStretch(1)
@@ -32,7 +37,12 @@ class QModeDialog(QDialog):
         hbox.addWidget(serverButton)
         hbox.addStretch(1)
 
-        self.setLayout(hbox)
+        # Add the help link to the bottom left corner
+        vbox = QVBoxLayout()
+        vbox.addLayout(hbox)
+        vbox.addWidget(helpLink)
+
+        self.setLayout(vbox)
 
         qtUtils.centerWindow(self, 500, 200)
 

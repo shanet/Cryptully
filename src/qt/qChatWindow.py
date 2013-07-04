@@ -4,6 +4,7 @@ import sys
 
 import qtUtils
 from qFingerprintDialog import QFingerprintDialog
+from qHelpDialog import QHelpDialog
 
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QFontMetrics
@@ -209,7 +210,7 @@ class QChatWindow(QMainWindow):
 
 
     def __showHelpDialog(self):
-        QMessageBox.information(QWidget(), "Help", "Help not implemented yet.")
+        QHelpDialog(self).show()
 
 
     def __exit(self):

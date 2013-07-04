@@ -348,7 +348,7 @@ class NcursesUI(object):
                 try:
                     CursesFingerprintDialog(self.screen, self.crypto.getLocalFingerprint(), self.crypto.getRemoteFingerprint()).show()
                 except exceptions.CryptoError:
-                    CursesDialog(self.screen, "Public key(s) not available yet.", isBlocking=True).show()
+                    CursesDialog(self.screen, "Public key(s) not generated/received yet.", isBlocking=True).show()
             elif pos == 3:
                 passphrase = self.getKeypairPassphrase(True)
                 utils.saveKeypair(self.crypto, passphrase)
@@ -357,7 +357,7 @@ class NcursesUI(object):
                 utils.clearKeypair()
                 CursesDialog(self.screen, "Keypair cleared", isBlocking=True).show()
             elif pos == 5:
-                CursesDialog(self.screen, "Not implemented yet", isBlocking=True).show()
+                CursesDialog(self.screen, "Read the docs at https://cryptully.readthedocs.org/en/latest/", isBlocking=True).show()
             elif pos == 6:
                 break
             elif pos == 7:
