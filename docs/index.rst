@@ -73,11 +73,17 @@ Contents
    usage
    building
 
-----------
-Contribute
-----------
+------------
+Contributing
+------------
 
-If you would like contribute to |project|, see the building page on how to set up a build environment
-and get the source code.
+For non-programmers:
 
-Any issues encountered may be reported at https://github.com/shanet/Cryptully/issues.
+Even if you're not writing code, you can still help! Submitting any issues or problems you run into
+at https://github.com/shanet/Cryptully/issues or by emailing shane@shanetully. Even for something like
+a section in the documentation not being as clear as it could be or just a typo.
+
+For programmers:
+
+If you would like contribute to |project|, see the :ref:`downloads` page on how to set up a build environment
+and get the source code. Please any issues encountered at https://github.com/shanet/Cryptully/issues.
