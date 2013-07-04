@@ -9,6 +9,8 @@ def clean():
     try:
         shutil.rmtree('build')
         shutil.rmtree('dist')
+        shutil.rmtree('deb_dist')
+        shutil.rmtree('Cryptully.egg-info')
         os.unlink('logdict2.7.4.final.0-1.log')
     except OSError:
         pass
