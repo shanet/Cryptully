@@ -13,6 +13,18 @@ Introduction
 |project| is an encrypted chat program meant for secure conversations between two people
 with no knowledge of cryptography needed.
 
+.. image:: images/chatting.png
+
+--------
+Features
+--------
+
+* Provides basic encrypted chat with no requisite knowledge of cryptography
+* Runs on Linux, Windows, and Mac OS X
+* Ability to set own RSA keys
+* Graphical UI and command line (Curses) UI
+* Open source (LGPL license)
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 How does it work and how is it secure?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -24,16 +36,6 @@ with before leaving your computer and then decrypted on your friend's computer. 
 no one is listening in on your conversation, the fingerprints of the encryption keys are provided.
 You can use this to verify with your friend that no one is listening. More on this in the usage
 section though.
-
---------
-Features
---------
-
-* Provides basic encrypted chat with no requisite knowledge of cryptography
-* Runs on Linux, Windows, and Mac OS X
-* Ability to set own RSA keys
-* Graphical UI and command line (Curses) UI
-* Open source (LGPL license)
 
 -----------
 Quick Start
