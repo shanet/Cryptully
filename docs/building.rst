@@ -1,4 +1,4 @@
-Building Cryptully
+Building |project|
 ==================
 
 --------------
@@ -39,7 +39,7 @@ If you got any errors, something isn't right.
 Running Directly
 ----------------
 
-Cryptully is, after all, a Python script so you can run it without packaging it into anything fancy.
+|project| is, after all, a Python script so you can run it without packaging it into anything fancy.
 Just do::
 
     $ python src/cryptully.py
