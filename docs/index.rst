@@ -41,7 +41,7 @@ section though.
 Quick Start
 -----------
 
-1. Download the executable for your platform on the downloads page.
+1. Download the executable for your platform on the :ref:`downloads` page.
 2. Launch the executable (no need to install anything).
 3. One person selects "Wait for connection" (make sure port 9000 is forwarded if necessary).
 4. The other person selects "Connect to friend" and enters the IP address to connect to.
