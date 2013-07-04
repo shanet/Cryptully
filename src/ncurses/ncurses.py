@@ -181,13 +181,13 @@ class NcursesUI(object):
 
             self.screen.refresh()
             key = optionsWindow.getch()
-            if key == curses.KEY_DOWN and pos == constants.SERVER:
-                pos = constants.CLIENT
-            elif key == curses.KEY_UP and pos == constants.CLIENT:
-                pos = constants.SERVER
             # Enter key
-            elif key == ord('\n'):
+            if key == ord('\n'):
                 break
+            elif pos == constants.SERVER:
+                pos = constants.CLIENT
+            elif pos == constants.CLIENT:
+                pos = constants.SERVER
 
         # Re-enable the cursor
         curses.curs_set(2)
@@ -224,13 +224,13 @@ class NcursesUI(object):
 
             self.screen.refresh()
             key = acceptWindow.getch()
-            if key == curses.KEY_DOWN and pos == ACCEPT:
-                pos = REJECT
-            elif key == curses.KEY_UP and pos == REJECT:
-                pos = ACCEPT
             # Enter key
-            elif key == ord('\n'):
+            if key == ord('\n'):
                 break
+            elif pos == ACCEPT:
+                pos = REJECT
+            elif pos == REJECT:
+                pos = ACCEPT
 
         # Re-enable the cursor
         curses.curs_set(2)
@@ -333,6 +333,12 @@ class NcursesUI(object):
                     pos += 1
                 elif key == curses.KEY_UP and pos > 1:
                     pos -= 1
+                # Wrap around from top of menu
+                elif key == curses.KEY_UP and pos == 1:
+                    pos = (7 if showStartOption else 6)
+                # Wrap around from bottom of menu
+                elif key == curses.KEY_DOWN and pos == (7 if showStartOption else 6):
+                    pos = 1
                 # Enter key
                 elif key == ord('\n'):
                     break
