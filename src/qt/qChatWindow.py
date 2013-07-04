@@ -77,10 +77,11 @@ class QChatWindow(QMainWindow):
         # Title and icon
         self.setWindowTitle("Cryptully")
         self.setWindowIcon(QIcon(utils.getAbsoluteResourcePath('images/' + ('light' if isLightTheme else 'dark') + '/icon.png')))
-        self.statusBar().showMessage("Connected to 127.0.0.1")
+        self.statusBar().showMessage("Not Connected")
 
 
     def showNowChattingMessage(self):
+        self.statusBar().showMessage("Connected to " + self.sock.getHostname())
         self.appendMessage("You are now securely chatting with " + self.sock.getHostname() + " :)",
                            constants.SERVICE, showTimestamp=False)
 
