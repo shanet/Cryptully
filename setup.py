@@ -10,13 +10,13 @@ setup(
     author_email='shane@shanetully.com',
     url='https://github.com/shanet/Cryptully',
     license='LGPL3',
-    description='An encrypted client/server chat program for those that don\'t know crypto',
+    description='An encrypted chat program for those that don\'t know crypto',
     packages=find_packages(),
     package_data={
         'cryptully': ['src/images/*']
     },
     install_requires=[
-        'PyQt4',
+        'Qt4',
         'M2Crypto'
     ],
 )
