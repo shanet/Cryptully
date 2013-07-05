@@ -104,7 +104,10 @@ class NcursesUI(object):
             utils.doServerHandshake(self.sock)
         except exceptions.NetworkError as ne:
             self.sock.disconnect()
-            CursesDialog(self.screen, "Network Error", str(ne), isError=True).show()
+            CursesDialog(self.screen, str(ne), "Network Error", isError=True).show()
+        except exceptions.CryptoError as ce:
+            self.sock.disconnect()
+            CursesDialog(self.screen, str(ce), "Crypto Error", isError=True).show()
 
 
     def connectToServer(self):
@@ -115,16 +118,20 @@ class NcursesUI(object):
             self.sock = EncSocket((self.host, self.port), crypto=self.crypto)
             self.sock.connect()
         except exceptions.GenericError as ge:
-            CursesDialog(self.screen, "Error connecting to server", str(ge), isError=True).show()
+            CursesDialog(self.screen, str(ge), "Error connecting to server", isError=True).show()
 
-        # Do the handshake with the client
+        # Do the handshake with the server
         try:
             utils.doClientHandshake(self.sock)
             dialogWindow.hide()
         except exceptions.NetworkError as ne:
             self.sock.disconnect()
             dialogWindow.hide()
-            CursesDialog(self.screen, "Network Error", str(ne), isError=True).show()
+            CursesDialog(self.screen, str(ne), "Network Error", isError=True).show()
+        except exceptions.CryptoError as ce:
+            self.sock.disconnect()
+            dialogWindow.hide()
+            CursesDialog(self.screen, str(ce), "Crypto Error", isError=True).show()
 
 
     def handleNewConnection(self):

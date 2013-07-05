@@ -243,7 +243,7 @@ class CursesRecvThread(Thread):
             # Check if the client requested to end the connection
             if response == "__END__":
                 self.ncurses.sock.disconnect()
-                CursesDialog(self.ncurses.chatWindow, "Connection Terminated", "The client requested to end the connection", isError=True).show()
+                CursesDialog(self.ncurses.chatWindow, "The client requested to end the connection", "Connection Terminated", isError=True).show()
 
             # Put the received data in the chat window
             timestamp = utils.getTimestamp()
