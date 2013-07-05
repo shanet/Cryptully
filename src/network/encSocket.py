@@ -67,8 +67,6 @@ class EncSocket(object):
             else:
                 raise exceptions.ServerError("Unknown encryption type.")
 
-        # Add a newline to all outgoing data so that any line buffers are flushed
-        data += '\n'
         dataLength = len(data)
 
         # Send the length of the message (int converted to network byte order and padded to 32 bytes)
@@ -98,9 +96,6 @@ class EncSocket(object):
 
         # Receive the actual data
         data = self._recv(dataLength)
-
-        # Remove the newline at the end of the data
-        data = data[:-1]
 
         # Decrypt the incoming data
         if self.encryptType is not None:
