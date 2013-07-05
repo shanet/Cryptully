@@ -1,8 +1,8 @@
 Cryptully
 =========
 
-Shane Tully (shane@shanetully.com)
-shanetully.com
+### Shane Tully (shane@shanetully.com)
+### shanetully.com
 
 An encrypted chat program for those that don't know crypto.
 
