@@ -142,16 +142,16 @@ Command Line Options (advanced)
 
 Advanced users may utilize command line options of |project|::
 
-usage: cryptully-linux [-h] [-p [PORT]] [-s] [-c] [-n] [host]
+  usage: cryptully-linux [-h] [-p [PORT]] [-s] [-c] [-n] [host]
 
-positional arguments:
-  host                  The host to connect to (if client)
+  positional arguments:
+    host                  The host to connect to (if client)
 
-optional arguments:
-  -h, --help            show this help message and exit
-  -p [PORT], --port [PORT]
-                        Port to connect listen on (server) or connect to
-                        (client).
-  -s, --server          Run as server.
-  -c, --client          Run as client.
-  -n, --ncurses         Use the NCurses UI.
+  optional arguments:
+    -h, --help            show this help message and exit
+    -p [PORT], --port [PORT]
+                          Port to connect listen on (server) or connect to
+                          (client).
+    -s, --server          Run as server.
+    -c, --client          Run as client.
+    -n, --ncurses         Use the NCurses UI.

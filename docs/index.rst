@@ -34,7 +34,7 @@ data is relayed between those two computer directly (no intermediate servers). W
 starts it generates encryption keys (2048bit RSA and 256bit AES) that all communications are encrypted
 with before leaving your computer and then decrypted on your friend's computer. Further, to ensure that
 no one is listening in on your conversation, the fingerprints of the encryption keys are provided.
-You can use this to verify with your friend that no one is listening. More on this in the usage
+You can use this to verify with your friend that no one is listening. More on this in the :ref:`using-|project|`
 section though.
 
 -----------
