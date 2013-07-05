@@ -135,3 +135,23 @@ To save your encryption keys:
    read to you section" with the one you originally exchanged with them.
 
 If you ever want to generate new encryption keys, just select "Clear keys" from the options menu.
+
+-------------------------------
+Command Line Options (advanced)
+-------------------------------
+
+Advanced users may utilize command line options of |project|::
+
+usage: cryptully-linux [-h] [-p [PORT]] [-s] [-c] [-n] [host]
+
+positional arguments:
+  host                  The host to connect to (if client)
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -p [PORT], --port [PORT]
+                        Port to connect listen on (server) or connect to
+                        (client).
+  -s, --server          Run as server.
+  -c, --client          Run as client.
+  -n, --ncurses         Use the NCurses UI.
