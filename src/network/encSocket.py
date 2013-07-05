@@ -1,6 +1,6 @@
-import sys
 import time
 import socket
+import sys
 
 from utils.crypto import Crypto
 from utils import exceptions
@@ -81,9 +81,8 @@ class EncSocket(object):
 
             sentLen += amountSent
 
-        # Sleep for 10ms to ensure that the system has time to send the data
-        # in the case of this function being called in rapid succession
-        time.sleep(.05)
+            # Sleep for 10ms to ensure that the system has time to send the data
+            time.sleep(.05)
 
 
     def recv(self):
