@@ -1,10 +1,8 @@
 Cryptully
 =========
 
-### Shane Tully (shane@shanetully.com)
-### shanetully.com
-
-An encrypted chat program for those that don't know crypto.
+### An encrypted chat program for those that don't know crypto.
+### Shane Tully (shane@shanetully.com / shanetully.com)
 
 ## Quick Start
 
