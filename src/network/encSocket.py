@@ -69,9 +69,16 @@ class EncSocket(object):
 
         # Add a newline to all outgoing data so that any line buffers are flushed
         data += '\n'
-        length = len(data)
+        dataLength = len(data)
 
-        # Send the data until the proper number of bytes sent is reached
+        # Send the length of the message (int converted to network byte order and padded to 32 bytes)
+        self._send(str('%32s' % socket.htonl(dataLength)), 32)
+
+        # Send the actual data
+        self._send(data, dataLength)
+
+
+    def _send(self, data, length):
         sentLen = 0
         while sentLen < length:
             amountSent = self.sock.send(data[sentLen:])
@@ -81,29 +88,44 @@ class EncSocket(object):
 
             sentLen += amountSent
 
-            # Sleep for 10ms to ensure that the system has time to send the data
-            time.sleep(.05)
-
 
     def recv(self):
+        # Receive the length of the incoming message
         try:
-            # Recieve the actual data
-            data = self.sock.recv(4096)
+            dataLength = socket.ntohl(int(self._recv(32)))
+        except ValueError:
+            raise exceptions.NetworkError("Remote sent unexpected data")
 
-            if data == '':
-                raise exceptions.NetworkError("Remote unexpectedly closed connection")
+        # Receive the actual data
+        data = self._recv(dataLength)
 
-            # Remove the newline at the end of the data
-            data = data[:-1]
+        # Remove the newline at the end of the data
+        data = data[:-1]
 
-            # Decrypt the incoming data
-            if self.encryptType is not None:
-                if self.encryptType == self.RSA:
-                    data = self.crypto.rsaDecrypt(data)
-                elif self.encryptType == self.AES:
-                    data = self.crypto.aesDecrypt(data)
-                else:
-                    raise exceptions.ServerError("Unknown encryption type.")
+        # Decrypt the incoming data
+        if self.encryptType is not None:
+            if self.encryptType == self.RSA:
+                data = self.crypto.rsaDecrypt(data)
+            elif self.encryptType == self.AES:
+                data = self.crypto.aesDecrypt(data)
+            else:
+                raise exceptions.ServerError("Unknown encryption type.")
+
+        return data
+
+
+    def _recv(self, length):
+        try:
+            data = ''
+            recvLen = 0
+            while recvLen < length:
+                newData = self.sock.recv(length-recvLen)
+
+                if newData == '':
+                    raise exceptions.NetworkError("Remote unexpectedly closed connection")
+
+                data = data + newData
+                recvLen += len(newData)
 
             return data
         except socket.error as se:
