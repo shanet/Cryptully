@@ -234,8 +234,9 @@ class CursesRecvThread(Thread):
             try:
                 response = self.ncurses.sock.recv()
             except exceptions.NetworkError as ne:
-                self.ncurses.sock.disconnect()
-                CursesDialog(self.ncurses.chatWindow, str(ne), "Network Error", isError=True).show()
+                self.networkError(ne)
+            except exceptions.CryptoError as ce:
+                self.networkError(ne)
 
             mutex.acquire()
 
@@ -257,3 +258,8 @@ class CursesRecvThread(Thread):
             self.ncurses.textboxWindow.refresh()
 
             mutex.release()
+
+
+    def networkError(self, error):
+        self.ncurses.sock.disconnect()
+        CursesDialog(self.ncurses.chatWindow, str(error), "Network Error", isError=True).show()
