@@ -80,13 +80,13 @@ class Client(object):
             # Send the ready command
             self.sendMessage(constants.COMMAND_REDY)
 
-            # Send the server's public key
-            serverPublicKey = self.sock.crypto.getLocalPubKeyAsString()
-            self.sendMessage(constants.COMMAND_PUBLIC_KEY, serverPublicKey)
-
             # Receive the client's public key
             clientPublicKey = self.receiveMessage(constants.COMMAND_PUBLIC_KEY)
             self.sock.crypto.setRemotePubKey(clientPublicKey)
+
+            # Send the server's public key
+            serverPublicKey = self.sock.crypto.getLocalPubKeyAsString()
+            self.sendMessage(constants.COMMAND_PUBLIC_KEY, serverPublicKey)
 
             # Switch to RSA encryption to exchange the AES key, IV, and salt
             self.sock.setEncryptionType(self.sock.RSA)
@@ -117,13 +117,13 @@ class Client(object):
             # Receive the redy command
             self.receiveMessage(constants.COMMAND_REDY)
 
-            # Receive the server's public key
-            serverPublicKey = self.receiveMessage(constants.COMMAND_PUBLIC_KEY)
-            self.sock.crypto.setRemotePubKey(serverPublicKey)
-
             # Send the client's public key
             clientPublicKey = self.sock.crypto.getLocalPubKeyAsString()
             self.sendMessage(constants.COMMAND_PUBLIC_KEY, clientPublicKey)
+
+            # Receive the server's public key
+            serverPublicKey = self.receiveMessage(constants.COMMAND_PUBLIC_KEY)
+            self.sock.crypto.setRemotePubKey(serverPublicKey)
 
             # Switch to RSA encryption to receive the AES key, IV, and salt
             self.sock.setEncryptionType(self.sock.RSA)
