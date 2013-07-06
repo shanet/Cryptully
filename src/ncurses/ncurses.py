@@ -174,10 +174,10 @@ class NcursesUI(object):
 
         optionsWindow.addstr(1, 1, "Run as:")
 
-        pos = constants.SERVER
+        pos = constants.MODE_SERVER
 
         while True:
-            if pos == constants.SERVER:
+            if pos == constants.MODE_SERVER:
                 optionsWindow.addstr(3, 2, "Server", curses.color_pair(4))
                 optionsWindow.addstr(4, 2, "Client")
             else:
@@ -189,10 +189,10 @@ class NcursesUI(object):
             # Enter key
             if key == ord('\n'):
                 break
-            elif pos == constants.SERVER:
-                pos = constants.CLIENT
-            elif pos == constants.CLIENT:
-                pos = constants.SERVER
+            elif pos == constants.MODE_SERVER:
+                pos = constants.MODE_CLIENT
+            elif pos == constants.MODE_CLIENT:
+                pos = constants.MODE_SERVER
 
         # Re-enable the cursor
         curses.curs_set(2)
