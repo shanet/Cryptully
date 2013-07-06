@@ -38,14 +38,13 @@ class QtRecvThread(QThread):
                 message = self.client.receiveMessage(constants.COMMAND_MSG)
 
                 # Send the message to the given callback
-                #qtUtils.runOnUIThread(self.recvSlot, message, constants.RECEIVER)
                 self.recvSignal.emit(message, constants.RECEIVER, True)
             except exceptions.ProtocolEnd:
-                self.client.disconnect()
                 self.errorSignal.emit(errors.TITLE_END_CONNECTION, errors.CLIENT_ENDED_CONNECTION)
                 return
             except (exceptions.NetworkError, exceptions.CryptoError) as e:
-                handleNetworkError(self.client, self.errorSignal, e)
+                self.errorSignal.emit(errors.TITLE_NETWORK_ERROR, str(e))
+                return
 
 
 class QtSendThread(QThread):
@@ -66,8 +65,9 @@ class QtSendThread(QThread):
 
             try:
                 self.client.sendMessage(constants.COMMAND_MSG, message)
-            except exceptions.NetworkError as ne:
-                handleNetworkError(self.client, self.errorSignal, ne)
+            except (exceptions.NetworkError, exceptions.CryptoError) as e:
+                self.errorSignal.emit(errors.TITLE_NETWORK_ERROR, str(e))
+                return
             finally:
                 # Mark the operation as done
                 self.messageQueue.task_done()
@@ -148,12 +148,3 @@ class GetIPAddressThread(QThread):
             httpConnection.close()
         except Exception as e:
             self.failureSignal.emit(e)
-
-
-def handleNetworkError(client, signal, error):
-    try:
-        client.disconnect()
-    except Exception:
-        pass
-    finally:
-        signal.emit(errors.TITLE_NETWORK_ERROR, str(error))

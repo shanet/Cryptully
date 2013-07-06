@@ -35,6 +35,8 @@ class QtUI(QApplication):
         self.connectedToClient = False
         self.isLightTheme = qtUtils.isLightTheme(self.palette().color(QPalette.Window))
 
+        self.aboutToQuit.connect(self.stop)
+
 
     def start(self):
         self.timer = QTimer()
@@ -74,6 +76,7 @@ class QtUI(QApplication):
 
     def stop(self):
         self.__endConnections()
+        self.quit()
 
 
     def __restart(self):
@@ -83,6 +86,17 @@ class QtUI(QApplication):
 
 
     def __endConnections(self):
+        if hasattr(self, 'acceptThread'):
+            self.acceptThread.quit()
+        elif hasattr(self, 'connectThread'):
+            self.connectThread.quit()
+
+        if hasattr(self, 'sendThread'):
+            self.sendThread.quit()
+
+        if hasattr(self, 'recvThread'):
+            self.recvThread.quit()
+
         # If a client is connected, try to end the connection gracefully
         if hasattr(self, 'client'):
             self.client.disconnect()
@@ -95,28 +109,13 @@ class QtUI(QApplication):
         self.mode = None
         self.host = None
 
-        if hasattr(self, 'acceptThread'):
-            self.acceptThread.quit()
-            del self.acceptThread
-        elif hasattr(self, 'connectThread'):
-            self.connectThread.quit()
-            del self.connectThread
-
-        if hasattr(self, 'sendThread'):
-            self.sendThread.quit()
-            del self.sendThread
-
-        if hasattr(self, 'recvThread'):
-            self.recvThread.quit()
-            del self.recvThread
-
-        if hasattr(self, 'client'):
-            del self.client
-
         self.closeAllWindows()
 
         if hasattr(self, 'waitingDialog'):
             del self.waitingDialog
+
+        if hasattr(self, 'chatWindow'):
+            del self.chatWindow
 
 
     def __loadOrGenerateKepair(self):

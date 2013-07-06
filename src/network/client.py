@@ -9,13 +9,9 @@ class Client(object):
         self.mode = mode
         self.sock = EncSocket(clientAddr, clientSock, crypto)
         self.disconnectOnError = disconnectOnError
-        self.isStarted = False
 
 
     def sendMessage(self, command, payload=''):
-        if command == constants.COMMAND_HELO:
-            self.isStarted = True
-
         self.sock.send(command + constants.COMMAND_SEPARATOR + payload)
 
 
@@ -54,7 +50,7 @@ class Client(object):
 
 
     def disconnect(self):
-        if self.isStarted:
+        if self.sock.isConnected:
             try:
                 self.sendMessage(constants.COMMAND_END)
             except Exception:
@@ -77,11 +73,11 @@ class Client(object):
         # Fail if there are any protocol errors during the handshake
         self.disconnectOnError = True
 
-        # Send the hello command
-        self.sendMessage(constants.COMMAND_HELO)
+        # Receive the hello command
+        self.receiveMessage(constants.COMMAND_HELO)
 
-        # Receive the redy command
-        self.receiveMessage(constants.COMMAND_REDY)
+        # Send the ready command
+        self.sendMessage(constants.COMMAND_REDY)
 
         # Send the server's public key
         serverPublicKey = self.sock.crypto.getLocalPubKeyAsString()
@@ -110,11 +106,11 @@ class Client(object):
         # Fail if there are any protocol errors during the handshake
         self.disconnectOnError = True
 
-        # Receive the hello command
-        self.receiveMessage(constants.COMMAND_HELO)
+        # Send the hello command
+        self.sendMessage(constants.COMMAND_HELO)
 
-        # Send the ready command
-        self.sendMessage(constants.COMMAND_REDY)
+        # Receive the redy command
+        self.receiveMessage(constants.COMMAND_REDY)
 
         # Receive the server's public key
         serverPublicKey = self.receiveMessage(constants.COMMAND_PUBLIC_KEY)
