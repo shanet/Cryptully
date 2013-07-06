@@ -208,6 +208,10 @@ class QChatWindow(QMainWindow):
 
 
     def __showSaveKeypairDialog(self):
+        if utils.doesSavedKeypairExist():
+            QMessageBox.warning(self, "Keys Already Saved", "The current encryption keys have already been saved.")
+            return
+
         QMessageBox.information(self, "Save Keys", "For extra security, your encryption keys will be protected with a passphrase. You'll need to enter this each time you start the app.")
         passphrase = qtUtils.getKeypairPassphrase(self.isLightTheme, parent=self, verify=True, showForgotButton=False)
 
