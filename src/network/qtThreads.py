@@ -75,21 +75,24 @@ class QtSendThread(QThread):
 
 class QtServerAcceptThread(QThread):
     successSignal = pyqtSignal(Client)
+    failureSignal = pyqtSignal(str)
 
-    def __init__(self, server, crypto, successSlot):
+    def __init__(self, server, crypto, successSlot, failureSlot):
         QThread.__init__(self)
 
         self.server = server
         self.crypto = crypto
         self.successSignal.connect(successSlot)
+        self.failureSignal.connect(failureSlot)
 
 
     def run(self):
         try:
             client = self.server.accept(self.crypto)
             self.successSignal.emit(client)
-        except socket.error:
-            pass
+        except socket.error as se:
+            self.server.disconnect()
+            self.failureSignal.emit(str(se))
 
 
 class QtServerConnectThread(QThread):

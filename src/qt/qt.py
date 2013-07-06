@@ -147,11 +147,12 @@ class QtUI(QApplication):
             self.server.start(int(self.port))
         except exceptions.NetworkError as ne:
             QMessageBox.critical(self.chatWindow, errors.FAILED_TO_START_SERVER, errors.FAILED_TO_START_SERVER + ": " + str(ne))
+            self.__restart()
 
 
     def __waitForClient(self):
         # Start the accept thread
-        self.acceptThread = qtThreads.QtServerAcceptThread(self.server, self.crypto, self.__postAccept)
+        self.acceptThread = qtThreads.QtServerAcceptThread(self.server, self.crypto, self.__postAccept, self.__acceptFailure)
         self.acceptThread.start()
 
         # Show the waiting dialog
@@ -195,6 +196,12 @@ class QtUI(QApplication):
             self.__waitForClient()
 
         self.__startChat()
+
+
+    @pyqtSlot(str)
+    def __acceptFailure(self, errorMessage):
+        QMessageBox.critical(self.chatWindow, errors.FAILED_TO_ACCEPT_CLIENT, errorMessage)
+        self.__restart()
 
 
     @pyqtSlot()
