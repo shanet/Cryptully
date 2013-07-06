@@ -45,5 +45,3 @@ class QFingerprintDialog(QDialog):
         vbox.addStretch(1)
 
         self.setLayout(vbox)
-
-        qtUtils.centerWindow(self, 500, 200)

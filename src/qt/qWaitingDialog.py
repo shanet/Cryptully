@@ -61,8 +61,6 @@ class QWaitingDialog(QDialog):
 
         self.setLayout(vbox)
 
-        qtUtils.centerWindow(self, 500 if showIP else 250, 150 if showIP else 100)
-
         if showIP:
             # Start the thread to get the IP address and update the IP label when finished
             self.ipThread = qtThreads.GetIPAddressThread(self.__setIPAddress, self.__getIPAddressFailure)

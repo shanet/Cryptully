@@ -16,6 +16,7 @@ from PyQt4.QtGui import QApplication
 from PyQt4.QtGui import QInputDialog
 from PyQt4.QtGui import QMessageBox
 from PyQt4.QtGui import QPalette
+from PyQt4.QtGui import QWidget
 
 from utils import constants
 from utils import errors
@@ -70,8 +71,8 @@ class QtUI(QApplication):
             self.__connectToServer()
 
         if not self.isEventLoopRunning:
-            self.exec_()
             self.isEventLoopRunning = True
+            self.exec_()
 
 
     def stop(self):
@@ -152,12 +153,12 @@ class QtUI(QApplication):
 
     def __waitForClient(self):
         # Start the accept thread
-        self.acceptThread = qtThreads.QtServerAcceptThread(self.server, self.crypto, self.__postAccept, self.__acceptFailure)
+        self.acceptThread = qtThreads.QtServerAcceptThread(self.server, self.crypto, self.__postAccept)
         self.acceptThread.start()
 
         # Show the waiting dialog
         self.waitingDialog = QWaitingDialog(self.chatWindow, "Waiting for connection...", self.isLightTheme, self.__userClosedWaitingDialog, showIP=True)
-        self.waitingDialog.exec_()
+        self.waitingDialog.show()
 
 
     def __connectToServer(self):
@@ -170,7 +171,7 @@ class QtUI(QApplication):
 
         # Show the waiting dialog
         self.waitingDialog = QWaitingDialog(self.chatWindow, "Connecting to server...", self.isLightTheme, self.__userClosedWaitingDialog)
-        self.waitingDialog.exec_()
+        self.waitingDialog.show()
 
 
     @pyqtSlot(Client)
@@ -196,12 +197,6 @@ class QtUI(QApplication):
             self.__waitForClient()
 
         self.__startChat()
-
-
-    @pyqtSlot(str)
-    def __acceptFailure(self, errorMessage):
-        QMessageBox.critical(self.chatWindow, errors.FAILED_TO_ACCEPT_CLIENT, errorMessage)
-        self.__restart()
 
 
     @pyqtSlot()

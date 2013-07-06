@@ -15,14 +15,19 @@ from qPassphraseDialog import QPassphraseDialog
 from utils import constants
 from utils import utils
 
+
 invoker = qInvoker.Invoker()
 
-def centerWindow(window, width, height):
-    window.setGeometry(0, 0, width, height)
+
+def centerWindow(window):
     centerPoint = QDesktopWidget().availableGeometry().center()
     geo = window.frameGeometry()
     geo.moveCenter(centerPoint)
     window.move(geo.topLeft())
+
+
+def resizeWindow(window, width, height):
+    window.setGeometry(0, 0, width, height)
 
 
 def getKeypairPassphrase(isLightTheme, parent=None, verify=False, showForgotButton=True):

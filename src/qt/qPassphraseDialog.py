@@ -58,8 +58,6 @@ class QPassphraseDialog(QDialog):
 
         self.setLayout(vbox)
 
-        qtUtils.centerWindow(self, 350, 130)
-
 
     def buttonClicked(self, button):
         self.passphrase = self.passphraseInput.text()

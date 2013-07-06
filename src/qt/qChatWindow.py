@@ -74,7 +74,8 @@ class QChatWindow(QMainWindow):
         self.centralWidget.setLayout(vboxLayout)
         self.setCentralWidget(self.centralWidget)
 
-        qtUtils.centerWindow(self, 700, 400)
+        qtUtils.resizeWindow(self, 700, 400)
+        qtUtils.centerWindow(self)
 
         # Title and icon
         self.setWindowTitle("Cryptully")

@@ -44,7 +44,8 @@ class QModeDialog(QDialog):
 
         self.setLayout(vbox)
 
-        qtUtils.centerWindow(self, 500, 200)
+        qtUtils.resizeWindow(self, 500, 200)
+        qtUtils.centerWindow(self)
 
 
     def modeSelected(self, mode):
