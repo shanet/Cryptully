@@ -209,7 +209,12 @@ class QChatWindow(QMainWindow):
 
     def __showSaveKeypairDialog(self):
         QMessageBox.information(self, "Save Keys", "For extra security, your encryption keys will be protected with a passphrase. You'll need to enter this each time you start the app.")
-        passphrase = qtUtils.getKeypairPassphrase(self.isLightTheme, None, parent=self, verify=True, showForgotButton=False)
+        passphrase = qtUtils.getKeypairPassphrase(self.isLightTheme, parent=self, verify=True, showForgotButton=False)
+
+        # Return if the user did not provide a passphrase
+        if passphrase is None:
+            return
+
         utils.saveKeypair(self.client.sock.crypto, passphrase)
         QMessageBox.information(QWidget(), "Keys Saved", "Encryption keys saved. The current keys will be used for all subsequent connections.")
 

@@ -25,24 +25,24 @@ def centerWindow(window, width, height):
     window.move(geo.topLeft())
 
 
-def getKeypairPassphrase(isLightTheme, cancelCallback, parent=None, verify=False, showForgotButton=True):
+def getKeypairPassphrase(isLightTheme, parent=None, verify=False, showForgotButton=True):
     if parent is None:
         parent = QWidget()
 
     while True:
-        passphrase, button = QPassphraseDialog.getPassphrase(isLightTheme, verify, showForgotButton)
+        passphrase, button = QPassphraseDialog.getPassphrase(isLightTheme, False, showForgotButton)
         if button == constants.BUTTON_CANCEL:
-            cancelCallback()
+            return
         if button == constants.BUTTON_FORGOT:
             clearKeypair(parent)
-            cancelCallback()
+            return
 
         if not verify:
             return passphrase
 
         verifyPassphrase, button = QPassphraseDialog.getPassphrase(isLightTheme, verify, showForgotButton)
         if button == constants.BUTTON_CANCEL:
-            exitApp()
+            return
 
         if passphrase == verifyPassphrase:
             return passphrase

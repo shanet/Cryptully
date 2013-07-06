@@ -122,7 +122,13 @@ class QtUI(QApplication):
         self.crypto = Crypto()
         if utils.doesSavedKeypairExist():
             while(True):
-                passphrase = qtUtils.getKeypairPassphrase(self.isLightTheme, self.__restart)
+                passphrase = qtUtils.getKeypairPassphrase(self.isLightTheme)
+
+                # Restart the application if the user did not provide a passphrase
+                if passphrase is None:
+                    self.__restart()
+                    return
+
                 try:
                     utils.loadKeypair(self.crypto, passphrase)
                     break
