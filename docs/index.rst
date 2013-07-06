@@ -72,6 +72,7 @@ Contents
    downloads
    usage
    building
+   protocol
 
 ------------
 Contributing
