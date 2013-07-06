@@ -21,13 +21,14 @@ from utils import utils
 
 
 class QtRecvThread(QThread):
+    recvSignal = pyqtSignal(str, int, bool)
     errorSignal = pyqtSignal(str, str)
 
-    def __init__(self, client, recvCallback, errorSlot):
+    def __init__(self, client, recvSlot, errorSlot):
         QThread.__init__(self)
 
         self.client = client
-        self.recvCallback = recvCallback
+        self.recvSignal.connect(recvSlot)
         self.errorSignal.connect(errorSlot)
 
 
@@ -37,7 +38,8 @@ class QtRecvThread(QThread):
                 message = self.client.receiveMessage(constants.COMMAND_MSG)
 
                 # Send the message to the given callback
-                self.recvCallback(message, constants.RECEIVER)
+                #qtUtils.runOnUIThread(self.recvSlot, message, constants.RECEIVER)
+                self.recvSignal.emit(message, constants.RECEIVER, True)
             except exceptions.ProtocolEnd:
                 self.client.disconnect()
                 self.errorSignal.emit(errors.TITLE_END_CONNECTION, errors.CLIENT_ENDED_CONNECTION)

@@ -6,6 +6,7 @@ import qtUtils
 from qFingerprintDialog import QFingerprintDialog
 from qHelpDialog import QHelpDialog
 
+from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QFontMetrics
 from PyQt4.QtGui import QAction
@@ -111,6 +112,7 @@ class QChatWindow(QMainWindow):
         self.appendMessage(message, constants.SENDER)
 
 
+    @pyqtSlot(str, int, bool)
     def appendMessage(self, message, source, showTimestamp=True):
         if showTimestamp:
             timestamp = utils.getTimestamp()
@@ -119,12 +121,19 @@ class QChatWindow(QMainWindow):
 
         color = self.__getColor(source)
 
+        # If the user has scrolled up (current value != maximum), do not move the scrollbar
+        # to the bottom after appending the message
+        shouldScroll = True
+        scrollbar = self.chatLog.verticalScrollBar()
+        if scrollbar.value() != scrollbar.maximum() and source != constants.SENDER:
+            shouldScroll = False
+
         # Append the message to the end of the chat log
         self.chatLog.append(timestamp + '<font color="' + color + '">' + message + "</font>")
 
         # Move the vertical scrollbar to the bottom of the chat log
-        scrollbar = self.chatLog.verticalScrollBar()
-        scrollbar.setValue(scrollbar.maximum() + scrollbar.pageStep())
+        if shouldScroll:
+            scrollbar.setValue(scrollbar.maximum())
 
 
     def __getColor(self, source):
