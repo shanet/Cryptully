@@ -73,30 +73,34 @@ class Client(object):
         # Fail if there are any protocol errors during the handshake
         self.disconnectOnError = True
 
-        # Receive the hello command
-        self.receiveMessage(constants.COMMAND_HELO)
+        try:
+            # Receive the hello command
+            self.receiveMessage(constants.COMMAND_HELO)
 
-        # Send the ready command
-        self.sendMessage(constants.COMMAND_REDY)
+            # Send the ready command
+            self.sendMessage(constants.COMMAND_REDY)
 
-        # Send the server's public key
-        serverPublicKey = self.sock.crypto.getLocalPubKeyAsString()
-        self.sendMessage(constants.COMMAND_PUBLIC_KEY, serverPublicKey)
+            # Send the server's public key
+            serverPublicKey = self.sock.crypto.getLocalPubKeyAsString()
+            self.sendMessage(constants.COMMAND_PUBLIC_KEY, serverPublicKey)
 
-        # Receive the client's public key
-        clientPublicKey = self.receiveMessage(constants.COMMAND_PUBLIC_KEY)
-        self.sock.crypto.setRemotePubKey(clientPublicKey)
+            # Receive the client's public key
+            clientPublicKey = self.receiveMessage(constants.COMMAND_PUBLIC_KEY)
+            self.sock.crypto.setRemotePubKey(clientPublicKey)
 
-        # Switch to RSA encryption to exchange the AES key, IV, and salt
-        self.sock.setEncryptionType(self.sock.RSA)
+            # Switch to RSA encryption to exchange the AES key, IV, and salt
+            self.sock.setEncryptionType(self.sock.RSA)
 
-        # Send the AES key, IV, and salt
-        self.sendMessage(constants.COMMAND_AES_KEY, self.sock.crypto.aesKey)
-        self.sendMessage(constants.COMMAND_AES_IV, self.sock.crypto.aesIv)
-        self.sendMessage(constants.COMMAND_AES_SALT, self.sock.crypto.aesSalt)
+            # Send the AES key, IV, and salt
+            self.sendMessage(constants.COMMAND_AES_KEY, self.sock.crypto.aesKey)
+            self.sendMessage(constants.COMMAND_AES_IV, self.sock.crypto.aesIv)
+            self.sendMessage(constants.COMMAND_AES_SALT, self.sock.crypto.aesSalt)
 
-        # Switch to AES encryption for the remainder of the connection
-        self.sock.setEncryptionType(self.sock.AES)
+            # Switch to AES encryption for the remainder of the connection
+            self.sock.setEncryptionType(self.sock.AES)
+        except exceptions.ProtocolEnd:
+            self.isConnected = False
+            self.disconnect()
 
         # No longer fail on fail on protocol error
         self.disconnectOnError = False
@@ -106,34 +110,38 @@ class Client(object):
         # Fail if there are any protocol errors during the handshake
         self.disconnectOnError = True
 
-        # Send the hello command
-        self.sendMessage(constants.COMMAND_HELO)
+        try:
+            # Send the hello command
+            self.sendMessage(constants.COMMAND_HELO)
 
-        # Receive the redy command
-        self.receiveMessage(constants.COMMAND_REDY)
+            # Receive the redy command
+            self.receiveMessage(constants.COMMAND_REDY)
 
-        # Receive the server's public key
-        serverPublicKey = self.receiveMessage(constants.COMMAND_PUBLIC_KEY)
-        self.sock.crypto.setRemotePubKey(serverPublicKey)
+            # Receive the server's public key
+            serverPublicKey = self.receiveMessage(constants.COMMAND_PUBLIC_KEY)
+            self.sock.crypto.setRemotePubKey(serverPublicKey)
 
-        # Send the client's public key
-        clientPublicKey = self.sock.crypto.getLocalPubKeyAsString()
-        self.sendMessage(constants.COMMAND_PUBLIC_KEY, clientPublicKey)
+            # Send the client's public key
+            clientPublicKey = self.sock.crypto.getLocalPubKeyAsString()
+            self.sendMessage(constants.COMMAND_PUBLIC_KEY, clientPublicKey)
 
-        # Switch to RSA encryption to receive the AES key, IV, and salt
-        self.sock.setEncryptionType(self.sock.RSA)
+            # Switch to RSA encryption to receive the AES key, IV, and salt
+            self.sock.setEncryptionType(self.sock.RSA)
 
-        # Receive the AES key
-        self.sock.crypto.aesKey = self.receiveMessage(constants.COMMAND_AES_KEY)
+            # Receive the AES key
+            self.sock.crypto.aesKey = self.receiveMessage(constants.COMMAND_AES_KEY)
 
-        # Receive the AES IV
-        self.sock.crypto.aesIv = self.receiveMessage(constants.COMMAND_AES_IV)
+            # Receive the AES IV
+            self.sock.crypto.aesIv = self.receiveMessage(constants.COMMAND_AES_IV)
 
-        # Receive the AES salt
-        self.sock.crypto.aesSalt = self.receiveMessage(constants.COMMAND_AES_SALT)
+            # Receive the AES salt
+            self.sock.crypto.aesSalt = self.receiveMessage(constants.COMMAND_AES_SALT)
 
-        # Switch to AES encryption for the remainder of the connection
-        self.sock.setEncryptionType(self.sock.AES)
+            # Switch to AES encryption for the remainder of the connection
+            self.sock.setEncryptionType(self.sock.AES)
+        except exceptions.ProtocolEnd:
+            self.isConnected = False
+            self.disconnect()
 
         # No longer fail on fail on protocol error
         self.disconnectOnError = False
