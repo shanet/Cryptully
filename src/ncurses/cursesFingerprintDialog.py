@@ -16,7 +16,7 @@ class CursesFingerprintDialog(CursesDialog):
     def show(self):
         (height, width) = self.screen.getmaxyx()
 
-        dialogWidth = len(max(self.serverFingerprint, self.clientFingerprint)) + 2
+        dialogWidth = max(len(self.serverFingerprint), len(self.clientFingerprint)) + 2
         dialogHeight = 11
 
         self.dialogWindow = self.screen.subwin(dialogHeight, dialogWidth, height/2 - int(dialogHeight/2), width/2 - int(dialogWidth/2))
