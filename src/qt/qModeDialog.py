@@ -24,8 +24,8 @@ class QModeDialog(QDialog):
         self.setWindowTitle("Cryptully")
         self.setWindowIcon(QIcon(utils.getAbsoluteResourcePath('images/' + ('light' if isLightTheme else 'dark') + '/icon.png')))
 
-        clientButton = QModeButton("Connect to friend", utils.getAbsoluteResourcePath('images/client.png'), lambda: self.modeSelected(constants.CLIENT), 150, self)
-        serverButton = QModeButton("Wait for connection", utils.getAbsoluteResourcePath('images/server.png'), lambda: self.modeSelected(constants.SERVER), 150, self)
+        clientButton = QModeButton("Connect to friend", utils.getAbsoluteResourcePath('images/client.png'), lambda: self.modeSelected(constants.MODE_CLIENT), 150, self)
+        serverButton = QModeButton("Wait for connection", utils.getAbsoluteResourcePath('images/server.png'), lambda: self.modeSelected(constants.MODE_SERVER), 150, self)
 
         helpLink = QLinkLabel("Confused? Read the docs.", "https://cryptully.readthedocs.org/en/latest/", self)
 

@@ -1,8 +1,8 @@
 import sys
 
+from network.client import Client
 from network.server import Server
-from network.encSocket import EncSocket
-from network import threads
+from network import qtThreads
 
 from qAcceptDialog import QAcceptDialog
 from qChatWindow import QChatWindow
@@ -10,17 +10,18 @@ from qModeDialog import QModeDialog
 import qtUtils
 from qWaitingDialog import QWaitingDialog
 
-from PyQt4.QtCore import QTimer
 from PyQt4.QtCore import pyqtSlot
+from PyQt4.QtCore import QTimer
 from PyQt4.QtGui import QApplication
 from PyQt4.QtGui import QInputDialog
 from PyQt4.QtGui import QMessageBox
 from PyQt4.QtGui import QPalette
 
 from utils import constants
-from utils.crypto import Crypto
+from utils import errors
 from utils import exceptions
 from utils import utils
+from utils.crypto import Crypto
 
 
 class QtUI(QApplication):
@@ -30,10 +31,9 @@ class QtUI(QApplication):
         self.mode = mode
         self.port = port
         self.host = host
+        self.isEventLoopRunning = False
         self.connectedToClient = False
         self.isLightTheme = qtUtils.isLightTheme(self.palette().color(QPalette.Window))
-
-        self.aboutToQuit.connect(self.stop)
 
 
     def start(self):
@@ -44,11 +44,9 @@ class QtUI(QApplication):
         # Show mode dialog if a mode wasn't given
         if self.mode is None:
             self.mode = QModeDialog.getMode(self.isLightTheme)
-            # If the user closed the mode dialog by not selected a mode,
-            # stop the application
+            # If the user closed the mode dialog by not selected a mode, stop the app
             if self.mode is None:
-                self.stop()
-                return
+                qtUtils.exitApp()
 
         # Show the chat window
         self.chatWindow = QChatWindow(None, None, self.isLightTheme)
@@ -56,10 +54,10 @@ class QtUI(QApplication):
 
         self.__loadOrGenerateKepair()
 
-        if self.mode == constants.SERVER:
+        if self.mode == constants.MODE_SERVER:
             self.__startServer()
             self.__waitForClient()
-        elif self.mode == constants.CLIENT:
+        elif self.mode == constants.MODE_CLIENT:
             # Get the host if not given
             if self.host is None:
                 self.host, ok = QInputDialog.getText(self.chatWindow, "Hostname", "Host:")
@@ -69,37 +67,56 @@ class QtUI(QApplication):
 
             self.__connectToServer()
 
-        self.exec_()
+        if not self.isEventLoopRunning:
+            self.exec_()
+            self.isEventLoopRunning = True
 
 
     def stop(self):
-        print "Cleaning up..."
-        self.__stopHelper()
-        self.quit()
+        self.__endConnections()
 
 
     def __restart(self):
-        self.__stopHelper()
+        self.__endConnections()
+        self.__restartHelper()
         self.start()
 
 
-    def __stopHelper(self):
+    def __endConnections(self):
         # If a client is connected, try to end the connection gracefully
-        if hasattr(self, 'sock') and self.sock.isConnected:
-            self.sock.send("__END__")
-            self.sock.disconnect()
+        if hasattr(self, 'client'):
+            self.client.disconnect()
 
-        if hasattr(self, 'server') and self.server.isStarted:
+        if hasattr(self, 'server'):
             self.server.stop()
+
+
+    def __restartHelper(self):
+        self.mode = None
+        self.host = None
 
         if hasattr(self, 'acceptThread'):
             self.acceptThread.quit()
+            del self.acceptThread
         elif hasattr(self, 'connectThread'):
             self.connectThread.quit()
+            del self.connectThread
 
-        self.mode = None
-        self.host = None
+        if hasattr(self, 'sendThread'):
+            self.sendThread.quit()
+            del self.sendThread
+
+        if hasattr(self, 'recvThread'):
+            self.recvThread.quit()
+            del self.recvThread
+
+        if hasattr(self, 'client'):
+            del self.client
+
         self.closeAllWindows()
+
+        if hasattr(self, 'waitingDialog'):
+            del self.waitingDialog
 
 
     def __loadOrGenerateKepair(self):
@@ -111,7 +128,7 @@ class QtUI(QApplication):
                     utils.loadKeypair(self.crypto, passphrase)
                     break
                 except exceptions.CryptoError:
-                    QMessageBox.warning(self.chatWindow, "Wrong passphrase", "An incorrect passphrase was entered")
+                    QMessageBox.warning(self.chatWindow, errors.BAD_PASSPHRASE, errors.BAD_PASSPHRASE_VERBOSE)
 
             # We still need to generate an AES key
             self.crypto.generateAESKey()
@@ -124,12 +141,12 @@ class QtUI(QApplication):
             self.server = Server()
             self.server.start(int(self.port))
         except exceptions.NetworkError as ne:
-            QMessageBox.critical(self.chatWindow, "Error starting server", "Error starting server: " + str(ne))
+            QMessageBox.critical(self.chatWindow, errors.FAILED_TO_START_SERVER, errors.FAILED_TO_START_SERVER + ": " + str(ne))
 
 
     def __waitForClient(self):
         # Start the accept thread
-        self.acceptThread = threads.QtServerAcceptThread(self.server, self.crypto, self.__postAccept)
+        self.acceptThread = qtThreads.QtServerAcceptThread(self.server, self.crypto, self.__postAccept)
         self.acceptThread.start()
 
         # Show the waiting dialog
@@ -138,11 +155,11 @@ class QtUI(QApplication):
 
 
     def __connectToServer(self):
-        # Create the socket to use for the connection
-        self.sock = EncSocket((self.host, self.port), crypto=self.crypto)
+        # Create the client object to use for the connection
+        self.client = Client(constants.MODE_CLIENT, (self.host, self.port), crypto=self.crypto)
 
         # Start the connect thread
-        self.connectThread = threads.QtServerConnectThread(self.sock, self.__postConnect, self.__connectFailure)
+        self.connectThread = qtThreads.QtServerConnectThread(self.client, self.__postConnect, self.__connectFailure)
         self.connectThread.start()
 
         # Show the waiting dialog
@@ -150,32 +167,32 @@ class QtUI(QApplication):
         self.waitingDialog.exec_()
 
 
-    @pyqtSlot(EncSocket)
-    def __postAccept(self, sock):
+    @pyqtSlot(Client)
+    def __postAccept(self, client):
         self.connectedToClient = True
-        self.sock = sock
+        self.client = client
         self.waitingDialog.close()
 
         # Show the accept dialog
-        accept = QAcceptDialog.getAnswer(self.chatWindow, self.sock.getHostname())
+        accept = QAcceptDialog.getAnswer(self.chatWindow, self.client.getHostname())
 
         # If not accepted, disconnect and wait for a client again
         if not accept:
-            self.sock.disconnect()
+            self.client.disconnect()
             self.__waitForClient()
             return
 
         # Do the handshake with the client
         try:
-            utils.doServerHandshake(self.sock)
+            client.doHandshake()
         except exceptions.NetworkError as ne:
-            self.sock.disconnect()
+            self.client.disconnect()
             self.__waitForClient()
 
         self.__startChat()
 
 
-    @pyqtSlot(EncSocket)
+    @pyqtSlot()
     def __postConnect(self):
         self.connectedToClient = True
         self.waitingDialog.close()
@@ -184,7 +201,7 @@ class QtUI(QApplication):
 
     @pyqtSlot(str)
     def __connectFailure(self, errorMessage):
-        QMessageBox.critical(self.chatWindow, "Error connecting to server", errorMessage)
+        QMessageBox.critical(self.chatWindow, errors.FAILED_TO_CONNECT, errorMessage)
         self.__restart()
 
 
@@ -199,12 +216,12 @@ class QtUI(QApplication):
 
     def __startChat(self):
         # Start the sending and receiving thread
-        self.recvThread = threads.QtRecvThread(self.sock, self.chatWindow.appendMessage, self.__threadError)
+        self.recvThread = qtThreads.QtRecvThread(self.client, self.chatWindow.appendMessage, self.__threadError)
         self.recvThread.start()
-        self.sendThread = threads.QtSendThread(self.sock, self.__threadError)
+        self.sendThread = qtThreads.QtSendThread(self.client, self.__threadError)
         self.sendThread.start()
 
-        self.chatWindow.sock = self.sock
+        self.chatWindow.client = self.client
         self.chatWindow.messageQueue = self.sendThread.messageQueue
         self.chatWindow.showNowChattingMessage()
 

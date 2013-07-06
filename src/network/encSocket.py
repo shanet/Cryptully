@@ -3,6 +3,7 @@ import socket
 import sys
 
 from utils.crypto import Crypto
+from utils import errors
 from utils import exceptions
 from utils import utils
 
@@ -47,8 +48,8 @@ class EncSocket(object):
     def disconnect(self):
         try:
             self.sock.shutdown(socket.SHUT_RDWR)
-            self.sock.close()
-        except socket.error:
+            self.socket.close()
+        except Exception:
             pass
         finally:
             self.isConnected = False
@@ -65,7 +66,7 @@ class EncSocket(object):
             elif self.encryptType == self.AES:
                 data = self.crypto.aesEncrypt(data)
             else:
-                raise exceptions.ServerError("Unknown encryption type.")
+                raise exceptions.ServerError(errors.UNKNOWN_ENCRYPTION_TYPE)
 
         dataLength = len(data)
 
@@ -79,10 +80,13 @@ class EncSocket(object):
     def _send(self, data, length):
         sentLen = 0
         while sentLen < length:
-            amountSent = self.sock.send(data[sentLen:])
+            try:
+                amountSent = self.sock.send(data[sentLen:])
+            except socket.error, IOError:
+                raise exceptions.NetworkError(errors.UNEXPECTED_CLOSE_CONNECTION)
 
             if amountSent == 0:
-                raise exceptions.NetworkError("Remote unexpectedly closed connection")
+                raise exceptions.NetworkError(errors.UNEXPECTED_CLOSE_CONNECTION)
 
             sentLen += amountSent
 
@@ -92,7 +96,7 @@ class EncSocket(object):
         try:
             dataLength = socket.ntohl(int(self._recv(32)))
         except ValueError:
-            raise exceptions.NetworkError("Remote sent unexpected data")
+            raise exceptions.NetworkError(errors.UNEXPECTED_DATA)
 
         # Receive the actual data
         data = self._recv(dataLength)
@@ -104,7 +108,7 @@ class EncSocket(object):
             elif self.encryptType == self.AES:
                 data = self.crypto.aesDecrypt(data)
             else:
-                raise exceptions.ServerError("Unknown encryption type.")
+                raise exceptions.ServerError(errors.UNKNOWN_ENCRYPTION_TYPE)
 
         return data
 
@@ -117,7 +121,7 @@ class EncSocket(object):
                 newData = self.sock.recv(length-recvLen)
 
                 if newData == '':
-                    raise exceptions.NetworkError("Remote unexpectedly closed connection")
+                    raise exceptions.NetworkError(errors.UNEXPECTED_CLOSE_CONNECTION)
 
                 data = data + newData
                 recvLen += len(newData)

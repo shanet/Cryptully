@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 import curses
 import curses.ascii
 import curses.textpad
@@ -13,11 +11,12 @@ from getpass import getpass
 from cursesFingerprintDialog import CursesFingerprintDialog
 from cursesDialog import CursesDialog
 
-from network.encSocket import EncSocket
+from network.client import Client
+from network import ncursesThreads
 from network.server import Server
-from network import threads
 
 from utils import constants
+from utils import errors
 from utils import exceptions
 from utils import utils
 from utils.crypto import Crypto
@@ -38,11 +37,10 @@ class NcursesUI(object):
 
     def stop(self):
         # If a client is connected, try to end the connection gracefully
-        if hasattr(self, 'sock') and self.sock.isConnected:
-            self.sock.send("__END__")
-            self.sock.disconnect()
+        if hasattr(self, 'client'):
+            self.client.disconnect()
 
-        if hasattr(self, 'server') and self.server.isStarted:
+        if hasattr(self, 'server'):
             self.server.stop()
 
 
@@ -71,10 +69,10 @@ class NcursesUI(object):
         if self.mode == None:
             self.showOptionsWindow()
 
-        if self.mode == constants.SERVER:
+        if self.mode == constants.MODE_SERVER:
             self.startServer()
             self.waitForClient()
-        elif self.mode == constants.CLIENT:
+        elif self.mode == constants.MODE_CLIENT:
             # Get the host if not given
             if self.host == None:
                 self.getHost()
@@ -89,7 +87,7 @@ class NcursesUI(object):
             dialogWindow = CursesDialog(self.screen, "Waiting for connection...")
             dialogWindow.show()
 
-            self.sock = self.server.accept(self.crypto)
+            self.client = self.server.accept(self.crypto)
 
             dialogWindow.hide()
 
@@ -97,17 +95,17 @@ class NcursesUI(object):
             if self.showAcceptWindow() == ACCEPT:
                 break
             else:
-                self.sock.disconnect()
+                self.client.disconnect()
 
         # Do the handshake with the client
         try:
-            utils.doServerHandshake(self.sock)
+            self.client.doHandshake()
         except exceptions.NetworkError as ne:
-            self.sock.disconnect()
-            CursesDialog(self.screen, str(ne), "Network Error", isError=True).show()
+            CursesDialog(self.screen, str(ne), errors.TITLE_NETWORK_ERROR, isError=True).show()
+            self.client.disconnect()
         except exceptions.CryptoError as ce:
-            self.sock.disconnect()
-            CursesDialog(self.screen, str(ce), "Crypto Error", isError=True).show()
+            CursesDialog(self.screen, str(ce), errors.TITLE_CRYPTO_ERROR, isError=True).show()
+            self.client.disconnect()
 
 
     def connectToServer(self):
@@ -115,23 +113,23 @@ class NcursesUI(object):
             dialogWindow = CursesDialog(self.screen, "Connecting to server...", "", False)
             dialogWindow.show()
 
-            self.sock = EncSocket((self.host, self.port), crypto=self.crypto)
-            self.sock.connect()
+            self.client = Client(constants.MODE_CLIENT, (self.host, self.port), crypto=self.crypto)
+            self.client.connect()
         except exceptions.GenericError as ge:
-            CursesDialog(self.screen, str(ge), "Error connecting to server", isError=True).show()
+            CursesDialog(self.screen, str(ge), errors.FAILED_TO_CONNECT, isError=True).show()
 
         # Do the handshake with the server
         try:
-            utils.doClientHandshake(self.sock)
+            self.client.doHandshake()
             dialogWindow.hide()
         except exceptions.NetworkError as ne:
-            self.sock.disconnect()
+            self.client.disconnect()
             dialogWindow.hide()
-            CursesDialog(self.screen, str(ne), "Network Error", isError=True).show()
+            CursesDialog(self.screen, str(ne), errors.TITLE_NETWORK_ERROR, isError=True).show()
         except exceptions.CryptoError as ce:
-            self.sock.disconnect()
+            self.client.disconnect()
             dialogWindow.hide()
-            CursesDialog(self.screen, str(ce), "Crypto Error", isError=True).show()
+            CursesDialog(self.screen, str(ce), errors.TITLE_CRYPTO_ERROR, isError=True).show()
 
 
     def handleNewConnection(self):
@@ -151,8 +149,8 @@ class NcursesUI(object):
 
 
     def startThreads(self):
-        threads.CursesSendThread(self).start()
-        threads.CursesRecvThread(self).start()
+        ncursesThreads.CursesSendThread(self).start()
+        ncursesThreads.CursesRecvThread(self).start()
 
 
     def setColors(self):
@@ -207,7 +205,7 @@ class NcursesUI(object):
 
 
     def showAcceptWindow(self):
-        dialogWidth = 23 + len(self.sock.getHostname());
+        dialogWidth = 23 + len(self.client.getHostname());
         acceptWindow = self.screen.subwin(6, dialogWidth, self.height/2 - 3, self.width/2 - int(dialogWidth/2))
         acceptWindow.border(0)
 
@@ -217,7 +215,7 @@ class NcursesUI(object):
         # Disable the cursor
         curses.curs_set(0)
 
-        acceptWindow.addstr(1, 1, "Got connection from %s" % self.sock.getHostname())
+        acceptWindow.addstr(1, 1, "Got connection from %s" % self.client.getHostname())
 
         pos = ACCEPT
 
@@ -292,7 +290,7 @@ class NcursesUI(object):
     def setStatusWindow(self):
         self.statusWindow.clear()
         self.statusWindow.border(0)
-        self.statusWindow.addstr(1, 1, self.sock.getHostname())
+        self.statusWindow.addstr(1, 1, self.client.getHostname())
         self.statusWindow.refresh()
 
 
@@ -301,7 +299,7 @@ class NcursesUI(object):
             self.server = Server()
             self.server.start(int(self.port))
         except exceptions.NetworkError as ne:
-            CursesDialog(screen, "Error starting server", str(ne), isError=True).show()
+            CursesDialog(screen, errors.FAILED_TO_START_SERVER, str(ne), isError=True).show()
 
 
     def showOptionsMenuWindow(self, showStartOption=False):
@@ -414,7 +412,7 @@ class NcursesUI(object):
                 break
             else:
                 curses.cbreak()
-                CursesDialog(self.screen, "Passphrases do not match", '', isBlocking=True).show()
+                CursesDialog(self.screen, errors.VERIFY_PASSPHRASE_FAILED, '', isBlocking=True).show()
                 curses.nocbreak()
 
         # Turn off echo and disable buffering
@@ -437,7 +435,7 @@ class NcursesUI(object):
                     utils.loadKeypair(self.crypto, passphrase)
                     break
                 except exceptions.CryptoError:
-                    CursesDialog(self.screen, "Wrong passphrase", '', isBlocking=True).show()
+                    CursesDialog(self.screen, errors.BAD_PASSPHRASE, '', isBlocking=True).show()
 
             # We still need to generate an AES key
             self.crypto.generateAESKey()

@@ -5,48 +5,6 @@ from time import localtime
 from time import strftime
 
 
-def doServerHandshake(sock):
-    # Send the server's public key
-    localPubKey = sock.crypto.getLocalPubKeyAsString()
-    sock.send(localPubKey)
-
-    # Receive the client's public key
-    remotePubKey = sock.recv()
-    sock.crypto.setRemotePubKey(remotePubKey)
-
-    # Switch to RSA encryption to exchange the AES key, IV, and salt
-    sock.setEncryptionType(sock.RSA)
-
-    # Send the AES key, IV, and salt
-    sock.send(sock.crypto.aesKey)
-    sock.send(sock.crypto.aesIv)
-    sock.send(sock.crypto.aesSalt)
-
-    # Switch to AES encryption for the remainder of the connection
-    sock.setEncryptionType(sock.AES)
-
-
-def doClientHandshake(sock):
-    # Receive the server's public key
-    remotePubKey = sock.recv()
-    sock.crypto.setRemotePubKey(remotePubKey)
-
-    # Send the client's public key
-    localPubKey = sock.crypto.getLocalPubKeyAsString()
-    sock.send(localPubKey)
-
-    # Switch to RSA encryption to receive the AES key, IV, and salt
-    sock.setEncryptionType(sock.RSA)
-
-    # Receive the AES key, IV, and salt
-    sock.crypto.aesKey  = sock.recv()
-    sock.crypto.aesIv   = sock.recv()
-    sock.crypto.aesSalt = sock.recv()
-
-    # Switch to AES encryption for the remainder of the connection
-    sock.setEncryptionType(sock.AES)
-
-
 def saveKeypair(crypto, passphrase):
     # Cast passphrase to a stringto avoid any strange types
     passphrase = str(passphrase)

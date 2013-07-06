@@ -9,6 +9,8 @@ class NetworkError(Exception):
 class ProtocolError(Exception):
     pass
 
+class ProtocolEnd(Exception):
+    pass
 
 class CryptoError(Exception):
     pass

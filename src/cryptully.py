@@ -9,21 +9,20 @@ from utils import constants
 from ncurses.ncurses import NcursesUI
 from qt.qt import QtUI
 
+ncursesUI = None
+qtUI = None
 
 def main():
     args = parse_cmdline_args()
 
     signal.signal(signal.SIGINT, signalHandler)
 
-    global ncursesUI
-    global qtUI
-    ncursesUI = None
-    qtUI = None
-
     if args.ncurses:
+        global ncursesUI
         ncursesUI = NcursesUI(args.mode, args.port, args.host)
         ncursesUI.start()
     else:
+        global qtUI
         qtUI = QtUI(sys.argv, args.mode, args.port, args.host)
         qtUI.start()
 
@@ -42,9 +41,9 @@ def parse_cmdline_args():
 
     # Set the mode from the client and server command line args. If neither were specified, let the UI ask the user later
     if args.client:
-        args.mode = constants.CLIENT
+        args.mode = constants.MODE_CLIENT
     elif args.server:
-        args.mode = constants.SERVER
+        args.mode = constants.MODE_SERVER
     else:
         args.mode = None
 

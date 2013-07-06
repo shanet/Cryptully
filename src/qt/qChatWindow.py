@@ -27,10 +27,10 @@ from utils import utils
 
 
 class QChatWindow(QMainWindow):
-    def __init__(self, sock, messageQueue, isLightTheme):
+    def __init__(self, client, messageQueue, isLightTheme):
         QMainWindow.__init__(self)
 
-        self.sock = sock
+        self.client = client
         self.messageQueue = messageQueue
         self.isLightTheme = isLightTheme
 
@@ -82,8 +82,8 @@ class QChatWindow(QMainWindow):
 
 
     def showNowChattingMessage(self):
-        self.statusBar().showMessage("Connected to " + self.sock.getHostname())
-        self.appendMessage("You are now securely chatting with " + self.sock.getHostname() + " :)",
+        self.statusBar().showMessage("Connected to " + self.client.getHostname())
+        self.appendMessage("You are now securely chatting with " + self.client.getHostname() + " :)",
                            constants.SERVICE, showTimestamp=False)
 
         self.appendMessage("It's a good idea to verify the communcation is secure by selecting"
@@ -195,13 +195,13 @@ class QChatWindow(QMainWindow):
 
 
     def __showFingerprintDialog(self):
-        QFingerprintDialog(self.sock.crypto).exec_()
+        QFingerprintDialog(self.client.sock.crypto).exec_()
 
 
     def __showSaveKeypairDialog(self):
         QMessageBox.information(self, "Save Keys", "For extra security, your encryption keys will be protected with a passphrase. You'll need to enter this each time you start the app.")
         passphrase = qtUtils.getKeypairPassphrase(self.isLightTheme, None, parent=self, verify=True, showForgotButton=False)
-        utils.saveKeypair(self.sock.crypto, passphrase)
+        utils.saveKeypair(self.client.sock.crypto, passphrase)
         QMessageBox.information(QWidget(), "Keys Saved", "Encryption keys saved. The current keys will be used for all subsequent connections.")
 
 
