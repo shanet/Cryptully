@@ -1,0 +1,3 @@
+import cryptully
+
+cryptully.main()
