@@ -9,8 +9,6 @@ from PyQt4.QtGui  import QVBoxLayout
 
 from qLine import QLine
 
-from utils import constants
-
 
 class QFingerprintDialog(QDialog):
     def __init__(self, crypto):
