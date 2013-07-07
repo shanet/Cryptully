@@ -6,12 +6,29 @@ import subprocess
 import sys
 
 def clean():
+    deleteDirectory('build')
+    deleteDirectory('dist')
+    deleteDirectory('deb_dist')
+    deleteDirectory('Cryptully.egg-info')
+    deleteFile('logdict2.7.4.final.0-1.log')
+
+
+def deleteDirectory(path):
     try:
-        shutil.rmtree('build')
-        shutil.rmtree('dist')
-        os.unlink('logdict2.7.4.final.0-1.log')
-    except OSError:
-        pass
+        shutil.rmtree(path)
+    except OSError as ose:
+        # Ignore 'no such file or directory' errors
+        if ose.errno != 2:
+            print ose
+
+
+def deleteFile(path):
+    try:
+        os.unlink(path)
+    except OSError as ose:
+        if ose.errno != 2:
+            print ose
+
 
 arg = sys.argv[1] if len(sys.argv) >= 2 else None
 
@@ -36,9 +53,14 @@ elif arg == 'install':
 elif arg == 'source':
     subprocess.call(['python', 'setup.py', 'sdist'])
 
+elif arg == 'run':
+    subprocess.call(['python', '-m', 'cryptully.cryptully'])
+
+elif arg == 'test':
+    subprocess.call(['python', '-m', 'cryptully.tests.runTests'])
+
 elif arg == 'clean':
     clean()
 
 else:
-    print "Invalid option"
-    print "Possible options: package, deb, rpm, install, source, clean"
+    print "Invalid option\nPossible options: package, deb, rpm, install, source, run, test, clean"
