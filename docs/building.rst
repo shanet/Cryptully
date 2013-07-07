@@ -44,11 +44,11 @@ Running Directly
 |project| is, after all, a Python script so you can run it without packaging it into anything fancy.
 Just do::
 
-    $ python src/cryptully.py
+    $ python cryptully/cryptully.py
 
 You can also check out all the command line options with::
 
-    $ python src/cryptully.py --help
+    $ python cryptully/cryptully.py --help
 
 -----
 Linux
@@ -107,6 +107,13 @@ It's probably a good idea to do the sanity check as described in the sanity chec
 9. ``python make.py dist /path/to/pyinstaller/``
 
 If everything went as intended, the packaged application should be in ``dist\``.
+
+----------
+Unit Tests
+----------
+
+Coming soon.
+
 
 -------------
 Documentation
