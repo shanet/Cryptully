@@ -54,10 +54,10 @@ elif arg == 'source':
     subprocess.call(['python', 'setup.py', 'sdist'])
 
 elif arg == 'run':
-    subprocess.call(['python', '-m', 'cryptully.cryptully'])
+    subprocess.call(['python', os.path.join('cryptully', 'cryptully.py')])
 
 elif arg == 'test':
-    subprocess.call(['python', '-m', 'cryptully.tests.runTests'])
+    subprocess.call(['python', os.path.join('cryptully', 'tests', 'runTests.py')])
 
 elif arg == 'clean':
     clean()
