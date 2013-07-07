@@ -2,10 +2,6 @@ import os
 import signal
 import sys
 
-import qtUtils
-from qFingerprintDialog import QFingerprintDialog
-from qHelpDialog import QHelpDialog
-
 from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QFontMetrics
@@ -22,6 +18,10 @@ from PyQt4.QtGui import QTextEdit
 from PyQt4.QtGui import QToolButton
 from PyQt4.QtGui import QVBoxLayout
 from PyQt4.QtGui import QWidget
+
+import qtUtils
+from qFingerprintDialog import QFingerprintDialog
+from qHelpDialog import QHelpDialog
 
 from utils import constants
 from utils import utils

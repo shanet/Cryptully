@@ -4,7 +4,7 @@ import Queue
 import signal
 import socket
 
-from network.client import Client
+from client import Client
 
 from PyQt4.QtCore import QCoreApplication
 from PyQt4.QtCore import QThread

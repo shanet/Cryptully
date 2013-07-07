@@ -9,8 +9,10 @@ from utils import constants
 from ncurses.ncurses import NcursesUI
 from qt.qt import QtUI
 
+
 ncursesUI = None
 qtUI = None
+
 
 def main():
     args = parse_cmdline_args()

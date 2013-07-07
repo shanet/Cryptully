@@ -75,10 +75,21 @@ def getAbsoluteResourcePath(relativePath):
         # PyInstaller stores data files in a tmp folder refered to as _MEIPASS
         basePath = sys._MEIPASS
     except Exception:
-        basePath = os.path.abspath('.')
-        # If the resource does not exist in the current directory, try the src directory
-        # This should only apply to running the application non-packaged
-        if not os.path.exists(os.path.join(basePath, relativePath)):
-            relativePath = 'src/' + relativePath
+        # If not running as a PyInstaller created binary, try to find the data file as
+        # an installed Python egg
+        try:
+            basePath = os.path.dirname(sys.modules['cryptully'].__file__)
+        except Exception:
+            basePath = ''
 
-    return os.path.join(basePath, relativePath)
+        # If the egg path does not exist, assume we're running as non-packaged
+        if not os.path.exists(os.path.join(basePath, relativePath)):
+            basePath = 'cryptully'
+
+    path = os.path.join(basePath, relativePath)
+
+    # If the path still doesn't exist, this function won't help you
+    if not os.path.exists(path):
+        return None
+
+    return path

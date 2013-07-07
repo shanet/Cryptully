@@ -1,7 +1,6 @@
 import os
 import signal
 
-import qInvoker
 
 from PyQt4.QtCore import QCoreApplication
 from PyQt4.QtGui  import QDesktopWidget
@@ -11,7 +10,9 @@ from PyQt4.QtGui  import QMessageBox
 from PyQt4.QtGui  import QPixmap
 from PyQt4.QtGui  import QWidget
 
+import qInvoker
 from qPassphraseDialog import QPassphraseDialog
+
 from utils import constants
 from utils import utils
 

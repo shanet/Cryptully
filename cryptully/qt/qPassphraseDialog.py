@@ -1,8 +1,6 @@
 import os
 import signal
 
-import qtUtils
-
 from PyQt4.QtGui import QDialog
 from PyQt4.QtGui import QHBoxLayout
 from PyQt4.QtGui import QIcon
@@ -10,6 +8,8 @@ from PyQt4.QtGui import QLabel
 from PyQt4.QtGui import QLineEdit
 from PyQt4.QtGui import QPushButton
 from PyQt4.QtGui import QVBoxLayout
+
+import qtUtils
 
 from utils import constants
 from utils import utils

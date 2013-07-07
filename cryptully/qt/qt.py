@@ -4,12 +4,6 @@ from network.client import Client
 from network.server import Server
 from network import qtThreads
 
-from qAcceptDialog import QAcceptDialog
-from qChatWindow import QChatWindow
-from qModeDialog import QModeDialog
-import qtUtils
-from qWaitingDialog import QWaitingDialog
-
 from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtCore import QTimer
 from PyQt4.QtGui import QApplication
@@ -17,6 +11,12 @@ from PyQt4.QtGui import QInputDialog
 from PyQt4.QtGui import QMessageBox
 from PyQt4.QtGui import QPalette
 from PyQt4.QtGui import QWidget
+
+from qAcceptDialog import QAcceptDialog
+from qChatWindow import QChatWindow
+from qModeDialog import QModeDialog
+import qtUtils
+from qWaitingDialog import QWaitingDialog
 
 from utils import constants
 from utils import errors

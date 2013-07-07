@@ -1,5 +1,3 @@
-import qtUtils
-
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui  import QDialog
 from PyQt4.QtGui  import QHBoxLayout
@@ -8,6 +6,7 @@ from PyQt4.QtGui  import QLabel
 from PyQt4.QtGui  import QVBoxLayout
 
 from qLine import QLine
+import qtUtils
 
 
 class QFingerprintDialog(QDialog):
