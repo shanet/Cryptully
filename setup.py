@@ -11,7 +11,6 @@ setup(
     url='https://github.com/shanet/Cryptully',
     license='LGPL3',
     description='An encrypted chat program for those that don\'t know crypto',
-    test_suite='cryptully.tests',
     packages=find_packages(),
     package_data={
         'cryptully': ['images/*.png', 'images/light/*.png', 'images/dark/*.png']
