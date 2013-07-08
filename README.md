@@ -4,6 +4,8 @@ Cryptully
 ### An encrypted chat program for those that don't know crypto.
 ### Shane Tully (shane@shanetully.com / shanetully.com)
 
+[![Build Status](https://travis-ci.org/[YOUR_GITHUB_USERNAME]/[YOUR_PROJECT_NAME].png)](https://travis-ci.org/[shanet]/[Cryptully])
+
 ## Quick Start
 
 1. Download the executable for your platform on the releases page.
