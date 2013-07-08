@@ -8,12 +8,15 @@ class Crypto(object):
     DECRYPT = 0;
 
 
-    def __init__(self):
+    def __init__(self, generateKeys=False):
         self.localKeypair  = None
         self.remoteKeypair = None
         self.aesKey        = None
         self.aesIv         = None
         self.aesSalt       = None
+
+        if generateKeys:
+            self.generateKeys()
 
 
     def generateKeys(self, rsaBits=2048, aesMode='aes_256_cbc'):
