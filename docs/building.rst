@@ -112,8 +112,7 @@ If everything went as intended, the packaged application should be in ``dist\``.
 Unit Tests
 ----------
 
-Coming soon.
-
+Units tests are located in the ``cryptully/tests`` directory. Running them is as simple as ``python make.py test``.
 
 -------------
 Documentation
