@@ -10,8 +10,12 @@ before_install:
 # Skip the install stage
 install: true
 
-script: "python cryptully/test_cryptully.py"
+script: "./make.py test"
 
 branches:
   only:
     - master
+
+# Allow M2Crypto to be found
+virtualenv:
+  system_site_packages: true
