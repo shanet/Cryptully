@@ -57,7 +57,7 @@ elif arg == 'run':
     subprocess.call(['python', os.path.join('cryptully', 'cryptully.py')])
 
 elif arg == 'test':
-    subprocess.call(['python', os.path.join('cryptully', 'tests', 'runTests.py')])
+    subprocess.call(['python', os.path.join('cryptully', 'test_cryptully.py')])
 
 elif arg == 'clean':
     clean()
