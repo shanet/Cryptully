@@ -89,7 +89,7 @@ class Client(object):
             self.sendMessage(constants.COMMAND_PUBLIC_KEY, serverPublicKey)
 
             # Switch to RSA encryption to exchange the AES key, IV, and salt
-            self.sock.setEncryptionType(self.sock.RSA)
+            self.sock.encryptType = self.sock.RSA
 
             # Send the AES key, IV, and salt
             self.sendMessage(constants.COMMAND_AES_KEY, self.sock.crypto.aesKey)
@@ -97,7 +97,7 @@ class Client(object):
             self.sendMessage(constants.COMMAND_AES_SALT, self.sock.crypto.aesSalt)
 
             # Switch to AES encryption for the remainder of the connection
-            self.sock.setEncryptionType(self.sock.AES)
+            self.sock.encryptType = self.sock.AES
         except exceptions.ProtocolEnd:
             self.isConnected = False
             self.disconnect()
@@ -126,7 +126,7 @@ class Client(object):
             self.sock.crypto.setRemotePubKey(serverPublicKey)
 
             # Switch to RSA encryption to receive the AES key, IV, and salt
-            self.sock.setEncryptionType(self.sock.RSA)
+            self.sock.encryptType = self.sock.RSA
 
             # Receive the AES key
             self.sock.crypto.aesKey = self.receiveMessage(constants.COMMAND_AES_KEY)
@@ -138,7 +138,7 @@ class Client(object):
             self.sock.crypto.aesSalt = self.receiveMessage(constants.COMMAND_AES_SALT)
 
             # Switch to AES encryption for the remainder of the connection
-            self.sock.setEncryptionType(self.sock.AES)
+            self.sock.encryptType = self.sock.AES
         except exceptions.ProtocolEnd:
             self.isConnected = False
             self.disconnect()

@@ -33,10 +33,6 @@ class EncSocket(object):
             self.crypto = crypto
 
 
-    def setEncryptionType(self, type=None):
-        self.encryptType = type
-
-
     def connect(self):
         try:
             self.sock.connect(self.addr)
