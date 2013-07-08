@@ -6,7 +6,7 @@ Cryptully
 
 [![Build Status](https://travis-ci.org/shanet/Cryptully.png)](https://travis-ci.org/shanet/Cryptully)
 
-## Quick Start
+### Quick Start
 
 1. Download the executable for your platform on the releases page.
 2. Launch the executable (no need to install anything).
@@ -16,7 +16,7 @@ Cryptully
 
 Need more info? See the [documentation](https://cryptully.readthedocs.org/en/latest/) for much more detailed instructions.
 
-## Running the Python Script
+### Running From Source
 
 Install the following:
 
@@ -24,19 +24,19 @@ Install the following:
 * PyQt4
 * M2Crypto
 * Python Curses
-* Clone the repo and run `python src/cryptully.py`.
+* Clone the repo and run `python make.py run`.
 
 Detailed instructions are on the [building page](https://cryptully.readthedocs.org/en/latest/building.html) of the documentation.
 
-## Building
+### Building
 
 Cryptully builds and runs on Linux, Windows, and OS X. See the [building page](https://cryptully.readthedocs.org/en/latest/building.html) for detailed instructions.
 
-## Documentation
+### Documentation
 
 Documentation is available at https://cryptully.readthedocs.org/en/latest/.
 
-## License
+### License
 
 Copyright (C) 2013 Shane Tully
 
