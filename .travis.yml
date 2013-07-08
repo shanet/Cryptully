@@ -1,6 +1,17 @@
 language: python
+
 python:
   - "2.7"
+
 before_install:
-  - sudo apt-get install python-qt4-dev python-m2crypto
-script: "./make.py test"
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq python-qt4-dev python-m2crypto
+
+# Skip the install stage
+install: true
+
+script: "python cryptully/test_cryptully.py"
+
+branches:
+  only:
+    - master
