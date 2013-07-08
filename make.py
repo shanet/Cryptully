@@ -57,7 +57,9 @@ elif arg == 'run':
     subprocess.call(['python', os.path.join('cryptully', 'cryptully.py')])
 
 elif arg == 'test':
-    subprocess.call(['python', os.path.join('cryptully', 'test_cryptully.py')])
+    # Carry the exit code from the tests
+    exitCode = subprocess.call(['python', os.path.join('cryptully', 'test_cryptully.py')])
+    sys.exit(exitCode)
 
 elif arg == 'clean':
     clean()
