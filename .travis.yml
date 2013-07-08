@@ -1,0 +1,6 @@
+language: python
+python:
+  - "2.7"
+before_install:
+  - sudo apt-get install python-qt4-dev python-m2crypto
+script: "./make.py test"
