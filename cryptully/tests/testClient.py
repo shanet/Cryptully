@@ -21,6 +21,8 @@ class TestClient(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         try:
+            self.client = Client(constants.MODE_CLIENT, ('127.0.0.1', constants.DEFAULT_PORT))
+
             self.server = Server()
             self.server.start(constants.DEFAULT_PORT)
 
@@ -41,30 +43,35 @@ class TestClient(unittest.TestCase):
             raise 3
 
 
-    def testClientCommuncation(self):
-        self.client = Client(constants.MODE_CLIENT, ('127.0.0.1', constants.DEFAULT_PORT))
-
+    def testConncecToServer(self):
         try:
             self.client.connect()
         except Exception as e:
             print "Failed to connect to server: " + str(e)
             raise e
 
+
+    def testCheckHostname(self):
         self.assertEqual(self.client.getHostname(), "127.0.0.1")
 
-        # Do the handshake
+
+    def testHandshake(self):
         try:
             self.client.doHandshake()
         except Exception as e:
             self.fail(str(e))
 
+
+    def checkEncryptType(self):
         # Confirm AES is being used
         self.assertEqual(self.client.sock.encryptType, self.client.sock.AES)
 
-        # Send a message
+
+    def testSendMessageToServer(self):
         self.client.sendMessage(constants.COMMAND_MSG, CLIENT_TEST_MESSAGE_1)
 
-        # Receive messages from the server
+
+    def testReceiveMessageFromServer(self):
         message = self.client.receiveMessage(constants.COMMAND_MSG)
         self.assertEqual(message, SERVER_TEST_MESSAGE_1)
         message = self.client.receiveMessage(constants.COMMAND_MSG)
@@ -72,11 +79,14 @@ class TestClient(unittest.TestCase):
         message = self.client.receiveMessage(constants.COMMAND_MSG)
         self.assertEqual(message, SERVER_TEST_MESSAGE_3)
 
-        # Send an unexpected command to the server
+    def testSendUnexpectCommandToServer(self):
         self.client.sendMessage(constants.COMMAND_REDY)
+
         # Server should respond with error command
         self.client.receiveMessage(constants.COMMAND_ERR)
 
+
+    def testDisconnect(self):
         self.client.disconnect()
 
 
