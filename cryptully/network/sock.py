@@ -1,4 +1,5 @@
 import socket
+import struct
 
 from utils import errors
 from utils import exceptions
@@ -39,9 +40,8 @@ class Socket(object):
     def send(self, data):
         dataLength = len(data)
 
-        # Send the length of the message (int converted to network byte order and padded to 32 bytes)
-        self._send(str('%32s' % socket.htonl(dataLength)), 32)
-        print str('%32s' % socket.htonl(dataLength))
+        # Send the length of the message (int converted to network byte order and packed as binary data)
+        self._send(struct.pack("I", socket.htonl(dataLength)), 4)
 
         # Send the actual data
         self._send(data, dataLength)
@@ -62,10 +62,10 @@ class Socket(object):
 
 
     def recv(self):
-        # Receive the length of the incoming message
+        # Receive the length of the incoming message (unpack the binary data)
         try:
-            dataLength = socket.ntohl(int(self._recv(32)))
-        except ValueError:
+            dataLength = socket.ntohl(struct.unpack("I", self._recv(4))[0])
+        except ValueError, IndexError:
             raise exceptions.NetworkError(errors.UNEXPECTED_DATA)
 
         # Receive the actual data
