@@ -38,7 +38,12 @@ class Socket(object):
 
 
     def send(self, data):
+        if type(data) is not str:
+            raise TypeError()
+
         dataLength = len(data)
+
+        print "sock sending: %d: %s\n\n" % (dataLength, data)
 
         # Send the length of the message (int converted to network byte order and packed as binary data)
         self._send(struct.pack("I", socket.htonl(dataLength)), 4)
@@ -52,7 +57,7 @@ class Socket(object):
         while sentLen < length:
             try:
                 amountSent = self.sock.send(data[sentLen:])
-            except socket.error, IOError:
+            except Exception:
                 raise exceptions.NetworkError(errors.UNEXPECTED_CLOSE_CONNECTION)
 
             if amountSent == 0:
@@ -65,12 +70,14 @@ class Socket(object):
         # Receive the length of the incoming message (unpack the binary data)
         try:
             dataLength = socket.ntohl(struct.unpack("I", self._recv(4))[0])
-        except ValueError, IndexError:
+        except Exception as e:
+            raise e
             raise exceptions.NetworkError(errors.UNEXPECTED_DATA)
 
         # Receive the actual data
-        return self._recv(dataLength)
-
+        data = self._recv(dataLength)
+        print "sock recv: %d: %s\n\n" % (dataLength, data)
+        return data
 
     def _recv(self, length):
         try:

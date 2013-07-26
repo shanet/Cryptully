@@ -1,6 +1,9 @@
 import os
 import sys
 
+import constants
+import errors
+
 from time import localtime
 from time import strftime
 
@@ -66,8 +69,16 @@ def doesSavedKeypairExist():
     return (os.path.exists(storeDir) and os.path.exists(keypairFile))
 
 
+def isValidNick(nick):
+    if not nick.isalnum():
+        return errors.INVALID_NICK_CONTENT
+    if len(nick) > constants.NICK_MAX_LEN:
+        return errors.INVALID_NICK_LENGTH
+    return errors.VALID_NICK
+
+
 def getTimestamp():
-    return strftime('%H:%M:%S', localtime()) + ': '
+    return strftime('%H:%M:%S', localtime())
 
 
 def getAbsoluteResourcePath(relativePath):

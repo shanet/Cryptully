@@ -1,7 +1,3 @@
-import qtUtils
-
-from network import qtThreads
-
 from PyQt4.QtCore import pyqtSignal
 from PyQt4.QtGui  import QDialog
 from PyQt4.QtGui  import QFrame
@@ -10,21 +6,22 @@ from PyQt4.QtGui  import QLabel
 from PyQt4.QtGui  import QMovie
 from PyQt4.QtGui  import QVBoxLayout
 
+import qtUtils
 from qLine import QLine
 
 from utils import constants
-from utils import utils
+
 
 class QWaitingDialog(QDialog):
     ipLabelPrefix = "IP address: "
     onCloseSignal = pyqtSignal()
 
-    def __init__(self, parent, text="", isLightTheme=True, onCloseSlot=None, showIP=False):
+    def __init__(self, parent, text="", onCloseSlot=None, showIP=False):
         QDialog.__init__(self, parent)
         self.onCloseSignal.connect(onCloseSlot)
 
         # Create connecting image
-        connMov = QMovie(utils.getAbsoluteResourcePath('images/' + ('light' if isLightTheme else 'dark') + '/waiting.gif'))
+        connMov = QMovie(qtUtils.getAbsoluteImagePath('waiting.gif'))
         connMov.start()
         self.connImg = QLabel(self)
         self.connImg.setMovie(connMov)

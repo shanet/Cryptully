@@ -2,76 +2,66 @@ import os
 import signal
 import sys
 
+from PyQt4.QtCore import pyqtSignal
 from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QFontMetrics
 from PyQt4.QtGui import QAction
-from PyQt4.QtGui import QHBoxLayout
 from PyQt4.QtGui import QIcon
+from PyQt4.QtGui import QInputDialog
 from PyQt4.QtGui import QLabel
 from PyQt4.QtGui import QMainWindow
 from PyQt4.QtGui import QMenu
 from PyQt4.QtGui import QMessageBox
 from PyQt4.QtGui import QPushButton
 from PyQt4.QtGui import QSplitter
+from PyQt4.QtGui import QTabWidget
 from PyQt4.QtGui import QTextEdit
+from PyQt4.QtGui import QToolBar
 from PyQt4.QtGui import QToolButton
 from PyQt4.QtGui import QVBoxLayout
 from PyQt4.QtGui import QWidget
 
-import qtUtils
+from qChatTab import QChatTab
+from qAcceptDialog import QAcceptDialog
 from qFingerprintDialog import QFingerprintDialog
 from qHelpDialog import QHelpDialog
+import qtUtils
 
 from utils import constants
+from utils import errors
 from utils import utils
 
 
 class QChatWindow(QMainWindow):
-    def __init__(self, client, messageQueue, isLightTheme):
+    newClientSignal = pyqtSignal(str)
+    clientReadySignal = pyqtSignal(str)
+    handleErrorSignal = pyqtSignal(str, int)
+    sendMessageToTabSignal = pyqtSignal(str, str, str)
+
+    def __init__(self, connectionManager=None, messageQueue=None):
         QMainWindow.__init__(self)
 
-        self.client = client
+        self.connectionManager = connectionManager
         self.messageQueue = messageQueue
-        self.isLightTheme = isLightTheme
+        self.newClientSignal.connect(self.newClientSlot)
+        self.clientReadySignal.connect(self.clientReadySlot)
+        self.handleErrorSignal.connect(self.handleErrorSlot)
+        self.sendMessageToTabSignal.connect(self.sendMessageToTab)
+
+        self.chatTabs = QTabWidget(self)
+        self.chatTabs.setTabsClosable(True)
+        self.chatTabs.setMovable(True)
+        self.chatTabs.tabCloseRequested.connect(self.closeTab)
 
         self.__setMenubar()
 
-        self.chatLog = QTextEdit()
-        self.chatLog.setReadOnly(True)
-
-        self.chatInput = QTextEdit()
-        self.chatInput.textChanged.connect(self.chatInputTextChanged)
-
-        self.sendButton = QPushButton("Send")
-        self.sendButton.clicked.connect(self.sendMessage)
-
-        # Set the min height for the chatlog and a matching fixed height for the send button
-        chatInputFontMetrics = QFontMetrics(self.chatInput.font())
-        self.chatInput.setMinimumHeight(chatInputFontMetrics.lineSpacing() * 3)
-        self.sendButton.setFixedHeight(chatInputFontMetrics.lineSpacing() * 3)
-
-        hboxLayout = QHBoxLayout()
-        hboxLayout.addWidget(self.chatInput)
-        hboxLayout.addWidget(self.sendButton)
-
-        # Put the chatinput and send button in a wrapper widget so they may be added to the splitter
-        chatInputWrapper = QWidget()
-        chatInputWrapper.setLayout(hboxLayout)
-        chatInputWrapper.setMinimumHeight(chatInputFontMetrics.lineSpacing() * 3.7)
-
-        # Put the chat log and chat input into a splitter so the user can resize them at will
-        splitter = QSplitter(Qt.Vertical)
-        splitter.addWidget(self.chatLog)
-        splitter.addWidget(chatInputWrapper)
-        splitter.setSizes([int(self.height()), 1])
-
-        vboxLayout = QVBoxLayout()
-        vboxLayout.addWidget(splitter)
+        vbox = QVBoxLayout()
+        vbox.addWidget(self.chatTabs)
 
         # Add the completeted layout to the window
         self.centralWidget = QWidget()
-        self.centralWidget.setLayout(vboxLayout)
+        self.centralWidget.setLayout(vbox)
         self.setCentralWidget(self.centralWidget)
 
         qtUtils.resizeWindow(self, 700, 400)
@@ -79,108 +69,132 @@ class QChatWindow(QMainWindow):
 
         # Title and icon
         self.setWindowTitle("Cryptully")
-        self.setWindowIcon(QIcon(utils.getAbsoluteResourcePath('images/' + ('light' if isLightTheme else 'dark') + '/icon.png')))
-        self.statusBar().showMessage("Not Connected")
+        self.setWindowIcon(QIcon(qtUtils.getAbsoluteImagePath('icon.png')))
 
 
-    def showNowChattingMessage(self):
-        self.statusBar().showMessage("Connected to " + self.client.getHostname())
-        self.appendMessage("You are now securely chatting with " + self.client.getHostname() + " :)",
-                           constants.SERVICE, showTimestamp=False)
-
-        self.appendMessage("It's a good idea to verify the communcation is secure by selecting"
-                           "\"verify key integrity\" in the options menu.", constants.SERVICE, showTimestamp=False)
+    def connectedToServer(self):
+        # Add an initial tab once connected to the server
+        self.addNewTab()
 
 
-    def chatInputTextChanged(self):
-        if str(self.chatInput.toPlainText())[-1:] == '\n':
-            self.sendMessage()
+    def newClient(self, message):
+        # This function is called from a bg thread. Send a signal to get on the UI thread
+        self.newClientSignal.emit(message)
 
 
-    def sendMessage(self):
-        message = str(self.chatInput.toPlainText())[:-1]
+    @pyqtSlot(str)
+    def newClientSlot(self, nick):
+        nick = str(nick)
 
-        # Don't send empty messages
-        if message == '':
+        # Show the accept dialog
+        accept = QAcceptDialog.getAnswer(self, nick)
+
+        if not accept:
+            self.connectionManager.newClientRejected(nick)
             return
 
-        # Add the message to the message queue to be sent
-        self.messageQueue.put(message)
-
-        # Clear the chat input
-        self.chatInput.clear()
-
-        self.appendMessage(message, constants.SENDER)
+        self.addNewTab(nick)
+        self.connectionManager.newClientAccepted(nick)
 
 
-    @pyqtSlot(str, int, bool)
-    def appendMessage(self, message, source, showTimestamp=True):
-        if showTimestamp:
-            timestamp = utils.getTimestamp()
-        else:
-            timestamp = ''
-
-        color = self.__getColor(source)
-
-        # If the user has scrolled up (current value != maximum), do not move the scrollbar
-        # to the bottom after appending the message
-        shouldScroll = True
-        scrollbar = self.chatLog.verticalScrollBar()
-        if scrollbar.value() != scrollbar.maximum() and source != constants.SENDER:
-            shouldScroll = False
-
-        # Append the message to the end of the chat log
-        self.chatLog.append(timestamp + '<font color="' + color + '">' + message + "</font>")
-
-        # Move the vertical scrollbar to the bottom of the chat log
-        if shouldScroll:
-            scrollbar.setValue(scrollbar.maximum())
+    def addNewTab(self, nick=None):
+        newTab = QChatTab(self.connectionManager, nick)
+        self.chatTabs.addTab(newTab, nick if nick is not None else "New Chat")
+        self.chatTabs.setCurrentWidget(newTab)
 
 
-    def __getColor(self, source):
-        if source == constants.SENDER:
-            if self.isLightTheme:
-                return '#0000CC'
-            else:
-                return '#6666FF'
-        elif source == constants.RECEIVER:
-            if self.isLightTheme:
-                return '#CC0000'
-            else:
-                return '#CC3333'
-        else:
-            if self.isLightTheme:
-                return '#000000'
-            else:
-                return '#FFFFFF'
+    def clientReady(self, nick):
+        # Use a signal to call the client ready slot on the UI thread since
+        # this function is called from a background thread
+        self.clientReadySignal.emit(nick)
+
+
+    @pyqtSlot(str)
+    def clientReadySlot(self, nick):
+        tab = self.getTabByNick(str(nick))
+        tab.showNowChattingMessage()
+
+
+    def handleError(self, nick, errorCode):
+        self.handleErrorSignal.emit(nick, errorCode)
+
+
+    @pyqtSlot(str, int)
+    def handleErrorSlot(self, nick, errorCode):
+        print str(errorCode)
+        nick = str(nick)
+        tab = self.getTabByNick(nick)
+        tab.resetOrDisable()
+
+        if errorCode == errors.ERR_CONNECTION_ENDED:
+            QMessageBox.warning(self, errors.TITLE_CONNECTION_ENDED, errors.CONNECTION_ENDED % (nick))
+        elif errorCode == errors.ERR_NICK_NOT_FOUND:
+            QMessageBox.warning(self, errors.TITLE_NICK_NOT_FOUND, errors.NICK_NOT_FOUND)
+        elif errorCode == errors.ERR_CONNECTION_REJECTED:
+            QMessageBox.warning(self, errors.TITLE_CONNECTION_REJECTED, errors.CONNECTION_REJECTED % (nick))
+        elif errorCode == errors.ERR_BAD_HANDSHAKE:
+            QMessageBox.warning(self, errors.TITLE_PROTOCOL_ERROR, errors.PROTOCOL_ERROR)
+        elif errorCode == errors.ERR_CLIENT_EXISTS:
+            QMessageBox.warning(self, errors.TITLE_CLIENT_EXISTS, errors.CLIENT_EXISTS % (nick))
+        elif errorCode == errors.ERR_SELF_CONNECT:
+            QMessageBox.warning(self, errors.TITLE_SELF_CONNECT, errors.SELF_CONNECT)
+        elif errorCode == errors.ERR_SERVER_SHUTDOWN:
+            QMessageBox.critical(self, errors.TITLE_SERVER_SHUTDOWN, errors.SELF_SERVER_SHUTDOWN)
+
+
+    def postMessage(self, command, sourceNick, payload):
+        self.sendMessageToTabSignal.emit(command, sourceNick, payload)
+
+
+    @pyqtSlot(str, str, str)
+    def sendMessageToTab(self, command, sourceNick, payload):
+        self.getTabByNick(sourceNick).appendMessage(payload, constants.RECEIVER)
+
+
+    @pyqtSlot(int)
+    def closeTab(self, index):
+        tab = self.chatTabs.widget(index)
+        self.connectionManager.closeChat(tab.nick)
+
+        self.chatTabs.removeTab(index)
+
+        # Show a new tab if there are now no tabs left
+        if self.chatTabs.count() == 0:
+            self.addNewTab()
+
+
+    def getTabByNick(self, nick):
+        for i in range(0, self.chatTabs.count()):
+            curTab = self.chatTabs.widget(i)
+            if curTab.nick == nick:
+                return curTab
+        return None
 
 
     def __setMenubar(self):
-        iconPath = 'images/'
-        if self.isLightTheme:
-            iconPath = iconPath + 'light/'
-        else:
-            iconPath = iconPath + 'dark/'
+        newChatIcon     = QIcon(qtUtils.getAbsoluteImagePath('new_chat.png'))
+        fingerprintIcon = QIcon(qtUtils.getAbsoluteImagePath('fingerprint.png'))
+        saveIcon        = QIcon(qtUtils.getAbsoluteImagePath('save.png'))
+        clearIcon       = QIcon(qtUtils.getAbsoluteImagePath('delete.png'))
+        helpIcon        = QIcon(qtUtils.getAbsoluteImagePath('help.png'))
+        exitIcon        = QIcon(qtUtils.getAbsoluteImagePath('exit.png'))
+        menuIcon        = QIcon(qtUtils.getAbsoluteImagePath('menu.png'))
 
-        fingerprintIcon = QIcon(utils.getAbsoluteResourcePath(iconPath + 'fingerprint.png'))
-        saveIcon        = QIcon(utils.getAbsoluteResourcePath(iconPath + 'save.png'))
-        clearIcon       = QIcon(utils.getAbsoluteResourcePath(iconPath + 'delete.png'))
-        helpIcon        = QIcon(utils.getAbsoluteResourcePath(iconPath + 'help.png'))
-        exitIcon        = QIcon(utils.getAbsoluteResourcePath(iconPath + 'exit.png'))
-        menuIcon        = QIcon(utils.getAbsoluteResourcePath(iconPath + 'menu.png'))
-
+        newChatAction      = QAction(newChatIcon, '&New chat', self)
         fingerprintAction  = QAction(fingerprintIcon, '&Verify key integrity', self)
         saveKeypairAction  = QAction(saveIcon, '&Save current encryption keys', self)
         clearKeypairAction = QAction(clearIcon, 'C&lear saved encryption keys', self)
         helpAction         = QAction(helpIcon, 'Show &help', self)
         exitAction         = QAction(exitIcon, '&Exit', self)
 
+        newChatAction.triggered.connect(lambda: self.addNewTab())
         fingerprintAction.triggered.connect(self.__showFingerprintDialog)
         saveKeypairAction.triggered.connect(self.__showSaveKeypairDialog)
         clearKeypairAction.triggered.connect(self.__clearKeypair)
         helpAction.triggered.connect(self.__showHelpDialog)
         exitAction.triggered.connect(self.__exit)
 
+        newChatAction.setShortcut('Ctrl+N')
         fingerprintAction.setShortcut('Ctrl+I')
         saveKeypairAction.setShortcut('Ctrl+S')
         clearKeypairAction.setShortcut('Ctrl+L')
@@ -189,39 +203,60 @@ class QChatWindow(QMainWindow):
 
         optionsMenu = QMenu()
 
+        optionsMenu.addAction(newChatAction)
         optionsMenu.addAction(fingerprintAction)
         optionsMenu.addAction(saveKeypairAction)
         optionsMenu.addAction(clearKeypairAction)
         optionsMenu.addAction(helpAction)
         optionsMenu.addAction(exitAction)
 
-        toolButton = QToolButton()
-        toolButton.setIcon(menuIcon)
-        toolButton.setMenu(optionsMenu)
-        toolButton.setPopupMode(QToolButton.InstantPopup)
+        optionsMenuButton = QToolButton()
+        newChatButton     = QToolButton()
+        fingerprintButton = QToolButton()
+        exitButton        = QToolButton()
 
-        toolbar = self.addToolBar('toolbar')
-        toolbar.addWidget(toolButton)
+        newChatButton.clicked.connect(lambda: self.addNewTab())
+        fingerprintButton.clicked.connect(self.__showFingerprintDialog)
+        exitButton.clicked.connect(self.__exit)
+
+        optionsMenuButton.setIcon(menuIcon)
+        newChatButton.setIcon(newChatIcon)
+        fingerprintButton.setIcon(fingerprintIcon)
+        exitButton.setIcon(exitIcon)
+
+        optionsMenuButton.setMenu(optionsMenu)
+        optionsMenuButton.setPopupMode(QToolButton.InstantPopup)
+
+        toolbar = QToolBar(self)
+        toolbar.addWidget(optionsMenuButton)
+        toolbar.addWidget(newChatButton)
+        toolbar.addWidget(fingerprintButton)
+        toolbar.addWidget(exitButton)
+        self.addToolBar(Qt.LeftToolBarArea, toolbar)
 
 
     def __showFingerprintDialog(self):
-        QFingerprintDialog(self.client.sock.crypto).exec_()
+        try:
+            crypto = self.connectionManager.getClient(self.chatTabs.currentWidget().nick).crypto
+            QFingerprintDialog(crypto).exec_()
+        except AttributeError:
+            QMessageBox.information(self, "Not Available", "Encryption keys are not available until you are chatting with someone")
 
 
     def __showSaveKeypairDialog(self):
         if utils.doesSavedKeypairExist():
-            QMessageBox.warning(self, "Keys Already Saved", "The current encryption keys have already been saved.")
+            QMessageBox.warning(self, "Keys Already Saved", "The current encryption keys have already been saved")
             return
 
-        QMessageBox.information(self, "Save Keys", "For extra security, your encryption keys will be protected with a passphrase. You'll need to enter this each time you start the app.")
-        passphrase = qtUtils.getKeypairPassphrase(self.isLightTheme, parent=self, verify=True, showForgotButton=False)
+        QMessageBox.information(self, "Save Keys", "For extra security, your encryption keys will be protected with a passphrase. You'll need to enter this each time you start the app")
+        passphrase = qtUtils.getKeypairPassphrase(self, verify=True, showForgotButton=False)
 
         # Return if the user did not provide a passphrase
         if passphrase is None:
             return
 
-        utils.saveKeypair(self.client.sock.crypto, passphrase)
-        QMessageBox.information(QWidget(), "Keys Saved", "Encryption keys saved. The current keys will be used for all subsequent connections.")
+        utils.saveKeypair(self.connectionManager.getClient(self.nick).sock.crypto, passphrase)
+        QMessageBox.information(QWidget(), "Keys Saved", "Encryption keys saved. The current keys will be used for all subsequent connections")
 
 
     def __clearKeypair(self):

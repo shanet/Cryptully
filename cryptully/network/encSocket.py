@@ -3,9 +3,10 @@ import sys
 
 from sock import Socket
 
-from utils.crypto import Crypto
+from utils import constants
 from utils import errors
 from utils import exceptions
+from utils.crypto import Crypto
 
 
 class EncSocket(object):
@@ -33,7 +34,7 @@ class EncSocket(object):
         self.sock.disconnect()
 
 
-    def send(self, data):
+    def send(self, serverData, data):
         if type(data) is not str:
             raise TypeError()
 
@@ -46,7 +47,7 @@ class EncSocket(object):
             else:
                 raise exceptions.ServerError(errors.UNKNOWN_ENCRYPTION_TYPE)
 
-        self.sock.send(data)
+        self.sock.send(serverData + constants.COMMAND_SEPARATOR + data)
 
 
     def recv(self):

@@ -12,10 +12,9 @@ from PyQt4.QtGui import QVBoxLayout
 import qtUtils
 
 from utils import constants
-from utils import utils
 
 class QPassphraseDialog(QDialog):
-    def __init__(self, isLightTheme, verify=False, showForgotButton=True):
+    def __init__(self, verify=False, showForgotButton=True):
         QDialog.__init__(self)
 
         self.passphrase = None
@@ -23,7 +22,7 @@ class QPassphraseDialog(QDialog):
 
         # Set the title and icon
         self.setWindowTitle("Save Keys Passphrase")
-        self.setWindowIcon(QIcon(utils.getAbsoluteResourcePath('images/' + ('light' if isLightTheme else 'dark') + '/icon.png')))
+        self.setWindowIcon(QIcon(qtUtils.getAbsoluteResourcePath('icon.png')))
 
         label = QLabel("Encryption keys passphrase:" if not verify else "Verify:", self)
         self.passphraseInput = QLineEdit(self)
@@ -66,7 +65,7 @@ class QPassphraseDialog(QDialog):
 
 
     @staticmethod
-    def getPassphrase(isLightTheme, verify=False, showForgotButton=True):
-        passphraseDialog = QPassphraseDialog(isLightTheme, verify, showForgotButton)
+    def getPassphrase(verify=False, showForgotButton=True):
+        passphraseDialog = QPassphraseDialog(verify, showForgotButton)
         passphraseDialog.exec_()
         return passphraseDialog.passphrase, passphraseDialog.clickedButton

@@ -31,12 +31,12 @@ def resizeWindow(window, width, height):
     window.setGeometry(0, 0, width, height)
 
 
-def getKeypairPassphrase(isLightTheme, parent=None, verify=False, showForgotButton=True):
+def getKeypairPassphrase(parent=None, verify=False, showForgotButton=True):
     if parent is None:
         parent = QWidget()
 
     while True:
-        passphrase, button = QPassphraseDialog.getPassphrase(isLightTheme, False, showForgotButton)
+        passphrase, button = QPassphraseDialog.getPassphrase(False, showForgotButton)
         if button == constants.BUTTON_CANCEL:
             return
         if button == constants.BUTTON_FORGOT:
@@ -46,7 +46,7 @@ def getKeypairPassphrase(isLightTheme, parent=None, verify=False, showForgotButt
         if not verify:
             return passphrase
 
-        verifyPassphrase, button = QPassphraseDialog.getPassphrase(isLightTheme, verify, showForgotButton)
+        verifyPassphrase, button = QPassphraseDialog.getPassphrase(verify, showForgotButton)
         if button == constants.BUTTON_CANCEL:
             return
 
@@ -70,8 +70,15 @@ def clearKeypair(parent=None):
         QMessageBox.information(parent, "Keys Cleared", "Encryption keys cleared. New keys will be generated. You should verify key integrity for all new connections now.")
 
 
-def isLightTheme(color):
-    return (color.red() > 100 and color.blue() > 100 and color.green() > 100)
+isLightTheme = False
+def setIsLightTheme(color):
+    global isLightTheme
+    isLightTheme = (color.red() > 100 and color.blue() > 100 and color.green() > 100)
+
+
+def getAbsoluteImagePath(imageName):
+    global isLightTheme
+    return utils.getAbsoluteResourcePath('images/' + ('light' if isLightTheme else 'dark') + '/' + imageName)
 
 
 def runOnUIThread(function, *args, **kwargs):

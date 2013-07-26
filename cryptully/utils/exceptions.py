@@ -7,10 +7,14 @@ class NetworkError(Exception):
 
 
 class ProtocolError(Exception):
-    pass
+    def __init__(self, errno=0):
+        Exception.__init__(self)
+        self.errno = errno
+
 
 class ProtocolEnd(Exception):
     pass
+
 
 class CryptoError(Exception):
     pass
