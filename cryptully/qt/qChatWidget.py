@@ -132,3 +132,8 @@ class QChatWidget(QWidget):
     def disable(self):
         self.isDisabled = True
         self.chatInput.setReadOnly(True)
+
+
+    def enable(self):
+        self.isDisabled = False
+        self.chatInput.setReadOnly(False)

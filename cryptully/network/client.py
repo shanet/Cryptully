@@ -77,10 +77,17 @@ class Client(Thread):
             command = message.clientCommand
             payload = message.payload
 
+            # Check if the client requested to end the connection
             if command == constants.COMMAND_END:
                 self.errorCallback(self.remoteNick, errors.ERR_CONNECTION_ENDED)
                 self.connectionManager.destroyClient(self.remoteNick)
                 return
+            # Ensure we got a valid command
+            elif self.wasHandshakeDone and command not in constants.LOOP_COMMANDS:
+                self.errorCallback(self.remoteNick, errors.ERR_INVALID_COMMAND)
+                self.connectionManager.destroyClient(self.remoteNick)
+                return
+
 
             # Decrypt the incoming data
             payload = self.__getDecryptedPayload(message)
@@ -99,6 +106,7 @@ class Client(Thread):
                 self.sendMessage(constants.COMMAND_END)
             except Exception:
                 pass
+        self.isConnected = False
 
 
     def __doHandshake(self):
@@ -130,8 +138,8 @@ class Client(Thread):
             self.wasHandshakeDone = True
             self.handshakeDoneCallback(self.remoteNick)
         except exceptions.ProtocolEnd:
-            self.isConnected = False
             self.disconnect()
+            self.connectionManager.destroyClient(self.remoteNick)
         except exceptions.ProtocolError as pe:
             self.__handleHandshakeError(pe)
 
@@ -170,8 +178,8 @@ class Client(Thread):
             self.wasHandshakeDone = True
             self.handshakeDoneCallback(self.remoteNick)
         except exceptions.ProtocolEnd:
-            self.isConnected = False
             self.disconnect()
+            self.connectionManager.destroyClient(self.remoteNick)
         except exceptions.ProtocolError as pe:
             self.__handleHandshakeError(pe)
 
@@ -211,6 +219,9 @@ class Client(Thread):
     def __handleHandshakeError(self, exception):
         self.errorCallback(self.remoteNick, exception.errno)
 
-        # For all errros except the connection being rejected, tell the client there was an error
+        # For all errors except the connection being rejected, tell the client there was an error
         if exception.errno != errors.ERR_CONNECTION_REJECTED:
             self.sendMessage(constants.COMMAND_ERR)
+        # For reject errors, delete this client
+        else:
+            self.connectionManager.destroyClient(self.remoteNick)

@@ -4,6 +4,7 @@ import constants
 VALID_NICK           = 0
 INVALID_NICK_CONTENT = 1
 INVALID_NICK_LENGTH  = 2
+INVALID_EMPTY_NICK   = 3
 
 # UI error messages
 TITLE_CONNECTION_ENDED    = "Connection Ended"
@@ -17,6 +18,10 @@ TITLE_PROTOCOL_ERROR      = "Invalid Response"
 TITLE_CLIENT_EXISTS       = "Client Exists"
 TITLE_SELF_CONNECT        = "Self Connection"
 TITLE_SERVER_SHUTDOWN     = "Server Shutdown"
+TITLE_INVALID_COMMAND     = "Invalid Command"
+TITLE_ALREADY_CONNECTED   = "Already Chatting"
+TITLE_UNKNOWN_ERROR       = "Unknown Error"
+TITLE_EMPTY_NICK          = "No Nickname Provided"
 
 UNEXPECTED_CLOSE_CONNECTION = "Remote unexpectedly closed connection"
 UNEXPECTED_DATA             = "Remote sent unexpected data"
@@ -39,6 +44,10 @@ CLIENT_EXISTS               = "%s is open in another tab already"
 CONNECTION_ENDED            = "%s has disconnected"
 SELF_CONNECT                = "You cannot connect to yourself"
 SERVER_SHUTDOWN             = "The server is shutting down"
+INVALID_COMMAND             = "An invalid command was recieved from %s"
+ALREADY_CONNECTED           = "A chat with %s is already open"
+UNKNOWN_ERROR               = "An unknown error occured with %s"
+EMPTY_NICK                  = "Please enter a nickname"
 
 # Error codes
 ERR_CONNECTION_ENDED    = 0
@@ -48,3 +57,5 @@ ERR_BAD_HANDSHAKE       = 3
 ERR_CLIENT_EXISTS       = 4
 ERR_SELF_CONNECT        = 5
 ERR_SERVER_SHUTDOWN     = 6
+ERR_INVALID_COMMAND     = 7
+ERR_ALREADY_CONNECTED   = 8

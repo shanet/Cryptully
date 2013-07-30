@@ -70,6 +70,8 @@ def doesSavedKeypairExist():
 
 
 def isValidNick(nick):
+    if nick == "":
+        return errors.INVALID_EMPTY_NICK
     if not nick.isalnum():
         return errors.INVALID_NICK_CONTENT
     if len(nick) > constants.NICK_MAX_LEN:

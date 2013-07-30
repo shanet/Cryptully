@@ -5,6 +5,7 @@ import sys
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QAction
 from PyQt4.QtGui import QHBoxLayout
+from PyQt4.QtGui import QMessageBox
 from PyQt4.QtGui import QStackedWidget
 from PyQt4.QtGui import QWidget
 
@@ -15,18 +16,21 @@ from qFingerprintDialog import QFingerprintDialog
 from qHelpDialog import QHelpDialog
 from qNickInputWidget import QNickInputWidget
 
+from utils import errors
+
 
 class QChatTab(QWidget):
-    def __init__(self, connectionManager, nick):
+    def __init__(self, chatWindow, nick):
         QWidget.__init__(self)
 
-        self.connectionManager = connectionManager
+        self.chatWindow = chatWindow
         self.nick = nick
+        self.unreadCount = 0
 
         self.widgetStack = QStackedWidget(self)
         self.widgetStack.addWidget(QNickInputWidget('new_chat.png', 150, self.connectClicked, parent=self))
         self.widgetStack.addWidget(QConnectingWidget(self))
-        self.widgetStack.addWidget(QChatWidget(self.connectionManager, self))
+        self.widgetStack.addWidget(QChatWidget(self.chatWindow.connectionManager, self))
 
         # Skip the chat layout if the nick was given denoting an incoming connection
         if self.nick is None or self.nick == '':
@@ -40,10 +44,15 @@ class QChatTab(QWidget):
 
 
     def connectClicked(self, nick):
+        # Check that the nick isn't already connected
+        if self.chatWindow.isNickInTabs(nick):
+            QMessageBox.warning(self, errors.TITLE_ALREADY_CONNECTED, errors.ALREADY_CONNECTED % (nick))
+            return
+
         self.nick = nick
         self.widgetStack.widget(1).setConnectingToNick(self.nick)
         self.widgetStack.setCurrentIndex(1)
-        self.connectionManager.openChat(self.nick)
+        self.chatWindow.connectionManager.openChat(self.nick)
 
 
     def showNowChattingMessage(self):
@@ -63,3 +72,8 @@ class QChatTab(QWidget):
             self.widgetStack.setCurrentIndex(0)
         elif curWidgetIndex == 2:
             self.widgetStack.widget(2).disable()
+
+
+    def enable(self):
+        self.widgetStack.setCurrentIndex(2)
+        self.widgetStack.widget(2).enable()

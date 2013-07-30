@@ -61,6 +61,10 @@ class ConnectionManager(object):
         elif nick == self.nick:
             self.errorCallback(nick, errors.ERR_SELF_CONNECT)
             return
+        # Check if a connection to the nick already exists
+        elif nick in self.clients:
+            self.errorCallback(nick, errors.ERR_ALREADY_CONNECTED)
+            return
 
         newClient = Client(self, nick, self.sendMessage, self.recvMessageCallback, self.handshakeDoneCallback, self.errorCallback, initiateHandshakeOnStart)
         self.clients[nick] = newClient
@@ -109,8 +113,6 @@ class ConnectionManager(object):
         command  = message.clientCommand
         sourceNick = message.sourceNick
 
-        # TODO: validate message fields (are they none?, message loop commands if not handshake?)
-
         # Handle errors/shutdown from the server
         if message.serverCommand == constants.COMMAND_ERR:
             self.errorCallback(message.destNick, int(message.error))
@@ -127,7 +129,7 @@ class ConnectionManager(object):
             if command == constants.COMMAND_HELO:
                 self.newClientCallback(sourceNick)
             else:
-                self.sendMessage(Message(clientCommand=constants.COMMAND_ERR))
+                self.sendMessage(Message(clientCommand=constants.COMMAND_ERR, erroCode=errors.INVALID_COMMAND))
 
 
     def newClientAccepted(self, nick):

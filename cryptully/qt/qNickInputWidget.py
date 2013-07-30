@@ -69,3 +69,5 @@ class QNickInputWidget(QWidget):
             QMessageBox.warning(self, errors.TITLE_INVALID_NICK, errors.INVALID_NICK_CONTENT)
         elif nickStatus == errors.INVALID_NICK_LENGTH:
             QMessageBox.warning(self, errors.TITLE_INVALID_NICK, errors.INVALID_NICK_LENGTH)
+        elif nickStatus == errors.INVALID_EMPTY_NICK:
+            QMessageBox.warning(self, errors.TITLE_EMPTY_NICK, errors.EMPTY_NICK)

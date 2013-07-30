@@ -43,8 +43,6 @@ class Socket(object):
 
         dataLength = len(data)
 
-        print "sock sending: %d: %s\n\n" % (dataLength, data)
-
         # Send the length of the message (int converted to network byte order and packed as binary data)
         self._send(struct.pack("I", socket.htonl(dataLength)), 4)
 
@@ -75,9 +73,8 @@ class Socket(object):
             raise exceptions.NetworkError(errors.UNEXPECTED_DATA)
 
         # Receive the actual data
-        data = self._recv(dataLength)
-        print "sock recv: %d: %s\n\n" % (dataLength, data)
-        return data
+        return self._recv(dataLength)
+
 
     def _recv(self, length):
         try:

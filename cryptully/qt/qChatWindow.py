@@ -15,6 +15,7 @@ from PyQt4.QtGui import QMenu
 from PyQt4.QtGui import QMessageBox
 from PyQt4.QtGui import QPushButton
 from PyQt4.QtGui import QSplitter
+from PyQt4.QtGui import QSystemTrayIcon
 from PyQt4.QtGui import QTabWidget
 from PyQt4.QtGui import QTextEdit
 from PyQt4.QtGui import QToolBar
@@ -53,6 +54,9 @@ class QChatWindow(QMainWindow):
         self.chatTabs.setTabsClosable(True)
         self.chatTabs.setMovable(True)
         self.chatTabs.tabCloseRequested.connect(self.closeTab)
+        self.chatTabs.currentChanged.connect(self.tabChanged)
+
+        self.systemTrayIcon = QSystemTrayIcon(self)
 
         self.__setMenubar()
 
@@ -93,12 +97,17 @@ class QChatWindow(QMainWindow):
             self.connectionManager.newClientRejected(nick)
             return
 
-        self.addNewTab(nick)
+        # If nick already has a tab, reuse it
+        if self.isNickInTabs(nick):
+            self.getTabByNick(nick)[0].enable()
+        else:
+            self.addNewTab(nick)
+
         self.connectionManager.newClientAccepted(nick)
 
 
     def addNewTab(self, nick=None):
-        newTab = QChatTab(self.connectionManager, nick)
+        newTab = QChatTab(self, nick)
         self.chatTabs.addTab(newTab, nick if nick is not None else "New Chat")
         self.chatTabs.setCurrentWidget(newTab)
 
@@ -111,7 +120,9 @@ class QChatWindow(QMainWindow):
 
     @pyqtSlot(str)
     def clientReadySlot(self, nick):
-        tab = self.getTabByNick(str(nick))
+        nick = str(nick)
+        tab, tabIndex = self.getTabByNick(nick)
+        self.chatTabs.setTabText(tabIndex, nick)
         tab.showNowChattingMessage()
 
 
@@ -121,9 +132,8 @@ class QChatWindow(QMainWindow):
 
     @pyqtSlot(str, int)
     def handleErrorSlot(self, nick, errorCode):
-        print str(errorCode)
         nick = str(nick)
-        tab = self.getTabByNick(nick)
+        tab = self.getTabByNick(nick)[0]
         tab.resetOrDisable()
 
         if errorCode == errors.ERR_CONNECTION_ENDED:
@@ -132,6 +142,7 @@ class QChatWindow(QMainWindow):
             QMessageBox.warning(self, errors.TITLE_NICK_NOT_FOUND, errors.NICK_NOT_FOUND)
         elif errorCode == errors.ERR_CONNECTION_REJECTED:
             QMessageBox.warning(self, errors.TITLE_CONNECTION_REJECTED, errors.CONNECTION_REJECTED % (nick))
+            tab.nick = None
         elif errorCode == errors.ERR_BAD_HANDSHAKE:
             QMessageBox.warning(self, errors.TITLE_PROTOCOL_ERROR, errors.PROTOCOL_ERROR)
         elif errorCode == errors.ERR_CLIENT_EXISTS:
@@ -140,6 +151,12 @@ class QChatWindow(QMainWindow):
             QMessageBox.warning(self, errors.TITLE_SELF_CONNECT, errors.SELF_CONNECT)
         elif errorCode == errors.ERR_SERVER_SHUTDOWN:
             QMessageBox.critical(self, errors.TITLE_SERVER_SHUTDOWN, errors.SELF_SERVER_SHUTDOWN)
+        elif errorCode == errors.ERR_ALREADY_CONNECTED:
+            QMessageBox.warning(self, errors.TITLE_ALREADY_CONNECTED, errors.ALREADY_CONNECTED % (nick))
+        elif errorCode == errors.ERR_INVALID_COMMAND:
+            QMessageBox.warning(self, errors.TITLE_INVALID_COMMAND, errors.INVALID_COMMAND % (nick))
+        else:
+            QMessageBox.warning(self, errors.TITLE_UNKNOWN_ERROR, errors.UNKNOWN_ERROR % (nick))
 
 
     def postMessage(self, command, sourceNick, payload):
@@ -148,7 +165,26 @@ class QChatWindow(QMainWindow):
 
     @pyqtSlot(str, str, str)
     def sendMessageToTab(self, command, sourceNick, payload):
-        self.getTabByNick(sourceNick).appendMessage(payload, constants.RECEIVER)
+        self.getTabByNick(sourceNick)[0].appendMessage(payload, constants.RECEIVER)
+
+        # Update the unread message count if the message is not intended for the currently selected tab
+        tab, tabIndex = self.getTabByNick(sourceNick)
+        if tabIndex != self.chatTabs.currentIndex():
+            tab.unreadCount += 1
+            self.chatTabs.setTabText(tabIndex, tab.nick + (" (%d)" % tab.unreadCount))
+
+            # Show a system notifcation of the new message
+            self.systemTrayIcon.setVisible(True)
+            self.systemTrayIcon.showMessage(sourceNick, payload)
+
+
+    @pyqtSlot(int)
+    def tabChanged(self, index):
+        # Reset the unread count for the tab when it's switched to
+        tab = self.chatTabs.widget(index)
+        if tab.unreadCount != 0:
+            tab.unreadCount = 0
+            self.chatTabs.setTabText(index, tab.nick)
 
 
     @pyqtSlot(int)
@@ -167,8 +203,16 @@ class QChatWindow(QMainWindow):
         for i in range(0, self.chatTabs.count()):
             curTab = self.chatTabs.widget(i)
             if curTab.nick == nick:
-                return curTab
+                return (curTab, i)
         return None
+
+
+    def isNickInTabs(self, nick):
+        for i in range(0, self.chatTabs.count()):
+            curTab = self.chatTabs.widget(i)
+            if curTab.nick == nick:
+                return True
+        return False
 
 
     def __setMenubar(self):
