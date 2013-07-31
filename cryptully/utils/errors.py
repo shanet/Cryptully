@@ -22,6 +22,7 @@ TITLE_INVALID_COMMAND     = "Invalid Command"
 TITLE_ALREADY_CONNECTED   = "Already Chatting"
 TITLE_UNKNOWN_ERROR       = "Unknown Error"
 TITLE_EMPTY_NICK          = "No Nickname Provided"
+TITLE_NETWORK_ERROR       = "Network Error"
 
 UNEXPECTED_CLOSE_CONNECTION = "Remote unexpectedly closed connection"
 UNEXPECTED_DATA             = "Remote sent unexpected data"
@@ -48,6 +49,7 @@ INVALID_COMMAND             = "An invalid command was recieved from %s"
 ALREADY_CONNECTED           = "A chat with %s is already open"
 UNKNOWN_ERROR               = "An unknown error occured with %s"
 EMPTY_NICK                  = "Please enter a nickname"
+NETWORK_ERROR               = "A network error occured while communicating with the server. Try connecting to the server again."
 
 # Error codes
 ERR_CONNECTION_ENDED    = 0
@@ -59,3 +61,4 @@ ERR_SELF_CONNECT        = 5
 ERR_SERVER_SHUTDOWN     = 6
 ERR_INVALID_COMMAND     = 7
 ERR_ALREADY_CONNECTED   = 8
+ERR_NETWORK_ERROR       = 9

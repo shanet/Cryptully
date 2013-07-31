@@ -25,8 +25,8 @@ class ConnectionManager(object):
         self.newClientCallback = newClientCallback
         self.handshakeDoneCallback = handshakeDoneCallback
         self.errorCallback = errorCallback
-        self.sendThread = SendThread(self.sock)
-        self.recvThread = RecvThread(self.sock, self.recvMessage)
+        self.sendThread = SendThread(self.sock, self.errorCallback)
+        self.recvThread = RecvThread(self.sock, self.recvMessage, self.errorCallback)
         self.messageQueue = Queue.Queue()
 
 
@@ -142,11 +142,12 @@ class ConnectionManager(object):
 
 
 class RecvThread(Thread):
-    def __init__(self, sock, recvCallback):
+    def __init__(self, sock, recvCallback, errorCallback):
         Thread.__init__(self)
         self.daemon = True
 
         self.sock = sock
+        self.errorCallback = errorCallback
         self.recvCallback = recvCallback
 
 
@@ -158,17 +159,17 @@ class RecvThread(Thread):
                 # Send the message to the given callback
                 self.recvCallback(message)
             except exceptions.NetworkError as ne:
-                # TODO: improve error handling
-                print "RecvThread error: " + str(ne)
+                self.errorCallback(None, errors.ERR_NETWORK_ERR)
                 return
 
 
 class SendThread(Thread):
-    def __init__(self, sock):
+    def __init__(self, sock, errorCallback):
         Thread.__init__(self)
         self.daemon = True
 
         self.sock = sock
+        self.errorCallback = errorCallback
         self.messageQueue = Queue.Queue()
 
 
@@ -184,8 +185,7 @@ class SendThread(Thread):
                 if message.serverCommand == constants.COMMAND_END:
                     self.sock.disconnect()
             except exceptions.NetworkError as ne:
-                # TODO: improve error handling
-                print "SendThread error: " + str(ne)
+                self.errorCallback(None, errors.ERR_NETWORK_ERR)
                 return
             finally:
                 # Mark the operation as done
