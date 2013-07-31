@@ -182,7 +182,7 @@ class QChatWindow(QMainWindow):
     def tabChanged(self, index):
         # Reset the unread count for the tab when it's switched to
         tab = self.chatTabs.widget(index)
-        if tab.unreadCount != 0:
+        if tab is not None and tab.unreadCount != 0:
             tab.unreadCount = 0
             self.chatTabs.setTabText(index, tab.nick)
 
