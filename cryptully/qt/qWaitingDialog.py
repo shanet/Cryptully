@@ -13,27 +13,14 @@ from utils import constants
 
 
 class QWaitingDialog(QDialog):
-    ipLabelPrefix = "IP address: "
-    onCloseSignal = pyqtSignal()
-
-    def __init__(self, parent, text="", onCloseSlot=None, showIP=False):
+    def __init__(self, parent, text=""):
         QDialog.__init__(self, parent)
-        self.onCloseSignal.connect(onCloseSlot)
 
         # Create connecting image
         connMov = QMovie(qtUtils.getAbsoluteImagePath('waiting.gif'))
         connMov.start()
         self.connImg = QLabel(self)
         self.connImg.setMovie(connMov)
-
-        # Create connecting and IP address labels
-        self.connLabel = QLabel(text, self)
-        if showIP:
-            self.ipLabel = QLabel(self.ipLabelPrefix + "Getting IP address...", self)
-            self.ipHelpLabel = QLabel("Your friend should enter the IP address above as the host to connect to.\n"
-                                      "Make sure that port " + str(constants.DEFAULT_PORT) + " is forwarded to "
-                                      "this computer. See the help\nfor more info.", self)
-
 
         hbox = QHBoxLayout()
         hbox.addStretch(1)
@@ -42,35 +29,4 @@ class QWaitingDialog(QDialog):
         hbox.addWidget(self.connLabel)
         hbox.addStretch(1)
 
-        vbox = QVBoxLayout()
-        vbox.addStretch(1)
-        vbox.addLayout(hbox)
-
-        if showIP:
-            vbox.addSpacing(10)
-            vbox.addWidget(QLine())
-            vbox.addSpacing(10)
-            vbox.addWidget(self.ipLabel)
-            vbox.addSpacing(10)
-            vbox.addWidget(self.ipHelpLabel)
-
-        vbox.addStretch(1)
-
-        self.setLayout(vbox)
-
-        if showIP:
-            # Start the thread to get the IP address and update the IP label when finished
-            self.ipThread = qtThreads.GetIPAddressThread(self.__setIPAddress, self.__getIPAddressFailure)
-            self.ipThread.start()
-
-
-    def closeEvent(self, event):
-        self.onCloseSignal.emit()
-
-
-    def __setIPAddress(self, ip):
-        self.ipLabel.setText(self.ipLabelPrefix + ip)
-
-
-    def __getIPAddressFailure(self, error):
-        self.ipLabel.setText(self.ipLabelPrefix + "Error getting IP address")
+        self.setLayout(hbox)
