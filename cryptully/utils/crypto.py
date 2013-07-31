@@ -26,7 +26,7 @@ class Crypto(object):
 
     def generateRSAKeypair(self, bits=2048):
         # Seed the random number generator with the number of bytes requested (bits/8)
-        M2Crypto.Rand.rand_seed(os.urandom(bits/8))
+        M2Crypto.Rand.rand_seed(M2Crypto.Rand.rand_bytes(bits/8))
 
         # Generate the keypair (65537 as the public exponent)
         self.localKeypair = M2Crypto.RSA.gen_key(bits, 65537, self.__generateKeypairCallback)
@@ -38,17 +38,17 @@ class Crypto(object):
         # Generate the AES key and IV
         bitsString = aesMode[4:7]
         if bitsString == '128':
-            bits = 16
+            bytes = 16
         elif bitsString == '192':
-            bits = 24
+            bytes = 24
         elif bitsString == '256':
-            bits = 32
+            bytes = 32
         else:
             raise exceptions.CryptoError("Invalid AES mode")
 
-        self.aesKey  = os.urandom(bits)
-        self.aesIv   = os.urandom(bits)
-        self.aesSalt = os.urandom(8)
+        self.aesKey  = M2Crypto.Rand.rand_bytes(bytes)
+        self.aesIv   = M2Crypto.Rand.rand_bytes(bytes)
+        self.aesSalt = M2Crypto.Rand.rand_bytes(8)
 
 
     def setRemotePubKey(self, pubKey):
