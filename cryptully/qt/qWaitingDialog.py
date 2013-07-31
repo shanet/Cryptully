@@ -16,17 +16,19 @@ class QWaitingDialog(QDialog):
     def __init__(self, parent, text=""):
         QDialog.__init__(self, parent)
 
-        # Create connecting image
-        connMov = QMovie(qtUtils.getAbsoluteImagePath('waiting.gif'))
-        connMov.start()
-        self.connImg = QLabel(self)
-        self.connImg.setMovie(connMov)
+        # Create waiting image
+        waitingImage = QMovie(qtUtils.getAbsoluteImagePath('waiting.gif'))
+        waitingImage.start()
+        waitingImageLabel = QLabel(self)
+        waitingImageLabel.setMovie(waitingImage)
+
+        waitingLabel = QLabel(text, self)
 
         hbox = QHBoxLayout()
         hbox.addStretch(1)
-        hbox.addWidget(self.connImg)
+        hbox.addWidget(waitingImageLabel)
         hbox.addSpacing(10)
-        hbox.addWidget(self.connLabel)
+        hbox.addWidget(waitingLabel)
         hbox.addStretch(1)
 
         self.setLayout(hbox)
