@@ -88,7 +88,6 @@ class Client(Thread):
                 self.connectionManager.destroyClient(self.remoteNick)
                 return
 
-
             # Decrypt the incoming data
             payload = self.__getDecryptedPayload(message)
 
@@ -101,12 +100,10 @@ class Client(Thread):
 
 
     def disconnect(self):
-        if self.isConnected:
-            try:
-                self.sendMessage(constants.COMMAND_END)
-            except Exception:
-                pass
-        self.isConnected = False
+        try:
+            self.sendMessage(constants.COMMAND_END)
+        except Exception:
+            pass
 
 
     def __doHandshake(self):

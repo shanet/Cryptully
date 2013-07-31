@@ -41,7 +41,7 @@ class ConnectionManager(object):
         if self.sock.isConnected:
             try:
                 # Send the end command to all clients
-                for client in self.clients:
+                for nick, client in self.clients.iteritems():
                     client.disconnect()
 
                 # Send the end command to the server
@@ -129,7 +129,7 @@ class ConnectionManager(object):
             if command == constants.COMMAND_HELO:
                 self.newClientCallback(sourceNick)
             else:
-                self.sendMessage(Message(clientCommand=constants.COMMAND_ERR, erroCode=errors.INVALID_COMMAND))
+                self.sendMessage(Message(clientCommand=constants.COMMAND_ERR, errorCode=errors.INVALID_COMMAND))
 
 
     def newClientAccepted(self, nick):
