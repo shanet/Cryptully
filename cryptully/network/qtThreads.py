@@ -18,25 +18,6 @@ from utils import exceptions
 from utils import utils
 
 
-class QtServerAcceptThread(QThread):
-    successSignal = pyqtSignal(Client)
-
-    def __init__(self, server, crypto, successSlot):
-        QThread.__init__(self)
-
-        self.server = server
-        self.crypto = crypto
-        self.successSignal.connect(successSlot)
-
-
-    def run(self):
-        try:
-            client = self.server.accept(self.crypto)
-            self.successSignal.emit(client)
-        except socket.error as se:
-            self.server.stop()
-
-
 class QtServerConnectThread(QThread):
     successSignal = pyqtSignal()
     failureSignal = pyqtSignal(str)
