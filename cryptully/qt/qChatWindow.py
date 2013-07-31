@@ -300,7 +300,7 @@ class QChatWindow(QMainWindow):
             return
 
         utils.saveKeypair(self.connectionManager.getClient(self.nick).sock.crypto, passphrase)
-        QMessageBox.information(QWidget(), "Keys Saved", "Encryption keys saved. The current keys will be used for all subsequent connections")
+        QMessageBox.information(self, "Keys Saved", "Encryption keys saved. The current keys will be used for all subsequent connections")
 
 
     def __clearKeypair(self):
@@ -312,4 +312,5 @@ class QChatWindow(QMainWindow):
 
 
     def __exit(self):
-        qtUtils.exitApp()
+        if QMessageBox.question(self, "Confirm Exit", "Are you sure you want to exit?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No):
+            qtUtils.exitApp()
