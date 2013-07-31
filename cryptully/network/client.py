@@ -15,7 +15,7 @@ class Client(Thread):
     RSA = 0
     AES = 1
 
-    def __init__(self, connectionManager, remoteNick, sendMessageCallback, recvMessageCallback, handshakeDoneCallback, errorCallback, initiateHandkshakeOnStart=False, crypto=None):
+    def __init__(self, connectionManager, remoteNick, crypto, sendMessageCallback, recvMessageCallback, handshakeDoneCallback, errorCallback, initiateHandkshakeOnStart=False):
         Thread.__init__(self)
         self.daemon = True
 
@@ -31,12 +31,9 @@ class Client(Thread):
         self.wasHandshakeDone = False
         self.messageQueue = Queue.Queue()
 
-        # Create a crypto object if one was not given
-        if crypto is None:
-            self.crypto = Crypto()
-            self.crypto.generateKeys()
-        else:
-            self.crypto = crypto
+        # We need to generate a new AES key so each client uses a unique AES key
+        self.crypto = crypto
+        self.crypto.generateAESKey()
 
 
     def sendChatMessage(self, text):

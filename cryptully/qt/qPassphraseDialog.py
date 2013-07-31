@@ -22,9 +22,9 @@ class QPassphraseDialog(QDialog):
 
         # Set the title and icon
         self.setWindowTitle("Save Keys Passphrase")
-        self.setWindowIcon(QIcon(qtUtils.getAbsoluteResourcePath('icon.png')))
+        self.setWindowIcon(QIcon(qtUtils.getAbsoluteImagePath('icon.png')))
 
-        label = QLabel("Encryption keys passphrase:" if not verify else "Verify:", self)
+        label = QLabel("Encryption keys passphrase:" if not verify else "Confirm passphrase:", self)
         self.passphraseInput = QLineEdit(self)
         self.passphraseInput.setEchoMode(QLineEdit.Password)
         okayButton = QPushButton(QIcon.fromTheme('dialog-ok'), "OK", self)

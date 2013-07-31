@@ -48,8 +48,8 @@ def clearKeypair():
 
 
 def loadKeypair(crypto, passphrase):
-    # Cast passphrase to a stringto avoid any strange types
-    passphrase = str(passphrase)
+    if type(passphrase) is not str:
+        raise TypeError()
 
     storeDir = os.path.join(os.path.expanduser('~'), '.cryptully')
     keypairFile = os.path.join(storeDir, 'keypair.pem')

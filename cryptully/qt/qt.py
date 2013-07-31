@@ -32,6 +32,7 @@ class QtUI(QApplication):
         self.nick = nick
         self.turn = turn
         self.port = port
+        self.crypto = None
         self.isEventLoopRunning = False
 
         qtUtils.setIsLightTheme(self.palette().color(QPalette.Window))
@@ -58,8 +59,7 @@ class QtUI(QApplication):
         self.chatWindow = QChatWindow()
         self.chatWindow.show()
 
-        # TODO: handle this
-        #self.__loadOrGenerateKepair()
+        self.__loadOrGenerateKepair()
 
         self.__connectToServer()
 
@@ -77,20 +77,19 @@ class QtUI(QApplication):
 
 
     def __restart(self):
-        self.connectionManager.disconnectFromServer()
-        self.__restartHelper()
-        self.start()
+        if hasattr(self, 'connectionManager'):
+            self.connectionManager.disconnectFromServer()
 
-
-    def __restartHelper(self):
         self.closeAllWindows()
-
         if hasattr(self, 'chatWindow'):
             del self.chatWindow
+
+        self.start()
 
 
     def __loadOrGenerateKepair(self):
         self.crypto = Crypto()
+
         if utils.doesSavedKeypairExist():
             while(True):
                 passphrase = qtUtils.getKeypairPassphrase()
@@ -101,20 +100,18 @@ class QtUI(QApplication):
                     return
 
                 try:
-                    utils.loadKeypair(self.crypto, passphrase)
+                    utils.loadKeypair(self.crypto, str(passphrase))
                     break
                 except exceptions.CryptoError:
                     QMessageBox.warning(self.chatWindow, errors.BAD_PASSPHRASE, errors.BAD_PASSPHRASE_VERBOSE)
-
-            # We still need to generate an AES key
-            self.crypto.generateAESKey()
         else:
-            self.crypto.generateKeys()
+            # Only generate an RSA keypair; a unique AES key will be generated later for each client
+            self.crypto.generateRSAKeypair()
 
 
     def __connectToServer(self):
         # Create the connection manager to manage all communcation to the server
-        self.connectionManager = ConnectionManager(self.nick, (self.turn, self.port), self.chatWindow.postMessage, self.chatWindow.newClient, self.chatWindow.clientReady, self.chatWindow.handleError)
+        self.connectionManager = ConnectionManager(self.nick, (self.turn, self.port), self.crypto, self.chatWindow.postMessage, self.chatWindow.newClient, self.chatWindow.clientReady, self.chatWindow.handleError)
         self.chatWindow.connectionManager = self.connectionManager
 
         # Start the connect thread
@@ -122,7 +119,7 @@ class QtUI(QApplication):
         self.connectThread.start()
 
         # Show the waiting dialog
-        self.waitingDialog = QWaitingDialog(self.chatWindow, "Connecting to server...", self.__userClosedWaitingDialog)
+        self.waitingDialog = QWaitingDialog(self.chatWindow, "Connecting to server...")
         self.waitingDialog.show()
 
 
@@ -134,6 +131,10 @@ class QtUI(QApplication):
 
     @pyqtSlot(str)
     def __connectFailure(self, errorMessage):
+        # Show a more friendly error if the connection was refused (errno 111)
+        if errorMessage.contains('Errno 111'):
+            errorMessage = "Unable to contact the server. Try again later."
+
         QMessageBox.critical(self.chatWindow, errors.FAILED_TO_CONNECT, errorMessage)
         self.__restart()
 
@@ -160,13 +161,3 @@ class QtUI(QApplication):
             self.__waitForClient()
 
         self.__startChat()
-
-
-    @pyqtSlot()
-    def __userClosedWaitingDialog(self):
-        self.waitingDialog.hide()
-        # If the waiting dialog was closed before we connected to the client,
-        # it means that the user closed the dialog and we should restart the app
-        #if not self.connectedToClient:
-        #    self.__restart()
-

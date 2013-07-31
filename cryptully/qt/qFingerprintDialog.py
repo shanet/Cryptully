@@ -16,7 +16,7 @@ class QFingerprintDialog(QDialog):
 
         # Set the title and icon
         self.setWindowTitle("Verify Key Integrity")
-        self.setWindowIcon(QIcon("images/placeholder.png"))
+        self.setWindowIcon(QIcon(qtUtils.getAbsoluteImagePath('icon.png')))
 
         keyIcon = QLabel(self)
         keyIcon.setPixmap(QPixmap(qtUtils.getAbsoluteImagePath('fingerprint.png')).scaledToWidth(80, Qt.SmoothTransformation))

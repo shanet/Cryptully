@@ -132,9 +132,10 @@ class QChatWindow(QMainWindow):
 
     @pyqtSlot(str, int)
     def handleErrorSlot(self, nick, errorCode):
-        nick = str(nick)
-        tab = self.getTabByNick(nick)[0]
-        tab.resetOrDisable()
+        if nick != '':
+            nick = str(nick)
+            tab = self.getTabByNick(nick)[0]
+            tab.resetOrDisable()
 
         if errorCode == errors.ERR_CONNECTION_ENDED:
             QMessageBox.warning(self, errors.TITLE_CONNECTION_ENDED, errors.CONNECTION_ENDED % (nick))
@@ -155,6 +156,8 @@ class QChatWindow(QMainWindow):
             QMessageBox.warning(self, errors.TITLE_ALREADY_CONNECTED, errors.ALREADY_CONNECTED % (nick))
         elif errorCode == errors.ERR_INVALID_COMMAND:
             QMessageBox.warning(self, errors.TITLE_INVALID_COMMAND, errors.INVALID_COMMAND % (nick))
+        elif errorCode == errors.ERR_NETWORK_ERROR:
+            QMessageBox.critical(self, errors.TITLE_NETWORK_ERROR, errors.NETWORK_ERROR)
         else:
             QMessageBox.warning(self, errors.TITLE_UNKNOWN_ERROR, errors.UNKNOWN_ERROR % (nick))
 
@@ -299,7 +302,7 @@ class QChatWindow(QMainWindow):
         if passphrase is None:
             return
 
-        utils.saveKeypair(self.connectionManager.getClient(self.nick).sock.crypto, passphrase)
+        utils.saveKeypair(self.connectionManager.crypto, passphrase)
         QMessageBox.information(self, "Keys Saved", "Encryption keys saved. The current keys will be used for all subsequent connections")
 
 
