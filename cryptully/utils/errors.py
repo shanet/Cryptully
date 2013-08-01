@@ -24,6 +24,7 @@ TITLE_UNKNOWN_ERROR       = "Unknown Error"
 TITLE_EMPTY_NICK          = "No Nickname Provided"
 TITLE_NETWORK_ERROR       = "Network Error"
 TITLE_BAD_HMAC            = "Tampering Detected"
+TITLE_BAD_DECRYPT         = "Decryption Error"
 
 UNEXPECTED_CLOSE_CONNECTION = "Remote unexpectedly closed connection"
 UNEXPECTED_DATA             = "Remote sent unexpected data"
@@ -52,6 +53,7 @@ UNKNOWN_ERROR               = "An unknown error occured with %s"
 EMPTY_NICK                  = "Please enter a nickname"
 NETWORK_ERROR               = "A network error occured while communicating with the server. Try connecting to the server again."
 BAD_HMAC                    = "Warning: Automatic data integrity check failed. Someone may be tampering with your conversation."
+BAD_DECRYPT                 = "Unable to decrypt incoming message. This usually happens when the client sends malformed data."
 
 # Error codes
 ERR_CONNECTION_ENDED    = 0
@@ -65,3 +67,4 @@ ERR_INVALID_COMMAND     = 7
 ERR_ALREADY_CONNECTED   = 8
 ERR_NETWORK_ERROR       = 9
 ERR_BAD_HMAC            = 10
+ERR_BAD_DECRYPT         = 11

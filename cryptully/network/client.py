@@ -205,13 +205,21 @@ class Client(Thread):
             payload = message.getEncryptedPayloadAsString()
             if self.encryptionType == self.AES:
                 # Check the HMAC
-                if self.__verifyHmac(message.hmac, message.getEncryptedPayloadAsString()):
+                if not self.__verifyHmac(message.hmac, message.getEncryptedPayloadAsString()):
                     self.errorCallback(message.sourceNick, errors.ERR_BAD_HMAC)
                     raise exceptions.CryptoError(errors.BAD_HMAC)
 
-                payload = self.crypto.aesDecrypt(payload)
+                try:
+                    payload = self.crypto.aesDecrypt(payload)
+                except exceptions.CryptoError as ce:
+                    self.errorCallback(message.sourceNick, errors.ERR_BAD_DECRYPT)
+                    raise ce
             elif self.encryptionType == self.RSA:
-                payload = self.crypto.rsaDecrypt(payload)
+                try:
+                    payload = self.crypto.rsaDecrypt(payload)
+                except exceptions.CryptoError as ce:
+                    self.errorCallback(message.sourceNick, errors.ERR_BAD_DECRYPT)
+                    raise ce
             else:
                 raise exceptions.CryptoError(errors.UNKNOWN_ENCRYPTION_TYPE)
         else:
