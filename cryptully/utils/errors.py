@@ -25,8 +25,10 @@ TITLE_EMPTY_NICK          = "No Nickname Provided"
 TITLE_NETWORK_ERROR       = "Network Error"
 TITLE_BAD_HMAC            = "Tampering Detected"
 TITLE_BAD_DECRYPT         = "Decryption Error"
+TITLE_NICK_IN_USE         = "Nickname Not Available"
 
-UNEXPECTED_CLOSE_CONNECTION = "Remote unexpectedly closed connection"
+UNEXPECTED_CLOSE_CONNECTION = "Server unexpectedly closed connection"
+CLOSE_CONNECTION            = "The server closed the connection"
 UNEXPECTED_DATA             = "Remote sent unexpected data"
 UNEXPECTED_COMMAND          = "Receieved unexpected command"
 NO_COMMAND_SEPARATOR        = "Command separator not found in message"
@@ -54,6 +56,7 @@ EMPTY_NICK                  = "Please enter a nickname"
 NETWORK_ERROR               = "A network error occured while communicating with the server. Try connecting to the server again."
 BAD_HMAC                    = "Warning: Automatic data integrity check failed. Someone may be tampering with your conversation."
 BAD_DECRYPT                 = "Unable to decrypt incoming message. This usually happens when the client sends malformed data."
+NICK_IN_USE                 = "Sorry, someone else is already using that nickname"
 
 # Error codes
 ERR_CONNECTION_ENDED    = 0
@@ -68,3 +71,7 @@ ERR_ALREADY_CONNECTED   = 8
 ERR_NETWORK_ERROR       = 9
 ERR_BAD_HMAC            = 10
 ERR_BAD_DECRYPT         = 11
+ERR_INVALID_NICK        = 12
+ERR_NICK_IN_USE         = 13
+ERR_CLOSED_CONNECTION   = 14
+

@@ -116,10 +116,10 @@ class ConnectionManager(object):
 
         # Handle errors/shutdown from the server
         if message.serverCommand == constants.COMMAND_ERR:
-            self.errorCallback(message.destNick, int(message.error))
+            self.errorCallback('', int(message.error))
             return
         elif message.serverCommand == constants.COMMAND_END:
-            self.errorCallback(message.destNick, int(message.error))
+            self.errorCallback('', int(message.error))
             return
 
         # Send the payload to it's intended client
@@ -160,7 +160,9 @@ class RecvThread(Thread):
                 # Send the message to the given callback
                 self.recvCallback(message)
             except exceptions.NetworkError as ne:
-                self.errorCallback('', errors.ERR_NETWORK_ERROR)
+                # Don't show an error if the connection closing was expected/normal
+                if ne.errno != errors.ERR_CLOSED_CONNECTION:
+                    self.errorCallback('', errors.ERR_NETWORK_ERROR)
                 return
 
 

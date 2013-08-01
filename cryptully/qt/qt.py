@@ -57,7 +57,7 @@ class QtUI(QApplication):
             self.nick = str(nick)
 
         # Show the chat window
-        self.chatWindow = QChatWindow()
+        self.chatWindow = QChatWindow(self.restart)
         self.chatWindow.show()
 
         self.__loadOrGenerateKepair()
@@ -81,7 +81,7 @@ class QtUI(QApplication):
         self.quit()
 
 
-    def __restart(self):
+    def restart(self):
         if hasattr(self, 'connectionManager'):
             self.connectionManager.disconnectFromServer()
 
@@ -101,7 +101,7 @@ class QtUI(QApplication):
 
                 # Restart the application if the user did not provide a passphrase
                 if passphrase is None:
-                    self.__restart()
+                    self.restart()
                     return
 
                 try:
@@ -141,28 +141,4 @@ class QtUI(QApplication):
             errorMessage = "Unable to contact the server. Try again later."
 
         QMessageBox.critical(self.chatWindow, errors.FAILED_TO_CONNECT, errorMessage)
-        self.__restart()
-
-
-    @pyqtSlot(Client)
-    def __postAccept(self, client):
-        self.client = client
-        self.waitingDialog.close()
-
-        # Show the accept dialog
-        accept = QAcceptDialog.getAnswer(self.chatWindow, self.client.getHostname())
-
-        # If not accepted, disconnect and wait for a client again
-        if not accept:
-            self.client.disconnect()
-            self.__waitForClient()
-            return
-
-        # Do the handshake with the client
-        try:
-            client.doHandshake()
-        except exceptions.NetworkError as ne:
-            self.client.disconnect()
-            self.__waitForClient()
-
-        self.__startChat()
+        self.restart()

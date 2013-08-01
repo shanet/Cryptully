@@ -40,9 +40,10 @@ class QChatWindow(QMainWindow):
     handleErrorSignal = pyqtSignal(str, int)
     sendMessageToTabSignal = pyqtSignal(str, str, str)
 
-    def __init__(self, connectionManager=None, messageQueue=None):
+    def __init__(self, restartCallback, connectionManager=None, messageQueue=None):
         QMainWindow.__init__(self)
 
+        self.restartCallback = restartCallback
         self.connectionManager = connectionManager
         self.messageQueue = messageQueue
         self.newClientSignal.connect(self.newClientSlot)
@@ -132,8 +133,13 @@ class QChatWindow(QMainWindow):
 
     @pyqtSlot(str, int)
     def handleErrorSlot(self, nick, errorCode):
-        if nick != '':
-            nick = str(nick)
+        # If no nick was given, disable all tabs
+        nick = str(nick)
+        if nick == '':
+            for i in range(0, self.chatTabs.count()):
+                curTab = self.chatTabs.widget(i)
+                curTab.resetOrDisable()
+        else:
             tab = self.getTabByNick(nick)[0]
             tab.resetOrDisable()
 
@@ -151,7 +157,7 @@ class QChatWindow(QMainWindow):
         elif errorCode == errors.ERR_SELF_CONNECT:
             QMessageBox.warning(self, errors.TITLE_SELF_CONNECT, errors.SELF_CONNECT)
         elif errorCode == errors.ERR_SERVER_SHUTDOWN:
-            QMessageBox.critical(self, errors.TITLE_SERVER_SHUTDOWN, errors.SELF_SERVER_SHUTDOWN)
+            QMessageBox.critical(self, errors.TITLE_SERVER_SHUTDOWN, errors.SERVER_SHUTDOWN)
         elif errorCode == errors.ERR_ALREADY_CONNECTED:
             QMessageBox.warning(self, errors.TITLE_ALREADY_CONNECTED, errors.ALREADY_CONNECTED % (nick))
         elif errorCode == errors.ERR_INVALID_COMMAND:
@@ -162,6 +168,9 @@ class QChatWindow(QMainWindow):
             QMessageBox.critical(self, errors.TITLE_BAD_HMAC, errors.BAD_HMAC)
         elif errorCode == errors.ERR_BAD_DECRYPT:
             QMessageBox.warning(self, errors.TITLE_BAD_DECRYPT, errors.BAD_DECRYPT)
+        elif errorCode == errors.ERR_NICK_IN_USE:
+            QMessageBox.warning(self, errors.TITLE_NICK_IN_USE, errors.NICK_IN_USE)
+            self.restartCallback()
         else:
             QMessageBox.warning(self, errors.TITLE_UNKNOWN_ERROR, errors.UNKNOWN_ERROR % (nick))
 

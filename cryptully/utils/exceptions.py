@@ -3,7 +3,9 @@ class GenericError(Exception):
 
 
 class NetworkError(Exception):
-    pass
+    def __init__(self, message, errno=0):
+        Exception.__init__(self, message)
+        self.errno = errno
 
 
 class ProtocolError(Exception):
