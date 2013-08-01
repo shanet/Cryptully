@@ -186,7 +186,7 @@ class SendThread(Thread):
                 if message.serverCommand == constants.COMMAND_END:
                     self.sock.disconnect()
             except exceptions.NetworkError as ne:
-                self.errorCallback('', errors.ERR_NETWORK_ERR)
+                self.errorCallback('', errors.ERR_NETWORK_ERROR)
                 return
             finally:
                 # Mark the operation as done
