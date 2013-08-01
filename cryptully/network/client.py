@@ -1,3 +1,4 @@
+import base64
 import Queue
 
 from threading import Thread
@@ -45,12 +46,16 @@ class Client(Thread):
 
         # Encrypt all outgoing data
         if payload is not None and self.encryptionType is not None:
-            if self.encryptionType == self.RSA:
-                payload = self.crypto.rsaEncrypt(payload)
-            elif self.encryptionType == self.AES:
+            if self.encryptionType == self.AES:
                 payload = self.crypto.aesEncrypt(payload)
+
+                # Generate and set the HMAC for the message
+                message.setBinaryHmac(self.crypto.generateHmac(payload))
+            elif self.encryptionType == self.RSA:
+                payload = self.crypto.rsaEncrypt(payload)
             else:
                 raise exceptions.CryptoError(errors.UNKNOWN_ENCRYPTION_TYPE)
+
             message.setEncryptedPayload(payload)
         else:
             message.payload = payload
@@ -200,6 +205,11 @@ class Client(Thread):
             payload = message.getEncryptedPayloadAsString()
             if self.encryptionType == self.AES:
                 payload = self.crypto.aesDecrypt(payload)
+                
+                # Check the HMAC
+                if self.__verifyHmac(message.hmac, message.getEncryptedPayloadAsString()):
+                    self.errorCallback(message.sourceNick, errors.ERR_BAD_HMAC)
+                    raise exceptions.CryptoError(errors.BAD_HMAC)
             elif self.encryptionType == self.RSA:
                 payload = self.crypto.rsaDecrypt(payload)
             else:
@@ -208,6 +218,11 @@ class Client(Thread):
             payload = message.payload
 
         return payload
+
+
+    def __verifyHmac(self, givenHmac, payload):
+        generatedHmac = self.crypto.generateHmac(payload)
+        return utils.secureStrcmp(generatedHmac, base64.b64decode(givenHmac))
 
 
     def __handleHandshakeError(self, exception):

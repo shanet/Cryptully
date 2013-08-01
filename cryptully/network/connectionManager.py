@@ -130,7 +130,7 @@ class ConnectionManager(object):
             if command == constants.COMMAND_HELO:
                 self.newClientCallback(sourceNick)
             else:
-                self.sendMessage(Message(clientCommand=constants.COMMAND_ERR, errorCode=errors.INVALID_COMMAND))
+                self.sendMessage(Message(clientCommand=constants.COMMAND_ERR, error=errors.INVALID_COMMAND))
 
 
     def newClientAccepted(self, nick):

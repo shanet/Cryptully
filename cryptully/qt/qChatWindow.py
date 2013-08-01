@@ -158,6 +158,8 @@ class QChatWindow(QMainWindow):
             QMessageBox.warning(self, errors.TITLE_INVALID_COMMAND, errors.INVALID_COMMAND % (nick))
         elif errorCode == errors.ERR_NETWORK_ERROR:
             QMessageBox.critical(self, errors.TITLE_NETWORK_ERROR, errors.NETWORK_ERROR)
+        elif errorCode == errors.ERR_BAD_HMAC:
+            QMessageBox.critical(self, errors.TITLE_BAD_HMAC, errors.BAD_HMAC)
         else:
             QMessageBox.warning(self, errors.TITLE_UNKNOWN_ERROR, errors.UNKNOWN_ERROR % (nick))
 

@@ -106,3 +106,15 @@ def getAbsoluteResourcePath(relativePath):
         return None
 
     return path
+
+
+def secureStrcmp(left, right):
+    equal = True
+    for i in range(0, min(len(left), len(right))-1):
+        if left[i] != right[i]:
+            equal = False
+
+    if len(left) != len(right):
+        equal = False
+
+    return equal

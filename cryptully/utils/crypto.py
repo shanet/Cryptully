@@ -1,4 +1,5 @@
 import os
+import hmac
 import M2Crypto
 
 import exceptions
@@ -97,6 +98,12 @@ class Crypto(object):
 
     def __aesGetCipher(self, op):
         return M2Crypto.EVP.Cipher(alg='aes_256_cbc', key=self.aesKey, iv=self.aesIv, salt=self.aesSalt, d='sha256', op=op)
+
+
+    def generateHmac(self, message):
+        hmac = M2Crypto.EVP.HMAC(self.aesKey, 'sha256')
+        hmac.update(message)
+        return hmac.digest()
 
 
     def readLocalKeypairFromFile(self, file, passphrase):

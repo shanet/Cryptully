@@ -23,6 +23,7 @@ TITLE_ALREADY_CONNECTED   = "Already Chatting"
 TITLE_UNKNOWN_ERROR       = "Unknown Error"
 TITLE_EMPTY_NICK          = "No Nickname Provided"
 TITLE_NETWORK_ERROR       = "Network Error"
+TITLE_BAD_HMAC            = "Tampering Detected"
 
 UNEXPECTED_CLOSE_CONNECTION = "Remote unexpectedly closed connection"
 UNEXPECTED_DATA             = "Remote sent unexpected data"
@@ -50,6 +51,7 @@ ALREADY_CONNECTED           = "A chat with %s is already open"
 UNKNOWN_ERROR               = "An unknown error occured with %s"
 EMPTY_NICK                  = "Please enter a nickname"
 NETWORK_ERROR               = "A network error occured while communicating with the server. Try connecting to the server again."
+BAD_HMAC                    = "Warning: Automatic data integrity check failed. Someone may be tampering with your conversation."
 
 # Error codes
 ERR_CONNECTION_ENDED    = 0
@@ -62,3 +64,4 @@ ERR_SERVER_SHUTDOWN     = 6
 ERR_INVALID_COMMAND     = 7
 ERR_ALREADY_CONNECTED   = 8
 ERR_NETWORK_ERROR       = 9
+ERR_BAD_HMAC            = 10
