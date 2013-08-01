@@ -1,4 +1,5 @@
 import sys
+import time
 
 from network.client import Client
 from network.connectionManager import ConnectionManager
@@ -72,6 +73,10 @@ class QtUI(QApplication):
     def stop(self):
         if hasattr(self, 'connectionManager'):
             self.connectionManager.disconnectFromServer()
+
+        # Give the send thread time to get the disconnect messages out before exiting
+        # and killing the thread
+        time.sleep(.25)
 
         self.quit()
 
