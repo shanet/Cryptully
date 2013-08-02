@@ -252,7 +252,9 @@ class RecvThread(Thread):
             except Exception as e:
                 if hasattr(e, 'errno') and e.errno != errors.ERR_CLOSED_CONNECTION:
                     printAndLog(self.nick + ": error receiving from: " + str(e))
-                    nickMap[self.nick].disconnect
+
+                if self.nick in nickMap:
+                    nickMap[self.nick].disconnect()
                 return
 
 
