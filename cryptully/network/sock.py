@@ -36,7 +36,6 @@ class Socket(object):
             self.sock.shutdown(socket.SHUT_RDWR)
             self.sock.close()
         except Exception as e:
-            print e
             pass
         finally:
             self.isConnected = False
