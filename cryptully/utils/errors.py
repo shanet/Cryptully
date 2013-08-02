@@ -26,6 +26,7 @@ TITLE_NETWORK_ERROR       = "Network Error"
 TITLE_BAD_HMAC            = "Tampering Detected"
 TITLE_BAD_DECRYPT         = "Decryption Error"
 TITLE_NICK_IN_USE         = "Nickname Not Available"
+TITLE_KICKED              = "Kicked"
 
 UNEXPECTED_CLOSE_CONNECTION = "Server unexpectedly closed connection"
 CLOSE_CONNECTION            = "The server closed the connection"
@@ -57,6 +58,7 @@ NETWORK_ERROR               = "A network error occured while communicating with 
 BAD_HMAC                    = "Warning: Automatic data integrity check failed. Someone may be tampering with your conversation."
 BAD_DECRYPT                 = "Unable to decrypt incoming message. This usually happens when the client sends malformed data."
 NICK_IN_USE                 = "Sorry, someone else is already using that nickname"
+KICKED                      = "You have been kicked off the server"
 
 # Error codes
 ERR_CONNECTION_ENDED    = 0
@@ -74,4 +76,5 @@ ERR_BAD_DECRYPT         = 11
 ERR_INVALID_NICK        = 12
 ERR_NICK_IN_USE         = 13
 ERR_CLOSED_CONNECTION   = 14
+ERR_KICKED              = 15
 

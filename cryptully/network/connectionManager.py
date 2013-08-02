@@ -161,7 +161,7 @@ class RecvThread(Thread):
                 self.recvCallback(message)
             except exceptions.NetworkError as ne:
                 # Don't show an error if the connection closing was expected/normal
-                if ne.errno != errors.ERR_CLOSED_CONNECTION:
+                if hasattr(ne, 'errno') and ne.errno != errors.ERR_CLOSED_CONNECTION:
                     self.errorCallback('', errors.ERR_NETWORK_ERROR)
                 return
 

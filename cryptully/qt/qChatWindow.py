@@ -168,6 +168,8 @@ class QChatWindow(QMainWindow):
             QMessageBox.critical(self, errors.TITLE_BAD_HMAC, errors.BAD_HMAC)
         elif errorCode == errors.ERR_BAD_DECRYPT:
             QMessageBox.warning(self, errors.TITLE_BAD_DECRYPT, errors.BAD_DECRYPT)
+        elif errorCode == errors.ERR_KICKED:
+            QMessageBox.critical(self, errors.TITLE_KICKED, errors.KICKED)
         elif errorCode == errors.ERR_NICK_IN_USE:
             QMessageBox.warning(self, errors.TITLE_NICK_IN_USE, errors.NICK_IN_USE)
             self.restartCallback()

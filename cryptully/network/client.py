@@ -237,7 +237,7 @@ class Client(Thread):
         self.errorCallback(self.remoteNick, exception.errno)
 
         # For all errors except the connection being rejected, tell the client there was an error
-        if exception.errno != errors.ERR_CONNECTION_REJECTED:
+        if hasattr(exception, 'errno') and exception.errno != errors.ERR_CONNECTION_REJECTED:
             self.sendMessage(constants.COMMAND_ERR)
         # For reject errors, delete this client
         else:

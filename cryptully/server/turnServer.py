@@ -1,4 +1,6 @@
+import os
 import Queue
+import signal
 import socket
 import sys
 import time
@@ -30,6 +32,7 @@ class TURNServer(object):
         logFile = open('cryptully.log', 'a')
 
         serversock = self.startServer()
+        Console().start()
 
         while True:
             # Wait for a client to connect
@@ -68,6 +71,62 @@ class TURNServer(object):
         logFile.close()
 
 
+class Console(Thread):
+    def __init__(self):
+        Thread.__init__(self)
+        self.daemon = True
+
+
+    def run(self):
+        while True:
+            input = raw_input().split()
+
+            if len(input) == 0:
+                continue
+
+            command = input[0]
+
+            if command == 'list' or command == 'nicks':
+                print "Registered nicks"
+                print "================"
+                for nick, client in nickMap.iteritems():
+                    print nick + " - " + str(client.sock)
+
+            elif command == 'zombies':
+                print "Zombie Connections"
+                print "=================="
+                for addr, client in ipMap.iteritems():
+                    print addr
+
+            elif command == 'kick':
+                if len(input) != 2:
+                    print "Kick command requires an argument"
+                else:
+                    try:
+                        client = nickMap[input[1]]
+                        client.kick()
+                        print input[1] + " kicked from server"
+                    except KeyError:
+                        print input[1] + " is not a registered nick"
+
+            elif command == 'kill':
+                if len(input) != 2:
+                    print "Kill command requires an argument"
+                else:
+                    try:
+                        client = ipMap[input[1]]
+                        client.kick()
+                        print input[1] + " killed"
+                    except KeyError:
+                        print input[1] + " is not a zombie"
+
+            elif command == 'stop':
+                os.kill(os.getpid(), signal.SIGINT)
+
+            else:
+                print "Unrecognized command"
+
+
 class Client(object):
     def __init__(self, sock):
         self.sock = sock
@@ -96,6 +155,13 @@ class Client(object):
         del nickMap[self.nick]
 
 
+    def kick(self):
+        self.send(Message(serverCommand=constants.COMMAND_ERR, destNick=self.nick, error=errors.ERR_KICKED))
+        time.sleep(.25)
+        self.disconnect()
+
+
+
 class SendThread(Thread):
     def __init__(self, sock):
         Thread.__init__(self)
@@ -113,7 +179,7 @@ class SendThread(Thread):
                 self.sock.send(str(message))
             except Exception as e:
                 nick = message.destNick
-                printAndLog(nick + ": error sending data to: " + e)
+                printAndLog(nick + ": error sending data to: " + str(e))
                 nickMap[nick].disconnect
                 return
             finally:
@@ -184,8 +250,9 @@ class RecvThread(Thread):
                     printAndLog(self.nick + ": sent message to non-existant nick")
                     self.sock.send(str(Message(serverCommand=constants.COMMAND_ERR, destNick=message.destNick, error=errors.ERR_NICK_NOT_FOUND)))
             except Exception as e:
-                printAndLog(self.nick + ": error receiving from: " + e)
-                nickMap[self.nick].disconnect
+                if hasattr(e, 'errno') and e.errno != errors.ERR_CLOSED_CONNECTION:
+                    printAndLog(self.nick + ": error receiving from: " + str(e))
+                    nickMap[self.nick].disconnect
                 return
 
 
