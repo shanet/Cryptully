@@ -31,7 +31,6 @@ class TURNServer(object):
         global logFile
         try:
             logFile = open('cryptully.log', 'a')
-            raise Exception
         except:
             logFile = None
             print "Error opening logfile"
