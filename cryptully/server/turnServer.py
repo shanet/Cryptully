@@ -31,12 +31,12 @@ class TURNServer(object):
         global logFile
         logFile = open('cryptully.log', 'a')
 
-        serversock = self.startServer()
         Console().start()
+        serversock = self.startServer()
 
         while True:
             # Wait for a client to connect
-            print "Waiting for client..."
+            #print "Waiting for client..."
             (clientSock, clientAddr) = serversock.accept()
 
             # Wrap the socket in our socket object
@@ -79,7 +79,7 @@ class Console(Thread):
 
     def run(self):
         while True:
-            input = raw_input().split()
+            input = raw_input(">> ").split()
 
             if len(input) == 0:
                 continue
@@ -274,7 +274,8 @@ class RecvThread(Thread):
 
 
 def printAndLog(message):
-    print message
+    sys.stdout.write("\b\b\b" + message + "\n>> ")
+    sys.stdout.flush()
     log(message)
 
 
