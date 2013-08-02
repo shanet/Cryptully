@@ -1,4 +1,4 @@
-DEFAULT_TURN_SERVER = 'shanetully.com'
+DEFAULT_TURN_SERVER = 'cryptully.com'
 DEFAULT_PORT        = 9000
 
 NICK_MAX_LEN = 32
