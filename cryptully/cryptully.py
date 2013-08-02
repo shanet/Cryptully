@@ -4,10 +4,6 @@ import sys
 import signal
 import argparse
 
-from ncurses.ncurses import NcursesUI
-from qt.qt import QtUI
-from server.turnServer import TURNServer
-
 from utils import constants
 
 
@@ -22,14 +18,17 @@ def main():
     signal.signal(signal.SIGINT, signalHandler)
 
     if args.server:
+        from server.turnServer import TURNServer
         global turnServer
         turnServer = TURNServer(args.port)
         turnServer.start()
     elif args.ncurses:
+        from ncurses.ncurses import NcursesUI
         global ncursesUI
         ncursesUI = NcursesUI(args.nick, args.turn, args.port)
         ncursesUI.start()
     else:
+        from qt.qt import QtUI
         global qtUI
         qtUI = QtUI(sys.argv, args.nick, args.turn, args.port)
         qtUI.start()
