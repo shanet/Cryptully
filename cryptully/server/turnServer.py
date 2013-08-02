@@ -29,7 +29,12 @@ class TURNServer(object):
 
     def start(self):
         global logFile
-        logFile = open('cryptully.log', 'a')
+        try:
+            logFile = open('cryptully.log', 'a')
+            raise Exception
+        except:
+            logFile = None
+            print "Error opening logfile"
 
         Console().start()
         serversock = self.startServer()
@@ -68,7 +73,8 @@ class TURNServer(object):
         # Give the send threads time to get their messages out
         time.sleep(.25)
 
-        logFile.close()
+        if logFile is not None:
+            logFile.close()
 
 
 class Console(Thread):
@@ -280,5 +286,6 @@ def printAndLog(message):
 
 
 def log(message):
-    logFile.write(message + '\n')
-    logFile.flush()
+    if logFile is not None:
+        logFile.write(message + '\n')
+        logFile.flush()
