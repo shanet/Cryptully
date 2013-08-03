@@ -116,7 +116,10 @@ class ConnectionManager(object):
 
         # Handle errors/shutdown from the server
         if message.serverCommand == constants.COMMAND_ERR:
-            self.errorCallback('', int(message.error))
+            # If the error was that the nick wasn't found, kill the client trying to connect to that nick
+            if int(message.error) == errors.ERR_NICK_NOT_FOUND:
+                del self.clients[str(message.destNick)]
+            self.errorCallback(message.destNick, int(message.error))
             return
         elif message.serverCommand == constants.COMMAND_END:
             self.errorCallback('', int(message.error))

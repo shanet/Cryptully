@@ -146,20 +146,21 @@ class QChatWindow(QMainWindow):
         if errorCode == errors.ERR_CONNECTION_ENDED:
             QMessageBox.warning(self, errors.TITLE_CONNECTION_ENDED, errors.CONNECTION_ENDED % (nick))
         elif errorCode == errors.ERR_NICK_NOT_FOUND:
-            QMessageBox.warning(self, errors.TITLE_NICK_NOT_FOUND, errors.NICK_NOT_FOUND)
+            QMessageBox.information(self, errors.TITLE_NICK_NOT_FOUND, errors.NICK_NOT_FOUND % (nick))
+            tab.nick = None
         elif errorCode == errors.ERR_CONNECTION_REJECTED:
-            QMessageBox.warning(self, errors.TITLE_CONNECTION_REJECTED, errors.CONNECTION_REJECTED % (nick))
+            QMessageBox.warning(self, errors.TITLE_CONNECTION_REJECTED, errors.CONNECTION_REJECTED)
             tab.nick = None
         elif errorCode == errors.ERR_BAD_HANDSHAKE:
             QMessageBox.warning(self, errors.TITLE_PROTOCOL_ERROR, errors.PROTOCOL_ERROR)
         elif errorCode == errors.ERR_CLIENT_EXISTS:
-            QMessageBox.warning(self, errors.TITLE_CLIENT_EXISTS, errors.CLIENT_EXISTS % (nick))
+            QMessageBox.information(self, errors.TITLE_CLIENT_EXISTS, errors.CLIENT_EXISTS % (nick))
         elif errorCode == errors.ERR_SELF_CONNECT:
             QMessageBox.warning(self, errors.TITLE_SELF_CONNECT, errors.SELF_CONNECT)
         elif errorCode == errors.ERR_SERVER_SHUTDOWN:
             QMessageBox.critical(self, errors.TITLE_SERVER_SHUTDOWN, errors.SERVER_SHUTDOWN)
         elif errorCode == errors.ERR_ALREADY_CONNECTED:
-            QMessageBox.warning(self, errors.TITLE_ALREADY_CONNECTED, errors.ALREADY_CONNECTED % (nick))
+            QMessageBox.information(self, errors.TITLE_ALREADY_CONNECTED, errors.ALREADY_CONNECTED % (nick))
         elif errorCode == errors.ERR_INVALID_COMMAND:
             QMessageBox.warning(self, errors.TITLE_INVALID_COMMAND, errors.INVALID_COMMAND % (nick))
         elif errorCode == errors.ERR_NETWORK_ERROR:
