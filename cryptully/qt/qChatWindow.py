@@ -330,5 +330,5 @@ class QChatWindow(QMainWindow):
 
 
     def __exit(self):
-        if QMessageBox.question(self, "Confirm Exit", "Are you sure you want to exit?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No):
+        if QMessageBox.Yes == QMessageBox.question(self, "Confirm Exit", "Are you sure you want to exit?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No):
             qtUtils.exitApp()
