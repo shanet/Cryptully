@@ -29,10 +29,12 @@ class QNickInputWidget(QWidget):
         self.nickLabel = QLabel("Nickname:", self)
         self.nickEdit = QLineEdit(nick, self)
         self.nickEdit.setMaxLength(constants.NICK_MAX_LEN)
+        self.nickEdit.returnPressed.connect(self.__connectClicked)
 
         # Connect button
         self.connectButton = QPushButton("Connect", self)
         self.connectButton.resize(self.connectButton.sizeHint())
+        self.connectButton.setAutoDefault(False)
         self.connectButton.clicked.connect(self.__connectClicked)
 
         hbox = QHBoxLayout()
