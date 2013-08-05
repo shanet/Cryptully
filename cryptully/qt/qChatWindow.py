@@ -136,12 +136,13 @@ class QChatWindow(QMainWindow):
         # If no nick was given, disable all tabs
         nick = str(nick)
         if nick == '':
-            for i in range(0, self.chatTabs.count()):
-                curTab = self.chatTabs.widget(i)
-                curTab.resetOrDisable()
+            self.__disableAllTabs()
         else:
-            tab = self.getTabByNick(nick)[0]
-            tab.resetOrDisable()
+            try:
+                tab = self.getTabByNick(nick)[0]
+                tab.resetOrDisable()
+            except:
+                self.__disableAllTabs()
 
         if errorCode == errors.ERR_CONNECTION_ENDED:
             QMessageBox.warning(self, errors.TITLE_CONNECTION_ENDED, errors.CONNECTION_ENDED % (nick))
@@ -176,6 +177,12 @@ class QChatWindow(QMainWindow):
             self.restartCallback()
         else:
             QMessageBox.warning(self, errors.TITLE_UNKNOWN_ERROR, errors.UNKNOWN_ERROR % (nick))
+
+
+    def __disableAllTabs(self):
+        for i in range(0, self.chatTabs.count()):
+            curTab = self.chatTabs.widget(i)
+            curTab.resetOrDisable()
 
 
     def postMessage(self, command, sourceNick, payload):
