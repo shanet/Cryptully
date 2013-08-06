@@ -152,7 +152,7 @@ class QChatWindow(QMainWindow):
             QMessageBox.warning(self, errors.TITLE_CONNECTION_REJECTED, errors.CONNECTION_REJECTED % (nick))
             tab.nick = None
         elif errorCode == errors.ERR_BAD_HANDSHAKE:
-            QMessageBox.warning(self, errors.TITLE_PROTOCOL_ERROR, errors.PROTOCOL_ERROR)
+            QMessageBox.warning(self, errors.TITLE_PROTOCOL_ERROR, errors.PROTOCOL_ERROR % (nick))
         elif errorCode == errors.ERR_CLIENT_EXISTS:
             QMessageBox.information(self, errors.TITLE_CLIENT_EXISTS, errors.CLIENT_EXISTS % (nick))
         elif errorCode == errors.ERR_SELF_CONNECT:
