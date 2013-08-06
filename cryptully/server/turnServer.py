@@ -185,7 +185,7 @@ class SendThread(Thread):
             except Exception as e:
                 nick = message.destNick
                 printAndLog(nick + ": error sending data to: " + str(e))
-                nickMap[nick].disconnect
+                nickMap[nick].disconnect()
                 return
             finally:
                 self.queue.task_done()
