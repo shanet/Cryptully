@@ -211,19 +211,20 @@ class RecvThread(Thread):
             return
 
         # Check that the nick is valid
-        if utils.isValidNick(message.sourceNick) != errors.VALID_NICK:
+        self.nick = message.sourceNick
+        if utils.isValidNick(self.nick) != errors.VALID_NICK:
             printAndLog(str(self.sock) + ": tried to register an invalid nick")
             self.__handleError(errors.ERR_INVALID_NICK)
             return
 
         # Check that the nick is not already in use
-        if message.sourceNick in nickMap:
+        self.nick = self.nick.lower()
+        if self.nick in nickMap:
             printAndLog(str(self.sock) + ": tried to register an in-use nick")
             self.__handleError(errors.ERR_NICK_IN_USE)
             return
 
-        self.nick = message.sourceNick
-        self.nickRegisteredCallback(message.sourceNick)
+        self.nickRegisteredCallback(self.nick)
 
         while True:
             try:
@@ -270,11 +271,13 @@ class RecvThread(Thread):
         # Remove the client from the ip or nick maps (it may be in either)
         try:
             del ipMap[str(self.sock)]
-        except Exception:
+            # If found the ip map, don't try to delete from the nick map (it can't be in both)
+            return
+        except:
             pass
         try:
             del nickMap[self.nick]
-        except Exception:
+        except:
             pass
 
 
