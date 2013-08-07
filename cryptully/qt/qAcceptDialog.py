@@ -9,7 +9,7 @@ class QAcceptDialog(QMessageBox):
         self.accepted = None
 
         self.setWindowTitle("Accept Connection?")
-        self.setText("Got connection from " + hostname)
+        self.setText("Received connection from " + hostname)
         self.setIcon(QMessageBox.Question)
 
         self.acceptButton = QPushButton(QIcon.fromTheme('dialog-ok'), "Accept")
