@@ -1,9 +1,12 @@
+import re
+
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QFontMetrics
 from PyQt4.QtGui import QHBoxLayout
 from PyQt4.QtGui import QLabel
 from PyQt4.QtGui import QPushButton
 from PyQt4.QtGui import QSplitter
+from PyQt4.QtGui import QTextBrowser
 from PyQt4.QtGui import QTextEdit
 from PyQt4.QtGui import QWidget
 
@@ -20,8 +23,10 @@ class QChatWidget(QWidget):
         self.connectionManager = connectionManager
         self.isDisabled = False
 
-        self.chatLog = QTextEdit()
-        self.chatLog.setReadOnly(True)
+        self.urlRegex = re.compile(constants.URL_REGEX)
+
+        self.chatLog = QTextBrowser()
+        self.chatLog.setOpenExternalLinks(True)
 
         self.chatInput = QTextEdit()
         self.chatInput.textChanged.connect(self.chatInputTextChanged)
@@ -69,6 +74,9 @@ class QChatWidget(QWidget):
         if text == '':
             return
 
+        # Convert URLs into clickable links
+        text = self.__linkify(text)
+
         # Add the message to the message queue to be sent
         self.connectionManager.getClient(self.nick).sendChatMessage(text)
 
@@ -109,6 +117,15 @@ class QChatWidget(QWidget):
         # Move the vertical scrollbar to the bottom of the chat log
         if shouldScroll:
             scrollbar.setValue(scrollbar.maximum())
+
+
+    def __linkify(self, text):
+        matches = self.urlRegex.findall(text)
+
+        for match in matches:
+            text = text.replace(match[0], '<a href="%s">%s</a>' % (match[0], match[0]))
+
+        return text
 
 
     def __getColor(self, source):
