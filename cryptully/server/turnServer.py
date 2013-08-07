@@ -246,9 +246,9 @@ class RecvThread(Thread):
                         printAndLog(self.nick + ": requested to send message to invalid nick")
                         self.__handleError(errors.ERR_INVALID_NICK)
                         
-                    client = nickMap[destNick]
+                    client = nickMap[destNick.lower()]
 
-                    # Rewrite the nick to prevent nick spoofing
+                    # Rewrite the source nick to prevent nick spoofing
                     message.sourceNick = self.nick
 
                     client.send(message)

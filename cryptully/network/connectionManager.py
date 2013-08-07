@@ -52,7 +52,7 @@ class ConnectionManager(object):
 
 
     def openChat(self, destNick):
-        self.__createClient(destNick, initiateHandshakeOnStart=True)
+        self.__createClient(destNick.lower(), initiateHandshakeOnStart=True)
 
 
     def __createClient(self, nick, initiateHandshakeOnStart=False):

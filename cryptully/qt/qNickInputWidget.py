@@ -60,7 +60,7 @@ class QNickInputWidget(QWidget):
 
 
     def __connectClicked(self):
-        nick = str(self.nickEdit.text())
+        nick = str(self.nickEdit.text()).lower()
 
         # Validate the given nick
         nickStatus = utils.isValidNick(nick)
