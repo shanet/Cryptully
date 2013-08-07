@@ -199,7 +199,8 @@ class QChatWindow(QMainWindow):
             tab.unreadCount += 1
             self.chatTabs.setTabText(tabIndex, tab.nick + (" (%d)" % tab.unreadCount))
 
-            # Show a system notifcation of the new message
+        # Show a system notifcation of the new message if not the current window or tab
+        if not self.isActiveWindow() or tabIndex != self.chatTabs.currentIndex():
             self.systemTrayIcon.setVisible(True)
             self.systemTrayIcon.showMessage(sourceNick, payload)
 
