@@ -1,21 +1,9 @@
-import Queue
-import signal
-import socket
-
 from client import Client
 
-from PyQt4.QtCore import QCoreApplication
 from PyQt4.QtCore import QThread
 from PyQt4.QtCore import pyqtSignal
-from PyQt4.QtGui import QMessageBox
-from PyQt4.QtGui import QWidget
 
-from qt import qtUtils
-
-from utils import constants
-from utils import errors
 from utils import exceptions
-from utils import utils
 
 
 class QtServerConnectThread(QThread):
