@@ -19,7 +19,7 @@ though. The core dependencies are:
 * Python 2.7
 * PyQt4
 * M2Crypto
-* PyInstaller
+* PyInstaller (only if you want to build a binary, otherwise it is not needed)
 
 Depending what platform you're building on, you'll need a few more things, but those are documented
 in the relevant sections below.
@@ -42,7 +42,7 @@ Running Directly
 ----------------
 
 |project| is, after all, a Python script so you can run it without packaging it into anything fancy.
-Just do::
+Once the sanity check passes, just do::
 
     $ python cryptully/cryptully.py
 
@@ -81,8 +81,8 @@ Windows
 
 It's probably a good idea to do the sanity check as described in the sanity check above at this point.
 
-8. ``cd \path\to\cryptully\``
-9. ``python make.py dist \path\to\pyinstaller\``
+8. ``> cd \path\to\cryptully\``
+9. ``> python make.py dist \path\to\pyinstaller\``
 
 If everything went as intended, the packaged application should be in ``dist\``.
 
@@ -103,8 +103,8 @@ OS X
 
 It's probably a good idea to do the sanity check as described in the sanity check above at this point.
 
-8. ``cd /path/to/cryptully/``
-9. ``python make.py dist /path/to/pyinstaller/``
+8. ``$ cd /path/to/cryptully/``
+9. ``$ python make.py dist /path/to/pyinstaller/``
 
 If everything went as intended, the packaged application should be in ``dist\``.
 
