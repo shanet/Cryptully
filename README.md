@@ -10,8 +10,8 @@ Cryptully
 
 1. Download the executable for your platform on the releases page.
 2. Launch the executable (no need to install anything).
-3. One person selects "Wait for connection" (make sure port 9000 is forwarded if necessary).
-4. The other person selects "Connect to friend" and enters the IP address to connect to.
+3. Select a nickname and connect to the server.
+4. Enter the nickname of the person you want to chat with.
 5. You should now be chatting! (but you should verify the key integrity in the options menu)
 
 Need more info? See the [documentation](https://cryptully.readthedocs.org/en/latest/) for much more detailed instructions.
