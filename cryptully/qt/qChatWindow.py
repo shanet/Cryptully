@@ -82,9 +82,9 @@ class QChatWindow(QMainWindow):
         self.addNewTab()
 
 
-    def newClient(self, message):
+    def newClient(self, nick):
         # This function is called from a bg thread. Send a signal to get on the UI thread
-        self.newClientSignal.emit(message)
+        self.newClientSignal.emit(nick)
 
 
     @pyqtSlot(str)

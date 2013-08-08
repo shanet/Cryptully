@@ -2,6 +2,7 @@ import curses
 import curses.ascii
 import curses.textpad
 import os
+import Queue
 import signal
 import sys
 import time
@@ -13,7 +14,10 @@ from cursesDialog import CursesDialog
 
 from network.client import Client
 from network import ncursesThreads
-from network.server import Server
+from network.connectionManager import ConnectionManager
+
+from threading import Lock
+from threading import Thread
 
 from utils import constants
 from utils import errors
@@ -24,11 +28,16 @@ from utils.crypto import Crypto
 ACCEPT = 0
 REJECT = 1
 
+mutex = Lock()
+
 class NcursesUI(object):
-    def __init__(self, mode, port, host):
-        self.mode   = mode
-        self.port   = port
-        self.host   = host
+    def __init__(self, nick, turn, port):
+        self.nick = nick
+        self.turn = turn
+        self.port = port
+
+        self.connectedNick = None
+        self.messageQueue = Queue.Queue()
 
 
     def start(self):
@@ -60,97 +69,87 @@ class NcursesUI(object):
         self.screen.refresh()
 
         # Try to load a keypair if one was saved or generate a new keypair
-        self.loadOrGenerateKepair()
+        self.__loadOrGenerateKepair()
 
-        # Show the options menu
-        self.showOptionsMenuWindow(showStartOption=True)
+        # Get the nick if not given
+        if self.nick == None:
+            self.showNickInputDialog()
 
-        # Get the server/client mode if not given
-        if self.mode == None:
-            self.showOptionsWindow()
+        self.connectToServer()
 
-        if self.mode == constants.MODE_SERVER:
-            self.startServer()
-            self.waitForClient()
-        elif self.mode == constants.MODE_CLIENT:
-            # Get the host if not given
-            if self.host == None:
-                self.getHost()
-            self.connectToServer()
-
-        self.handleNewConnection()
-
-
-    def waitForClient(self):
-        while True:
-            # Show the waiting for connections dialog
-            dialogWindow = CursesDialog(self.screen, "Waiting for connection...")
-            dialogWindow.show()
-
-            self.client = self.server.accept(self.crypto)
-
-            dialogWindow.hide()
-
-            # Show the accept dialog
-            if self.showAcceptWindow() == ACCEPT:
-                break
-            else:
-                self.client.disconnect()
-
-        # Do the handshake with the client
-        try:
-            self.client.doHandshake()
-        except exceptions.NetworkError as ne:
-            CursesDialog(self.screen, str(ne), errors.TITLE_NETWORK_ERROR, isError=True).show()
-            self.client.disconnect()
-        except exceptions.CryptoError as ce:
-            CursesDialog(self.screen, str(ce), errors.TITLE_CRYPTO_ERROR, isError=True).show()
-            self.client.disconnect()
+        self.__receiveMessageLoop()
 
 
     def connectToServer(self):
-        try:
-            dialogWindow = CursesDialog(self.screen, "Connecting to server...", "", False)
-            dialogWindow.show()
+        # Create the connection manager to manage all communcation to the server
+        self.connectionManager = ConnectionManager(self.nick, (self.turn, self.port), self.crypto, self.postMessage, self.newClient, self.clientReady, self.handleError)
 
-            self.client = Client(constants.MODE_CLIENT, (self.host, self.port), crypto=self.crypto)
-            self.client.connect()
-        except exceptions.GenericError as ge:
-            CursesDialog(self.screen, str(ge), errors.FAILED_TO_CONNECT, isError=True).show()
-
-        # Do the handshake with the server
-        try:
-            self.client.doHandshake()
-            dialogWindow.hide()
-        except exceptions.NetworkError as ne:
-            self.client.disconnect()
-            dialogWindow.hide()
-            CursesDialog(self.screen, str(ne), errors.TITLE_NETWORK_ERROR, isError=True).show()
-        except exceptions.CryptoError as ce:
-            self.client.disconnect()
-            dialogWindow.hide()
-            CursesDialog(self.screen, str(ce), errors.TITLE_CRYPTO_ERROR, isError=True).show()
+        dialogWindow = CursesDialog(self.screen, "Connecting to server...", "", False)
+        dialogWindow.show()
+        # TODO: push this to it's own thread
+        self.connectionManager.connectToServer()
+        dialogWindow.hide()
 
 
-    def handleNewConnection(self):
-        # Set the hostname of who we're connected to in the status window
-        self.setStatusWindow()
+    def postMessage(self, command, sourceNick, payload):
+        self.messageQueue.put((command, sourceNick, payload))
+
+
+    def __receiveMessageLoop(self):
+        (height, width) = self.chatWindow.getmaxyx()
+
+        while True:
+            message = self.messageQueue.get()
+            mutex.acquire()
+
+            # Put the received data in the chat window
+            prefix = "(%s) %s: " % (utils.getTimestamp(), message[1])
+            self.chatWindow.scroll(1)
+            self.chatWindow.addstr(height-1, 0, prefix, curses.color_pair(2))
+            self.chatWindow.addstr(height-1, len(prefix), message[2])
+
+            # Move the cursor back to the chat input window
+            self.textboxWindow.move(0, 0)
+
+            self.chatWindow.refresh()
+            self.textboxWindow.refresh()
+
+            mutex.release()
+            self.messageQueue.task_done()
+
+
+    def newClient(self, nick):
+        # Only allow one client (TODO: support multiple clients)
+        if self.connectedNick is not None:
+            self.connectionManager.newClientRejected(nick)
+        
+
+        # Show the accept dialog
+        accept = self.showAcceptWindow(nick)
+
+        if accept == REJECT:
+            self.connectionManager.newClientRejected(nick)
+            return
+
+        # Set who we're connected to in the status window
+        self.setStatusWindow(nick)
+        self.connectedNick = nick
 
         # Add a hint on how to display the options menu
         self.screen.addstr(0, 5, "Ctrl+U for options")
         self.screen.refresh()
 
-        # Start the sending and receiving threads
-        self.startThreads()
+        self.connectionManager.newClientAccepted(nick)
 
-        # Keep the main thread alive so the daemon threads don't die
-        while True:
-            time.sleep(10)
+        CursesSendThread(self).start()
 
 
-    def startThreads(self):
-        ncursesThreads.CursesSendThread(self).start()
-        ncursesThreads.CursesRecvThread(self).start()
+    def clientReady(self, nick):
+        pass
+
+
+    def handleError(self, nick, errorCode):
+        CursesDialog(self.screen, "error: " + str(errorCode), isBlocking=True).show()
 
 
     def setColors(self):
@@ -162,50 +161,8 @@ class NcursesUI(object):
             self.screen.bkgd(curses.color_pair(1))
 
 
-    def showOptionsWindow(self):
-        optionsWindow = self.screen.subwin(6, 11, self.height/2 - 3, self.width/2 - 6)
-        optionsWindow.border(0)
-
-        # Enable arrow key detection for this window
-        optionsWindow.keypad(True)
-
-        # Disable the cursor
-        curses.curs_set(0)
-
-        optionsWindow.addstr(1, 1, "Run as:")
-
-        pos = constants.MODE_SERVER
-
-        while True:
-            if pos == constants.MODE_SERVER:
-                optionsWindow.addstr(3, 2, "Server", curses.color_pair(4))
-                optionsWindow.addstr(4, 2, "Client")
-            else:
-                optionsWindow.addstr(3, 2, "Server")
-                optionsWindow.addstr(4, 2, "Client", curses.color_pair(4))
-
-            self.screen.refresh()
-            key = optionsWindow.getch()
-            # Enter key
-            if key == ord('\n'):
-                break
-            elif pos == constants.MODE_SERVER:
-                pos = constants.MODE_CLIENT
-            elif pos == constants.MODE_CLIENT:
-                pos = constants.MODE_SERVER
-
-        # Re-enable the cursor
-        curses.curs_set(2)
-
-        # Get rid of the options window
-        optionsWindow.clear()
-        optionsWindow.refresh()
-
-        self.mode = pos
-
-
-    def showAcceptWindow(self):
-        dialogWidth = 23 + len(self.client.getHostname());
+    def showAcceptWindow(self, nick):
+        dialogWidth = 28 + len(nick);
         acceptWindow = self.screen.subwin(6, dialogWidth, self.height/2 - 3, self.width/2 - int(dialogWidth/2))
         acceptWindow.border(0)
 
@@ -215,7 +172,7 @@ class NcursesUI(object):
         # Disable the cursor
         curses.curs_set(0)
 
-        acceptWindow.addstr(1, 1, "Got connection from %s" % self.client.getHostname())
+        acceptWindow.addstr(1, 1, "Recveived connection from %s" % nick)
 
         pos = ACCEPT
 
@@ -253,53 +210,45 @@ class NcursesUI(object):
 
 
     def makeStatusWindow(self):
-        self.statusWindow = self.screen.subwin(self.height-3, self.width-23)
+        self.statusWindow = self.screen.subwin(self.height-3, self.width-34)
         self.statusWindow.border(0)
         self.statusWindow.addstr(1, 1, "Disconnected")
 
 
     def makeChatInputWindow(self):
-        self.textboxWindow = self.screen.subwin(1, self.width-25, self.height-2, 1)
+        self.textboxWindow = self.screen.subwin(1, self.width-38, self.height-2, 1)
 
         self.textbox = curses.textpad.Textbox(self.textboxWindow, insert_mode=True)
         curses.textpad.rectangle(self.screen, self.height-3, 0, self.height-1, self.width-24)
         self.textboxWindow.move(0, 0)
 
 
-    def getHost(self):
-        self.hostWindow = self.screen.subwin(3, 26, self.height/2 - 1, self.width/2 - 13)
-        self.hostWindow.border(0)
-        self.hostWindow.addstr(1, 1, "Host: ")
-        self.hostWindow.refresh()
+    def showNickInputDialog(self):
+        self.nickInputWindow = self.screen.subwin(3, 42, self.height/2 - 1, self.width/2 - 22)
+        self.nickInputWindow.border(0)
+        self.nickInputWindow.addstr(1, 1, "Nickname: ")
+        self.nickInputWindow.refresh()
 
         # Turn on echo and wait for enter key to read buffer
         curses.echo()
         curses.nocbreak()
 
-        self.host = self.hostWindow.getstr(1, 7)
+        self.nick = self.nickInputWindow.getstr(1, 11)
 
         # Turn off echo and disable buffering
         curses.cbreak()
         curses.noecho()
 
         # Get rid of the host window
-        self.hostWindow.clear()
+        self.nickInputWindow.clear()
         self.screen.refresh()
 
 
-    def setStatusWindow(self):
+    def setStatusWindow(self, nick):
         self.statusWindow.clear()
         self.statusWindow.border(0)
-        self.statusWindow.addstr(1, 1, self.client.getHostname())
+        self.statusWindow.addstr(1, 1, nick)
         self.statusWindow.refresh()
-
-
-    def startServer(self):
-        try:
-            self.server = Server()
-            self.server.start(int(self.port))
-        except exceptions.NetworkError as ne:
-            CursesDialog(screen, errors.FAILED_TO_START_SERVER, str(ne), isError=True).show()
 
 
     def showOptionsMenuWindow(self, showStartOption=False):
@@ -426,18 +375,68 @@ class NcursesUI(object):
         return passphrase
 
 
-    def loadOrGenerateKepair(self):
+    def __loadOrGenerateKepair(self):
         self.crypto = Crypto()
+
         if utils.doesSavedKeypairExist():
             while(True):
-                passphrase = self.getKeypairPassphrase()
                 try:
                     utils.loadKeypair(self.crypto, passphrase)
                     break
                 except exceptions.CryptoError:
                     CursesDialog(self.screen, errors.BAD_PASSPHRASE, '', isBlocking=True).show()
-
-            # We still need to generate an AES key
-            self.crypto.generateAESKey()
         else:
-            self.crypto.generateKeys()
+            # Only generate an RSA keypair; a unique AES key will be generated later for each client
+            self.crypto.generateRSAKeypair()
+
+
+class CursesSendThread(Thread):
+    def __init__(self, ncurses):
+        self.ncurses = ncurses
+
+        Thread.__init__(self)
+        self.daemon = True
+
+
+    def run(self):
+        (height, width) = self.ncurses.chatWindow.getmaxyx()
+
+        while True:
+            chatInput = self.ncurses.textbox.edit(self.inputValidator)
+
+            mutex.acquire()
+
+            # Clear the chat input
+            self.ncurses.textboxWindow.deleteln()
+            self.ncurses.textboxWindow.move(0, 0)
+            self.ncurses.textboxWindow.deleteln()
+
+            # Add the new input to the chat window
+            prefix = "(%s) %s: " % (utils.getTimestamp(), self.ncurses.nick)
+            self.ncurses.chatWindow.scroll(1)
+            self.ncurses.chatWindow.addstr(height-1, 0, prefix, curses.color_pair(3))
+            self.ncurses.chatWindow.addstr(height-1, len(prefix), chatInput[:-1])
+
+            # Send the input to the client
+            self.ncurses.connectionManager.getClient(self.ncurses.connectedNick).sendChatMessage(chatInput[:-1])
+
+            # Move the cursor back to the chat input window
+            self.ncurses.textboxWindow.move(0, 0)
+
+            self.ncurses.chatWindow.refresh()
+            self.ncurses.textboxWindow.refresh()
+
+            mutex.release()
+
+
+    def inputValidator(self, char):
+        if char == 21: # Ctrl+U
+            self.ncurses.showOptionsMenuWindow()
+            return 0
+        elif char == curses.KEY_HOME:
+            return curses.ascii.SOH
+        elif char == curses.KEY_END:
+            return curses.ascii.ENQ
+        elif char == curses.KEY_ENTER or char == ord('\n'):
+             return curses.ascii.BEL
+        return char
