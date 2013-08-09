@@ -153,7 +153,36 @@ class NcursesUI(object):
 
 
     def handleError(self, nick, errorCode):
-        CursesDialog(self.screen, "error: " + str(errorCode), isBlocking=True).show()
+        if errorCode == errors.ERR_CONNECTION_ENDED:
+            CursesDialog(self.screen, errors.CONNECTION_ENDED % (nick), errors.TITLE_CONNECTION_ENDED, isError=True).show()
+        elif errorCode == errors.ERR_NICK_NOT_FOUND:
+            CursesDialog(self.screen, errors.NICK_NOT_FOUND % (nick), errors.TITLE_NICK_NOT_FOUND, isError=True).show()
+        elif errorCode == errors.ERR_CONNECTION_REJECTED:
+            CursesDialog(self.screen, errors.CONNECTION_REJECTED % (nick), errors.TITLE_CONNECTION_REJECTED, isError=True).show()
+        elif errorCode == errors.ERR_BAD_HANDSHAKE:
+            CursesDialog(self.screen, errors.PROTOCOL_ERROR % (nick), errors.TITLE_PROTOCOL_ERROR, isError=True).show()
+        elif errorCode == errors.ERR_CLIENT_EXISTS:
+            CursesDialog(self.screen, errors.CLIENT_EXISTS % (nick), errors.TITLE_CLIENT_EXISTS, isError=True).show()
+        elif errorCode == errors.ERR_SELF_CONNECT:
+            CursesDialog(self.screen, errors.SELF_CONNECT, errors.TITLE_SELF_CONNECT, isError=True).show()
+        elif errorCode == errors.ERR_SERVER_SHUTDOWN:
+            CursesDialog(self.screen, errors.SERVER_SHUTDOWN, errors.TITLE_SERVER_SHUTDOWN, isError=True).show()
+        elif errorCode == errors.ERR_ALREADY_CONNECTED:
+            CursesDialog(self.screen, errors.ALREADY_CONNECTED % (nick), errors.TITLE_ALREADY_CONNECTED, isError=True).show()
+        elif errorCode == errors.ERR_INVALID_COMMAND:
+            CursesDialog(self.screen, errors.INVALID_COMMAND % (nick), errors.TITLE_INVALID_COMMAND, isError=True).show()
+        elif errorCode == errors.ERR_NETWORK_ERROR:
+            CursesDialog(self.screen, errors.NETWORK_ERROR, errors.TITLE_NETWORK_ERROR, isError=True).show()
+        elif errorCode == errors.ERR_BAD_HMAC:
+            CursesDialog(self.screen, errors.BAD_HMAC, errors.TITLE_BAD_HMAC, isError=True).show()
+        elif errorCode == errors.ERR_BAD_DECRYPT:
+            CursesDialog(self.screen, errors.BAD_DECRYPT, errors.TITLE_BAD_DECRYPT, isError=True).show()
+        elif errorCode == errors.ERR_KICKED:
+            CursesDialog(self.screen, errors.KICKED, errors.TITLE_KICKED, isError=True).show()
+        elif errorCode == errors.ERR_NICK_IN_USE:
+            CursesDialog(self.screen, errors.NICK_IN_USE, errors.TITLE_NICK_IN_USE, isError=True).show()
+        else:
+            CursesDialog(self.screen, errors.UNKNOWN_ERROR % (nick), errors.TITLE_UNKNOWN_ERROR, isError=True).show()
 
 
     def setColors(self):
@@ -245,7 +274,7 @@ class NcursesUI(object):
 
         # Clear the window
         self.nickInputWindow.clear()
-        self.screen.refresh()
+        self.nickInputWindow.refresh()
 
 
     def setStatusWindow(self, nick):
