@@ -3,7 +3,6 @@ import signal
 import curses
 
 class CursesDialog:
-
     def __init__(self, screen, message, title="", isError=False, isBlocking=False):
         self.screen     = screen
         self.title      = title

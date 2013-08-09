@@ -9,6 +9,7 @@ import time
 
 from getpass import getpass
 
+from cursesAcceptDialog import CursesAcceptDialog
 from cursesFingerprintDialog import CursesFingerprintDialog
 from cursesDialog import CursesDialog
 
@@ -24,9 +25,6 @@ from utils import errors
 from utils import exceptions
 from utils import utils
 from utils.crypto import Crypto
-
-ACCEPT = 0
-REJECT = 1
 
 mutex = Lock()
 
@@ -58,7 +56,7 @@ class NcursesUI(object):
         (self.height, self.width) = self.screen.getmaxyx()
 
         # Change the colors, clear the screen and set the overall border
-        self.setColors()
+        self.__setColors()
         self.screen.clear()
         self.screen.border(0)
 
@@ -129,9 +127,9 @@ class NcursesUI(object):
         
 
         # Show the accept dialog
-        accept = self.showAcceptWindow(nick)
+        accept = CursesAcceptDialog(self, nick).show()
 
-        if accept == REJECT:
+        if accept == constants.REJECT:
             self.connectionManager.newClientRejected(nick)
             return
 
@@ -185,56 +183,13 @@ class NcursesUI(object):
             CursesDialog(self.screen, errors.UNKNOWN_ERROR % (nick), errors.TITLE_UNKNOWN_ERROR, isError=True).show()
 
 
-    def setColors(self):
+    def __setColors(self):
         if curses.has_colors():
             curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
             curses.init_pair(2, curses.COLOR_RED,   curses.COLOR_BLACK)
             curses.init_pair(3, curses.COLOR_CYAN,  curses.COLOR_BLACK)
             curses.init_pair(4, curses.COLOR_BLACK, curses.COLOR_GREEN)
             self.screen.bkgd(curses.color_pair(1))
-
-
-    def showAcceptWindow(self, nick):
-        dialogWidth = 28 + len(nick);
-        acceptWindow = self.screen.subwin(6, dialogWidth, self.height/2 - 3, self.width/2 - int(dialogWidth/2))
-        acceptWindow.border(0)
-
-        # Enable arrow key detection for this window
-        acceptWindow.keypad(True)
-
-        # Disable the cursor
-        curses.curs_set(0)
-
-        acceptWindow.addstr(1, 1, "Recveived connection from %s" % nick)
-
-        pos = ACCEPT
-
-        while True:
-            if pos == ACCEPT:
-                acceptWindow.addstr(3, 2, "Accept", curses.color_pair(4))
-                acceptWindow.addstr(4, 2, "Reject")
-            else:
-                acceptWindow.addstr(3, 2, "Accept")
-                acceptWindow.addstr(4, 2, "Reject", curses.color_pair(4))
-
-            self.screen.refresh()
-            key = acceptWindow.getch()
-            # Enter key
-            if key == ord('\n'):
-                break
-            elif pos == ACCEPT:
-                pos = REJECT
-            elif pos == REJECT:
-                pos = ACCEPT
-
-        # Re-enable the cursor
-        curses.curs_set(2)
-
-        # Get rid of the accept window
-        acceptWindow.clear()
-        acceptWindow.refresh()
-
-        return pos
 
 
     def makeChatWindow(self):
