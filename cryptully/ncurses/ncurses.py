@@ -86,9 +86,13 @@ class NcursesUI(object):
 
         dialogWindow = CursesDialog(self.screen, "Connecting to server...", "", False)
         dialogWindow.show()
-        # TODO: push this to it's own thread
-        self.connectionManager.connectToServer()
-        dialogWindow.hide()
+        try:
+            # TODO: push this to it's own thread
+            self.connectionManager.connectToServer()
+        except exceptions.GenericError as ge:
+            CursesDialog(self.screen, str(ge), "Error connecting to server", isError=True).show()
+        finally:
+            dialogWindow.hide()
 
 
     def postMessage(self, command, sourceNick, payload):
@@ -216,10 +220,10 @@ class NcursesUI(object):
 
 
     def makeChatInputWindow(self):
-        self.textboxWindow = self.screen.subwin(1, self.width-38, self.height-2, 1)
+        self.textboxWindow = self.screen.subwin(1, self.width-35, self.height-2, 1)
 
         self.textbox = curses.textpad.Textbox(self.textboxWindow, insert_mode=True)
-        curses.textpad.rectangle(self.screen, self.height-3, 0, self.height-1, self.width-24)
+        curses.textpad.rectangle(self.screen, self.height-3, 0, self.height-1, self.width-35)
         self.textboxWindow.move(0, 0)
 
 
@@ -239,7 +243,7 @@ class NcursesUI(object):
         curses.cbreak()
         curses.noecho()
 
-        # Get rid of the host window
+        # Clear the window
         self.nickInputWindow.clear()
         self.screen.refresh()
 
