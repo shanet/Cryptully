@@ -28,6 +28,7 @@ from utils.crypto import Crypto
 
 mutex = threading.Lock()
 dialogDismissed = threading.Condition()
+clientConnected = threading.Condition()
 
 class NcursesUI(object):
     def __init__(self, nick, turn, port):
@@ -92,11 +93,20 @@ class NcursesUI(object):
         if mode == constants.WAIT:
             self.waitingDialog = CursesDialog(self.screen, "Waiting for connection...", '')
             self.waitingDialog.show()
-            self.__receiveMessageLoop()
         else:
             # Get the nickname of who to connect to
-            nick = CursesInputDialog(self.screen, "Nickname: ").show()
-            self.__connectToNick(nick)
+            while True:
+                nick = CursesInputDialog(self.screen, "Nickname: ").show()
+
+                # Don't allow connections to self
+                if nick == self.nick:
+                    CursesDialog(self.screen, errors.SELF_CONNECT, errors.TITLE_SELF_CONNECT, isError=True, isBlocking=True).show()
+                    continue
+                
+                self.__connectToNick(nick)
+                break
+
+        self.__receiveMessageLoop()
 
 
     def __connectToServer(self):
@@ -110,15 +120,23 @@ class NcursesUI(object):
             self.connectionManager.connectToServer()
         except exceptions.GenericError as ge:
             dialogWindow.hide()
-            CursesDialog(self.screen, str(ge), "Error connecting to server", isError=True, isBlocking=True).show()
+            CursesDialog(self.screen, str(ge), "Error connecting to server", isError=True, isFatal=True, isBlocking=True).show()
             self.__quitApp()
         
         dialogWindow.hide()
 
 
     def __connectToNick(self, nick):
-        # TODO: handle connecting to a nick
-        pass
+        connectingDialog = CursesDialog(self.screen, "Connecting to %s..." % nick, "", False)
+        connectingDialog.show()
+        self.connectionManager.openChat(nick)
+
+        clientConnected.acquire()
+        clientConnected.wait()
+        clientConnected.release()
+
+        connectingDialog.hide()
+        self.__startSendThread()
 
 
     def postMessage(self, command, sourceNick, payload):
@@ -131,18 +149,18 @@ class NcursesUI(object):
             mutex.acquire()
 
             prefix = "(%s) %s: " % (utils.getTimestamp(), message[1])
-            self.__appendMessage(prefix, message[2])
+            self.appendMessage(prefix, message[2], curses.color_pair(2))
 
             mutex.release()
             self.messageQueue.task_done()
 
 
-    def __appendMessage(self, prefix, message):
+    def appendMessage(self, prefix, message, color):
         (height, width) = self.chatWindow.getmaxyx()
 
         # Put the received data in the chat window
         self.chatWindow.scroll(1)
-        self.chatWindow.addstr(height-1, 0, prefix, curses.color_pair(2))
+        self.chatWindow.addstr(height-1, 0, prefix, color)
         self.chatWindow.addstr(height-1, len(prefix), message)
 
         # Move the cursor back to the chat input window
@@ -171,17 +189,30 @@ class NcursesUI(object):
         self.setStatusWindow(nick)
         self.connectedNick = nick
 
+        self.__startSendThread()
+
+        self.connectionManager.newClientAccepted(nick)
+
+
+    def __startSendThread(self):
         # Add a hint on how to display the options menu
         self.screen.addstr(0, 5, "Ctrl+U for options")
         self.screen.refresh()
 
+        # Show the now chatting message
+        self.appendMessage('', "Now chatting with " + self.connectedNick, curses.color_pair(0))
+
         self.sendThread = CursesSendThread(self)
         self.sendThread.start()
-        self.connectionManager.newClientAccepted(nick)
 
 
     def clientReady(self, nick):
-        self.__appendMessage('', "Now chatting with " + nick)
+        self.connectedNick = nick
+
+        clientConnected.acquire()
+        clientConnected.notify()
+        clientConnected.release()
+
 
 
     def handleError(self, nick, errorCode):
@@ -429,9 +460,16 @@ class CursesSendThread(threading.Thread):
 
     def run(self):
         (height, width) = self.ncurses.chatWindow.getmaxyx()
+        self.ncurses.textboxWindow.move(0, 0)
 
         while True:
             chatInput = self.ncurses.textbox.edit(self.inputValidator)
+
+            mutex.acquire()
+
+            # Don't send anything if we're not connected to a nick
+            if self.ncurses.connectedNick is None:
+                self.ncurses.appendMessage('', "Not connected to client", curses.color_pair(0))
 
             if self.stop.is_set():
                 dialogDismissed.acquire()
@@ -441,7 +479,6 @@ class CursesSendThread(threading.Thread):
 
             self.ncurses.screen.refresh()
 
-            mutex.acquire()
 
             # Clear the chat input
             self.ncurses.textboxWindow.deleteln()
@@ -450,18 +487,10 @@ class CursesSendThread(threading.Thread):
 
             # Add the new input to the chat window
             prefix = "(%s) %s: " % (utils.getTimestamp(), self.ncurses.nick)
-            self.ncurses.chatWindow.scroll(1)
-            self.ncurses.chatWindow.addstr(height-1, 0, prefix, curses.color_pair(3))
-            self.ncurses.chatWindow.addstr(height-1, len(prefix), chatInput[:-1])
+            self.ncurses.appendMessage(prefix, chatInput[:-1], curses.color_pair(3))
 
             # Send the input to the client
             self.ncurses.connectionManager.getClient(self.ncurses.connectedNick).sendChatMessage(chatInput[:-1])
-
-            # Move the cursor back to the chat input window
-            self.ncurses.textboxWindow.move(0, 0)
-
-            self.ncurses.chatWindow.refresh()
-            self.ncurses.textboxWindow.refresh()
 
             mutex.release()
 
