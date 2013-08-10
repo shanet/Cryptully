@@ -10,14 +10,10 @@ from PyQt4.QtGui  import QMessageBox
 from PyQt4.QtGui  import QPixmap
 from PyQt4.QtGui  import QWidget
 
-import qInvoker
 from qPassphraseDialog import QPassphraseDialog
 
 from utils import constants
 from utils import utils
-
-
-invoker = qInvoker.Invoker()
 
 
 def centerWindow(window):
