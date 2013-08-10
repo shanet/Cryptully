@@ -4,14 +4,16 @@ from utils import constants
 
 
 class CursesAcceptDialog(object):
-    def __init__(self, ncurses, nick):
-        self.ncurses = ncurses
+    def __init__(self, screen, nick):
+        self.screen = screen
         self.nick = nick
 
 
     def show(self):
+        (height, width) = self.screen.getmaxyx()
+
         dialogWidth = 28 + len(self.nick);
-        acceptWindow = self.ncurses.screen.subwin(6, dialogWidth, self.ncurses.height/2 - 3, self.ncurses.width/2 - int(dialogWidth/2))
+        acceptWindow = self.screen.subwin(6, dialogWidth, height/2 - 3, width/2 - int(dialogWidth/2))
         acceptWindow.border(0)
 
         # Enable arrow key detection for this window
@@ -32,7 +34,7 @@ class CursesAcceptDialog(object):
                 acceptWindow.addstr(3, 2, "Accept")
                 acceptWindow.addstr(4, 2, "Reject", curses.color_pair(4))
 
-            self.ncurses.screen.refresh()
+            self.screen.refresh()
             key = acceptWindow.getch()
             # Enter key
             if key == ord('\n'):

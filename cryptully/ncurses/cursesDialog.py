@@ -1,5 +1,3 @@
-import os
-import signal
 import curses
 
 class CursesDialog:
@@ -22,7 +20,7 @@ class CursesDialog:
         if self.isBlocking:
             exitMessage = "Press any key to dismiss"
         elif self.isError:
-            exitMessage = "Press Ctrl^c to exit"
+            exitMessage = "Press enter to continue"
         else:
             exitMessage = ""
 
@@ -65,10 +63,6 @@ class CursesDialog:
         if self.isBlocking:
             self.dialogWindow.getch()
             self.hide()
-
-        if self.isError:
-            self.dialogWindow.getch()
-            os.kill(os.getpid(), signal.SIGINT)
 
 
     def hide(self):

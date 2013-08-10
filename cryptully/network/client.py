@@ -81,13 +81,13 @@ class Client(Thread):
 
             # Check if the client requested to end the connection
             if command == constants.COMMAND_END:
-                self.errorCallback(self.remoteNick, errors.ERR_CONNECTION_ENDED)
                 self.connectionManager.destroyClient(self.remoteNick)
+                self.errorCallback(self.remoteNick, errors.ERR_CONNECTION_ENDED)
                 return
             # Ensure we got a valid command
             elif self.wasHandshakeDone and command not in constants.LOOP_COMMANDS:
-                self.errorCallback(self.remoteNick, errors.ERR_INVALID_COMMAND)
                 self.connectionManager.destroyClient(self.remoteNick)
+                self.errorCallback(self.remoteNick, errors.ERR_INVALID_COMMAND)
                 return
 
             # Decrypt the incoming data

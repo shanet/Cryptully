@@ -5,20 +5,20 @@ import os
 import Queue
 import signal
 import sys
+import threading
 import time
 
 from getpass import getpass
 
 from cursesAcceptDialog import CursesAcceptDialog
-from cursesFingerprintDialog import CursesFingerprintDialog
 from cursesDialog import CursesDialog
+from cursesFingerprintDialog import CursesFingerprintDialog
+from cursesInputDialog import CursesInputDialog
+from cursesModeDialog import CursesModeDialog
 
 from network.client import Client
-from network import ncursesThreads
 from network.connectionManager import ConnectionManager
-
-from threading import Lock
-from threading import Thread
+from network import ncursesThreads
 
 from utils import constants
 from utils import errors
@@ -26,7 +26,8 @@ from utils import exceptions
 from utils import utils
 from utils.crypto import Crypto
 
-mutex = Lock()
+mutex = threading.Lock()
+dialogDismissed = threading.Condition()
 
 class NcursesUI(object):
     def __init__(self, nick, turn, port):
@@ -71,15 +72,29 @@ class NcursesUI(object):
 
         # Get the nick if not given
         if self.nick == None:
-            self.showNickInputDialog()
+            self.nick = CursesInputDialog(self.screen, "Nickname: ").show()
 
-        self.connectToServer()
+        self.__connectToServer()
+        self.postConnectToServer()
 
-        self.__receiveMessageLoop()
+
+    def postConnectToServer(self):
+        # Ask if to wait for a connection or connect to someone
+        mode = CursesModeDialog(self.screen).show()
+
+        # If waiting for a connection, enter the recv loop and start the send thread
+        if mode == constants.WAIT:
+            self.waitingDialog = CursesDialog(self.screen, "Waiting for connection...", '')
+            self.waitingDialog.show()
+            self.__receiveMessageLoop()
+        else:
+            # Get the nickname of who to connect to
+            nick = CursesInputDialog(self.screen, "Nickname: ").show()
+            self.__connectToNick(nick)
 
 
-    def connectToServer(self):
-        # Create the connection manager to manage all communcation to the server
+    def __connectToServer(self):
+        # Create the connection manager to manage all communication to the server
         self.connectionManager = ConnectionManager(self.nick, (self.turn, self.port), self.crypto, self.postMessage, self.newClient, self.clientReady, self.handleError)
 
         dialogWindow = CursesDialog(self.screen, "Connecting to server...", "", False)
@@ -91,6 +106,11 @@ class NcursesUI(object):
             CursesDialog(self.screen, str(ge), "Error connecting to server", isError=True).show()
         finally:
             dialogWindow.hide()
+
+
+    def __connectToNick(self, nick):
+        # TODO: handle connecting to a nick
+        pass
 
 
     def postMessage(self, command, sourceNick, payload):
@@ -125,11 +145,13 @@ class NcursesUI(object):
         if self.connectedNick is not None:
             self.connectionManager.newClientRejected(nick)
         
+        self.waitingDialog.hide()
 
         # Show the accept dialog
-        accept = CursesAcceptDialog(self, nick).show()
+        accept = CursesAcceptDialog(self.screen, nick).show()
 
         if accept == constants.REJECT:
+            self.waitingDialog.show()
             self.connectionManager.newClientRejected(nick)
             return
 
@@ -141,9 +163,9 @@ class NcursesUI(object):
         self.screen.addstr(0, 5, "Ctrl+U for options")
         self.screen.refresh()
 
+        self.sendThread = CursesSendThread(self)
+        self.sendThread.start()
         self.connectionManager.newClientAccepted(nick)
-
-        CursesSendThread(self).start()
 
 
     def clientReady(self, nick):
@@ -151,36 +173,50 @@ class NcursesUI(object):
 
 
     def handleError(self, nick, errorCode):
+        # Stop the send thread after the user presses enter
+        self.sendThread.stop.set()
+
         if errorCode == errors.ERR_CONNECTION_ENDED:
-            CursesDialog(self.screen, errors.CONNECTION_ENDED % (nick), errors.TITLE_CONNECTION_ENDED, isError=True).show()
+            dialog = CursesDialog(self.screen, errors.CONNECTION_ENDED % (nick), errors.TITLE_CONNECTION_ENDED, isError=True)
         elif errorCode == errors.ERR_NICK_NOT_FOUND:
-            CursesDialog(self.screen, errors.NICK_NOT_FOUND % (nick), errors.TITLE_NICK_NOT_FOUND, isError=True).show()
+            dialog = CursesDialog(self.screen, errors.NICK_NOT_FOUND % (nick), errors.TITLE_NICK_NOT_FOUND, isError=True)
         elif errorCode == errors.ERR_CONNECTION_REJECTED:
-            CursesDialog(self.screen, errors.CONNECTION_REJECTED % (nick), errors.TITLE_CONNECTION_REJECTED, isError=True).show()
+            dialog = CursesDialog(self.screen, errors.CONNECTION_REJECTED % (nick), errors.TITLE_CONNECTION_REJECTED, isError=True)
         elif errorCode == errors.ERR_BAD_HANDSHAKE:
-            CursesDialog(self.screen, errors.PROTOCOL_ERROR % (nick), errors.TITLE_PROTOCOL_ERROR, isError=True).show()
+            dialog = CursesDialog(self.screen, errors.PROTOCOL_ERROR % (nick), errors.TITLE_PROTOCOL_ERROR, isError=True)
         elif errorCode == errors.ERR_CLIENT_EXISTS:
-            CursesDialog(self.screen, errors.CLIENT_EXISTS % (nick), errors.TITLE_CLIENT_EXISTS, isError=True).show()
+            dialog = CursesDialog(self.screen, errors.CLIENT_EXISTS % (nick), errors.TITLE_CLIENT_EXISTS, isError=True)
         elif errorCode == errors.ERR_SELF_CONNECT:
-            CursesDialog(self.screen, errors.SELF_CONNECT, errors.TITLE_SELF_CONNECT, isError=True).show()
+            dialog = CursesDialog(self.screen, errors.SELF_CONNECT, errors.TITLE_SELF_CONNECT, isError=True)
         elif errorCode == errors.ERR_SERVER_SHUTDOWN:
-            CursesDialog(self.screen, errors.SERVER_SHUTDOWN, errors.TITLE_SERVER_SHUTDOWN, isError=True).show()
+            dialog = CursesDialog(self.screen, errors.SERVER_SHUTDOWN, errors.TITLE_SERVER_SHUTDOWN, isError=True)
         elif errorCode == errors.ERR_ALREADY_CONNECTED:
-            CursesDialog(self.screen, errors.ALREADY_CONNECTED % (nick), errors.TITLE_ALREADY_CONNECTED, isError=True).show()
+            dialog = CursesDialog(self.screen, errors.ALREADY_CONNECTED % (nick), errors.TITLE_ALREADY_CONNECTED, isError=True)
         elif errorCode == errors.ERR_INVALID_COMMAND:
-            CursesDialog(self.screen, errors.INVALID_COMMAND % (nick), errors.TITLE_INVALID_COMMAND, isError=True).show()
+            dialog = CursesDialog(self.screen, errors.INVALID_COMMAND % (nick), errors.TITLE_INVALID_COMMAND, isError=True)
         elif errorCode == errors.ERR_NETWORK_ERROR:
-            CursesDialog(self.screen, errors.NETWORK_ERROR, errors.TITLE_NETWORK_ERROR, isError=True).show()
+            dialog = CursesDialog(self.screen, errors.NETWORK_ERROR, errors.TITLE_NETWORK_ERROR, isError=True)
         elif errorCode == errors.ERR_BAD_HMAC:
-            CursesDialog(self.screen, errors.BAD_HMAC, errors.TITLE_BAD_HMAC, isError=True).show()
+            dialog = CursesDialog(self.screen, errors.BAD_HMAC, errors.TITLE_BAD_HMAC, isError=True)
         elif errorCode == errors.ERR_BAD_DECRYPT:
-            CursesDialog(self.screen, errors.BAD_DECRYPT, errors.TITLE_BAD_DECRYPT, isError=True).show()
+            dialog = CursesDialog(self.screen, errors.BAD_DECRYPT, errors.TITLE_BAD_DECRYPT, isError=True)
         elif errorCode == errors.ERR_KICKED:
-            CursesDialog(self.screen, errors.KICKED, errors.TITLE_KICKED, isError=True).show()
+            dialog = CursesDialog(self.screen, errors.KICKED, errors.TITLE_KICKED, isError=True)
         elif errorCode == errors.ERR_NICK_IN_USE:
-            CursesDialog(self.screen, errors.NICK_IN_USE, errors.TITLE_NICK_IN_USE, isError=True).show()
+            dialog = CursesDialog(self.screen, errors.NICK_IN_USE, errors.TITLE_NICK_IN_USE, isError=True)
         else:
-            CursesDialog(self.screen, errors.UNKNOWN_ERROR % (nick), errors.TITLE_UNKNOWN_ERROR, isError=True).show()
+            dialog = CursesDialog(self.screen, errors.UNKNOWN_ERROR % (nick), errors.TITLE_UNKNOWN_ERROR, isError=True)
+
+        dialog.show()
+
+        # Wait for the send thread to report that the dialog has been dismissed (enter was pressed)
+        dialogDismissed.acquire()
+        dialogDismissed.wait()
+        dialogDismissed.release()
+
+        dialog.hide()
+        self.connectedNick = None
+        self.postConnectToServer()
 
 
     def __setColors(self):
@@ -207,29 +243,8 @@ class NcursesUI(object):
         self.textboxWindow = self.screen.subwin(1, self.width-35, self.height-2, 1)
 
         self.textbox = curses.textpad.Textbox(self.textboxWindow, insert_mode=True)
-        curses.textpad.rectangle(self.screen, self.height-3, 0, self.height-1, self.width-35)
+        curses.textpad.rectangle(self.screen, self.height-3, 0, self.height-1, self.width-34)
         self.textboxWindow.move(0, 0)
-
-
-    def showNickInputDialog(self):
-        self.nickInputWindow = self.screen.subwin(3, 42, self.height/2 - 1, self.width/2 - 22)
-        self.nickInputWindow.border(0)
-        self.nickInputWindow.addstr(1, 1, "Nickname: ")
-        self.nickInputWindow.refresh()
-
-        # Turn on echo and wait for enter key to read buffer
-        curses.echo()
-        curses.nocbreak()
-
-        self.nick = self.nickInputWindow.getstr(1, 11)
-
-        # Turn off echo and disable buffering
-        curses.cbreak()
-        curses.noecho()
-
-        # Clear the window
-        self.nickInputWindow.clear()
-        self.nickInputWindow.refresh()
 
 
     def setStatusWindow(self, nick):
@@ -378,11 +393,16 @@ class NcursesUI(object):
             self.crypto.generateRSAKeypair()
 
 
-class CursesSendThread(Thread):
+    def __quitApp(self):
+        os.kill(os.getpid(), signal.SIGINT)
+
+
+class CursesSendThread(threading.Thread):
     def __init__(self, ncurses):
         self.ncurses = ncurses
+        self.stop = threading.Event()
 
-        Thread.__init__(self)
+        threading.Thread.__init__(self)
         self.daemon = True
 
 
@@ -391,6 +411,14 @@ class CursesSendThread(Thread):
 
         while True:
             chatInput = self.ncurses.textbox.edit(self.inputValidator)
+
+            if self.stop.is_set():
+                dialogDismissed.acquire()
+                dialogDismissed.notify()
+                dialogDismissed.release()
+                return
+
+            self.ncurses.screen.refresh()
 
             mutex.acquire()
 
