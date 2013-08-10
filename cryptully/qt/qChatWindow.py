@@ -91,6 +91,11 @@ class QChatWindow(QMainWindow):
     def newClientSlot(self, nick):
         nick = str(nick)
 
+        # Show a system notifcation of the new client if not the current window
+        if not self.isActiveWindow():
+            self.systemTrayIcon.setVisible(True)
+            self.systemTrayIcon.showMessage("Chat request from " + nick, '')
+
         # Show the accept dialog
         accept = QAcceptDialog.getAnswer(self, nick)
 
