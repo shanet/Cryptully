@@ -81,9 +81,5 @@ def getAbsoluteImagePath(imageName):
     return utils.getAbsoluteResourcePath('images/' + ('light' if isLightTheme else 'dark') + '/' + imageName)
 
 
-def runOnUIThread(function, *args, **kwargs):
-    QCoreApplication.postEvent(invoker, qInvoker.InvokeEvent(function, *args, **kwargs))
-
-
 def exitApp():
     os.kill(os.getpid(), signal.SIGINT)
