@@ -1,12 +1,13 @@
 import curses
 
 class CursesDialog:
-    def __init__(self, screen, message, title="", isError=False, isBlocking=False):
-        self.screen     = screen
-        self.title      = title
-        self.message    = message
+    def __init__(self, screen, message, title="", isError=False, isFatal=False, isBlocking=False):
+        self.screen  = screen
+        self.title   = title
+        self.message = message
 
         self.isError    = isError
+        self.isFatal    = isFatal
         self.isBlocking = isBlocking
 
         if curses.has_colors():
@@ -18,9 +19,12 @@ class CursesDialog:
         (height, width) = self.screen.getmaxyx()
 
         if self.isBlocking:
-            exitMessage = "Press any key to dismiss"
+            exitMessage = "Press any key to continue"
         elif self.isError:
-            exitMessage = "Press enter to continue"
+            if self.isFatal:
+                exitMessage = "Press enter to exit"
+            else:
+                exitMessage = "Press enter to continue"
         else:
             exitMessage = ""
 

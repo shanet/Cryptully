@@ -44,12 +44,14 @@ class NcursesUI(object):
 
 
     def stop(self):
-        # If a client is connected, try to end the connection gracefully
-        if hasattr(self, 'client'):
-            self.client.disconnect()
+        if hasattr(self, 'connectionManager'):
+            self.connectionManager.disconnectFromServer()
 
-        if hasattr(self, 'server'):
-            self.server.stop()
+        # Give the send thread time to get the disconnect messages out before exiting
+        # and killing the thread
+        time.sleep(.25)
+
+        curses.endwin()
 
 
     def run(self, screen):
@@ -103,9 +105,11 @@ class NcursesUI(object):
             # TODO: push this to it's own thread
             self.connectionManager.connectToServer()
         except exceptions.GenericError as ge:
-            CursesDialog(self.screen, str(ge), "Error connecting to server", isError=True).show()
-        finally:
             dialogWindow.hide()
+            CursesDialog(self.screen, str(ge), "Error connecting to server", isError=True, isBlocking=True).show()
+            self.__quitApp()
+        
+        dialogWindow.hide()
 
 
     def __connectToNick(self, nick):
@@ -173,8 +177,11 @@ class NcursesUI(object):
 
 
     def handleError(self, nick, errorCode):
-        # Stop the send thread after the user presses enter
-        self.sendThread.stop.set()
+        # Stop the send thread after the user presses enter if it is running
+        waiting = False
+        if hasattr(self, 'sendThread'):
+            waiting = True
+            self.sendThread.stop.set()
 
         if errorCode == errors.ERR_CONNECTION_ENDED:
             dialog = CursesDialog(self.screen, errors.CONNECTION_ENDED % (nick), errors.TITLE_CONNECTION_ENDED, isError=True)
@@ -189,13 +196,13 @@ class NcursesUI(object):
         elif errorCode == errors.ERR_SELF_CONNECT:
             dialog = CursesDialog(self.screen, errors.SELF_CONNECT, errors.TITLE_SELF_CONNECT, isError=True)
         elif errorCode == errors.ERR_SERVER_SHUTDOWN:
-            dialog = CursesDialog(self.screen, errors.SERVER_SHUTDOWN, errors.TITLE_SERVER_SHUTDOWN, isError=True)
+            dialog = CursesDialog(self.screen, errors.SERVER_SHUTDOWN, errors.TITLE_SERVER_SHUTDOWN, isError=True, isFatal=True)
         elif errorCode == errors.ERR_ALREADY_CONNECTED:
             dialog = CursesDialog(self.screen, errors.ALREADY_CONNECTED % (nick), errors.TITLE_ALREADY_CONNECTED, isError=True)
         elif errorCode == errors.ERR_INVALID_COMMAND:
             dialog = CursesDialog(self.screen, errors.INVALID_COMMAND % (nick), errors.TITLE_INVALID_COMMAND, isError=True)
         elif errorCode == errors.ERR_NETWORK_ERROR:
-            dialog = CursesDialog(self.screen, errors.NETWORK_ERROR, errors.TITLE_NETWORK_ERROR, isError=True)
+            dialog = CursesDialog(self.screen, errors.NETWORK_ERROR, errors.TITLE_NETWORK_ERROR, isError=True, isFatal=True)
         elif errorCode == errors.ERR_BAD_HMAC:
             dialog = CursesDialog(self.screen, errors.BAD_HMAC, errors.TITLE_BAD_HMAC, isError=True)
         elif errorCode == errors.ERR_BAD_DECRYPT:
@@ -203,20 +210,28 @@ class NcursesUI(object):
         elif errorCode == errors.ERR_KICKED:
             dialog = CursesDialog(self.screen, errors.KICKED, errors.TITLE_KICKED, isError=True)
         elif errorCode == errors.ERR_NICK_IN_USE:
-            dialog = CursesDialog(self.screen, errors.NICK_IN_USE, errors.TITLE_NICK_IN_USE, isError=True)
+            dialog = CursesDialog(self.screen, errors.NICK_IN_USE, errors.TITLE_NICK_IN_USE, isError=True, isFatal=True)
         else:
             dialog = CursesDialog(self.screen, errors.UNKNOWN_ERROR % (nick), errors.TITLE_UNKNOWN_ERROR, isError=True)
 
         dialog.show()
 
         # Wait for the send thread to report that the dialog has been dismissed (enter was pressed)
-        dialogDismissed.acquire()
-        dialogDismissed.wait()
-        dialogDismissed.release()
+        # or, if the send thread was not started yet, wait for a key press here
+        if waiting:
+            dialogDismissed.acquire()
+            dialogDismissed.wait()
+            dialogDismissed.release()
+        else:
+            self.screen.getch()
 
         dialog.hide()
-        self.connectedNick = None
-        self.postConnectToServer()
+
+        if dialog.isFatal:
+            self.__quitApp()
+        else:
+            self.connectedNick = None
+            self.postConnectToServer()
 
 
     def __setColors(self):
@@ -256,7 +271,6 @@ class NcursesUI(object):
 
     def showOptionsMenuWindow(self, showStartOption=False):
         menuWindow = self.screen.subwin((9 if showStartOption else 8), 40, 3, self.width/2 - 20)
-        menuWindow.border(0)
 
         # Enable arrow key detection for this window
         menuWindow.keypad(True)
@@ -264,6 +278,9 @@ class NcursesUI(object):
         pos = 1
 
         while True:
+            # Redraw the border on each loop in case something is shown on top of this window
+            menuWindow.border(0)
+
             # Disable the cursor
             curses.curs_set(0)
 
