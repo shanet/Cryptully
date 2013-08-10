@@ -18,13 +18,12 @@ class CursesDialog:
     def show(self):
         (height, width) = self.screen.getmaxyx()
 
-        if self.isBlocking:
-            exitMessage = "Press any key to continue"
+        if self.isFatal:
+            exitMessage = "Press enter to exit"
         elif self.isError:
-            if self.isFatal:
-                exitMessage = "Press enter to exit"
-            else:
-                exitMessage = "Press enter to continue"
+            exitMessage = "Press enter to continue"
+        elif self.isBlocking:
+            exitMessage = "Press any key to continue"
         else:
             exitMessage = ""
 
