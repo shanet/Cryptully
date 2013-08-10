@@ -262,7 +262,7 @@ class NcursesUI(object):
         self.textboxWindow = self.screen.subwin(1, self.width-35, self.height-2, 1)
 
         self.textbox = curses.textpad.Textbox(self.textboxWindow, insert_mode=True)
-        curses.textpad.rectangle(self.screen, self.height-3, 0, self.height-1, self.width-34)
+        curses.textpad.rectangle(self.screen, self.height-3, 0, self.height-1, self.width-35)
         self.textboxWindow.move(0, 0)
 
 
