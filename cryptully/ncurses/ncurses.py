@@ -122,26 +122,30 @@ class NcursesUI(object):
 
 
     def __receiveMessageLoop(self):
-        (height, width) = self.chatWindow.getmaxyx()
-
         while True:
             message = self.messageQueue.get()
             mutex.acquire()
 
-            # Put the received data in the chat window
             prefix = "(%s) %s: " % (utils.getTimestamp(), message[1])
-            self.chatWindow.scroll(1)
-            self.chatWindow.addstr(height-1, 0, prefix, curses.color_pair(2))
-            self.chatWindow.addstr(height-1, len(prefix), message[2])
-
-            # Move the cursor back to the chat input window
-            self.textboxWindow.move(0, 0)
-
-            self.chatWindow.refresh()
-            self.textboxWindow.refresh()
+            self.__appendMessage(prefix, message[2])
 
             mutex.release()
             self.messageQueue.task_done()
+
+
+    def __appendMessage(self, prefix, message):
+        (height, width) = self.chatWindow.getmaxyx()
+
+        # Put the received data in the chat window
+        self.chatWindow.scroll(1)
+        self.chatWindow.addstr(height-1, 0, prefix, curses.color_pair(2))
+        self.chatWindow.addstr(height-1, len(prefix), message)
+
+        # Move the cursor back to the chat input window
+        self.textboxWindow.move(0, 0)
+
+        self.chatWindow.refresh()
+        self.textboxWindow.refresh()
 
 
     def newClient(self, nick):
@@ -173,7 +177,7 @@ class NcursesUI(object):
 
 
     def clientReady(self, nick):
-        pass
+        self.__appendMessage('', "Now chatting with " + nick)
 
 
     def handleError(self, nick, errorCode):
