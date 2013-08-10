@@ -53,6 +53,10 @@ class NcursesUI(object):
 
         curses.endwin()
 
+    def __restart(self):
+        self.connectedNick = None
+        self.postConnectToServer()
+
 
     def run(self, screen):
         self.screen = screen
@@ -234,8 +238,7 @@ class NcursesUI(object):
         if dialog.isFatal:
             self.__quitApp()
         else:
-            self.connectedNick = None
-            self.postConnectToServer()
+            self.__restart()
 
 
     def __setColors(self):
@@ -259,7 +262,7 @@ class NcursesUI(object):
 
 
     def makeChatInputWindow(self):
-        self.textboxWindow = self.screen.subwin(1, self.width-35, self.height-2, 1)
+        self.textboxWindow = self.screen.subwin(1, self.width-36, self.height-2, 1)
 
         self.textbox = curses.textpad.Textbox(self.textboxWindow, insert_mode=True)
         curses.textpad.rectangle(self.screen, self.height-3, 0, self.height-1, self.width-35)
@@ -273,8 +276,9 @@ class NcursesUI(object):
         self.statusWindow.refresh()
 
 
-    def showOptionsMenuWindow(self, showStartOption=False):
-        menuWindow = self.screen.subwin((9 if showStartOption else 8), 40, 3, self.width/2 - 20)
+    def showOptionsMenuWindow(self):
+        numMenuEntires = 7
+        menuWindow = self.screen.subwin(numMenuEntires+2, 34, 3, self.width/2 - 14)
 
         # Enable arrow key detection for this window
         menuWindow.keypad(True)
@@ -289,50 +293,48 @@ class NcursesUI(object):
             curses.curs_set(0)
 
             while True:
-                menuItem = 1
-                if showStartOption:
-                    menuWindow.addstr(menuItem, 1, str(menuItem) + ".| Start chat", curses.color_pair(4) if pos == menuItem else curses.color_pair(1))
-                    menuItem += 1
-                menuWindow.addstr(menuItem, 1, str(menuItem) + ".| Show public key fingerprints", curses.color_pair(4) if pos == menuItem else curses.color_pair(1))
-                menuItem += 1
-                menuWindow.addstr(menuItem, 1, str(menuItem) + ".| Save current keypair", curses.color_pair(4) if pos == menuItem else curses.color_pair(1))
-                menuItem += 1
-                menuWindow.addstr(menuItem, 1, str(menuItem) + ".| Clear saved keypair", curses.color_pair(4) if pos == menuItem else curses.color_pair(1))
-                menuItem += 1
-                menuWindow.addstr(menuItem, 1, str(menuItem) + ".| Show help", curses.color_pair(4) if pos == menuItem else curses.color_pair(1))
-                menuItem += 1
-                menuWindow.addstr(menuItem, 1, str(menuItem) + ".| Close menu", curses.color_pair(4) if pos == menuItem else curses.color_pair(1))
-                menuItem += 1
-                menuWindow.addstr(menuItem, 1, str(menuItem) + ".| Quit application", curses.color_pair(4) if pos == menuItem else curses.color_pair(1))
+                item = 1
+                menuWindow.addstr(item, 1, str(item) + ".| Show public key fingerprints", curses.color_pair(4) if pos == item else curses.color_pair(1))
+                item += 1
+                menuWindow.addstr(item, 1, str(item) + ".| End current chat            ", curses.color_pair(4) if pos == item else curses.color_pair(1))
+                item += 1
+                menuWindow.addstr(item, 1, str(item) + ".| Save current keypair        ", curses.color_pair(4) if pos == item else curses.color_pair(1))
+                item += 1
+                menuWindow.addstr(item, 1, str(item) + ".| Clear saved keypair         ", curses.color_pair(4) if pos == item else curses.color_pair(1))
+                item += 1
+                menuWindow.addstr(item, 1, str(item) + ".| Show help                   ", curses.color_pair(4) if pos == item else curses.color_pair(1))
+                item += 1
+                menuWindow.addstr(item, 1, str(item) + ".| Close menu                  ", curses.color_pair(4) if pos == item else curses.color_pair(1))
+                item += 1
+                menuWindow.addstr(item, 1, str(item) + ".| Quit application            ", curses.color_pair(4) if pos == item else curses.color_pair(1))
 
                 menuWindow.refresh()
                 key = menuWindow.getch()
-                if key == curses.KEY_DOWN and pos < (7 if showStartOption else 6):
+                if key == curses.KEY_DOWN and pos < numMenuEntires:
                     pos += 1
                 elif key == curses.KEY_UP and pos > 1:
                     pos -= 1
                 # Wrap around from top of menu
                 elif key == curses.KEY_UP and pos == 1:
-                    pos = (7 if showStartOption else 6)
+                    pos = numMenuEntires
                 # Wrap around from bottom of menu
-                elif key == curses.KEY_DOWN and pos == (7 if showStartOption else 6):
+                elif key == curses.KEY_DOWN and pos == numMenuEntires:
                     pos = 1
                 # Enter key
                 elif key == ord('\n'):
                     break
 
-            # Move the selected item by 1 to adjust for the lack of a start option
-            if not showStartOption:
-                pos += 1
-
             # Process the selected option
             if pos == 1:
-                break
-            if pos == 2:
                 try:
                     CursesFingerprintDialog(self.screen, self.crypto.getLocalFingerprint(), self.crypto.getRemoteFingerprint()).show()
                 except exceptions.CryptoError:
                     CursesDialog(self.screen, "Public key(s) not generated/received yet.", isBlocking=True).show()
+            elif pos == 2:
+                self.connectionManager.closeChat(self.connectedNick)
+                menuWindow.clear()
+                menuWindow.refresh()
+                self.__restart()
             elif pos == 3:
                 passphrase = self.getKeypairPassphrase(True)
                 utils.saveKeypair(self.crypto, passphrase)
@@ -343,13 +345,11 @@ class NcursesUI(object):
             elif pos == 5:
                 CursesDialog(self.screen, "Read the docs at https://cryptully.readthedocs.org/en/latest/", isBlocking=True).show()
             elif pos == 6:
+                # Move the cursor back to the chat input textbox
+                self.textboxWindow.move(0, 0)
                 break
             elif pos == 7:
                 os.kill(os.getpid(), signal.SIGINT)
-
-            # Shift the selected item position back
-            if not showStartOption:
-                pos -= 1
 
         # Re-enable the cursor
         curses.curs_set(2)
