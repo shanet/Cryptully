@@ -1,9 +1,7 @@
 # -*- mode: python -*-
 import sys
-sys.path.append('/home/shane/Devel/Python/cryptully/')
 
 a = Analysis(['cryptully/cryptully.py'],
-             pathex=['/home/shane/Devel/Python/cryptully'],
              hiddenimports=[],
              hookspath=None)
 pyz = PYZ(a.pure)
