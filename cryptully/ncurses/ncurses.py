@@ -17,6 +17,8 @@ from cursesPassphraseDialog import CursesPassphraseDialog
 from cursesSendThread import CursesSendThread
 from cursesStatusWindow import CursesStatusWindow
 
+from crypto.crypto import Crypto
+
 from network.client import Client
 from network.connectionManager import ConnectionManager
 
@@ -24,7 +26,6 @@ from utils import constants
 from utils import errors
 from utils import exceptions
 from utils import utils
-from utils.crypto import Crypto
 
 
 class NcursesUI(object):

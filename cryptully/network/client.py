@@ -1,15 +1,16 @@
 import base64
 import Queue
 
-from threading import Thread
+from crypto.crypto import Crypto
 
 from message import Message
+
+from threading import Thread
 
 from utils import constants
 from utils import errors
 from utils import exceptions
 from utils import utils
-from utils.crypto import Crypto
 
 
 class Client(Thread):

@@ -1,6 +1,8 @@
 import sys
 import time
 
+from crypto.crypto import Crypto
+
 from network.client import Client
 from network.connectionManager import ConnectionManager
 from network import qtThreads
@@ -23,7 +25,6 @@ from utils import constants
 from utils import errors
 from utils import exceptions
 from utils import utils
-from utils.crypto import Crypto
 
 
 class QtUI(QApplication):

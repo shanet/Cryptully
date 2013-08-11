@@ -1,5 +1,7 @@
 import unittest
 
+from crypto.crypto import Crypto
+
 from network.client import Client
 from network.server import Server
 
@@ -9,12 +11,13 @@ from utils import constants
 from utils import errors
 from utils import exceptions
 from utils import utils
-from utils.crypto import Crypto
+
 
 CLIENT_TEST_MESSAGE_1 = "client test message 1"
 SERVER_TEST_MESSAGE_1 = "server test message 1"
 SERVER_TEST_MESSAGE_2 = "server test message 2"
 SERVER_TEST_MESSAGE_3 = "server test message 3"
+
 
 class TestClient(unittest.TestCase):
 
