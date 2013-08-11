@@ -24,10 +24,10 @@ class CursesModeDialog(object):
 
         while True:
             if position == constants.CONNECT:
-                modeDialog.addstr(1, 2, "Initiate connection    ", curses.color_pair(4))
+                modeDialog.addstr(1, 2, "Initiate connection", curses.color_pair(4))
                 modeDialog.addstr(2, 2, "Wait for connection")
             else:
-                modeDialog.addstr(1, 2, "Initiate connection    ")
+                modeDialog.addstr(1, 2, "Initiate connection")
                 modeDialog.addstr(2, 2, "Wait for connection", curses.color_pair(4))
 
             self.screen.refresh()
