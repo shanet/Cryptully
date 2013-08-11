@@ -26,7 +26,6 @@ from utils import exceptions
 from utils import utils
 from utils.crypto import Crypto
 
-mutex = threading.Lock()
 dialogDismissed = threading.Condition()
 clientConnected = threading.Condition()
 
@@ -36,8 +35,10 @@ class NcursesUI(object):
         self.turn = turn
         self.port = port
 
-        self.connectedNick = None
-        self.messageQueue = Queue.Queue()
+        self.connectedNick  = None
+        self.inRecveiveLoop = False
+        self.errorRaised    = threading.Event()
+        self.messageQueue   = Queue.Queue()
 
 
     def start(self):
@@ -55,7 +56,13 @@ class NcursesUI(object):
         curses.endwin()
 
     def __restart(self):
-        self.connectedNick = None
+        self.__drawUI()
+
+        self.connectedNick      = None
+        self.inRecveiveLoop     = False
+        self.clientConnectError = False
+
+        self.errorRaised.clear()
         self.postConnectToServer()
 
 
@@ -63,16 +70,7 @@ class NcursesUI(object):
         self.screen = screen
         (self.height, self.width) = self.screen.getmaxyx()
 
-        # Change the colors, clear the screen and set the overall border
-        self.__setColors()
-        self.screen.clear()
-        self.screen.border(0)
-
-        # Create the status and chat input windows
-        self.makeChatWindow()
-        self.makeStatusWindow()
-        self.makeChatInputWindow()
-        self.screen.refresh()
+        self.__drawUI()
 
         # Try to load a keypair if one was saved or generate a new keypair
         self.__loadOrGenerateKepair()
@@ -85,12 +83,25 @@ class NcursesUI(object):
         self.postConnectToServer()
 
 
+    def __drawUI(self):
+        # Change the colors, clear the screen and set the overall border
+        self.__setColors()
+        self.screen.clear()
+        self.screen.border(0)
+
+        # Create the status and chat input windows
+        self.makeChatWindow()
+        self.makeStatusWindow()
+        self.makeChatInputWindow()
+        self.screen.refresh()
+
+
     def postConnectToServer(self):
         # Ask if to wait for a connection or connect to someone
-        mode = CursesModeDialog(self.screen).show()
+        self.mode = CursesModeDialog(self.screen).show()
 
         # If waiting for a connection, enter the recv loop and start the send thread
-        if mode == constants.WAIT:
+        if self.mode == constants.WAIT:
             self.waitingDialog = CursesDialog(self.screen, "Waiting for connection...", '')
             self.waitingDialog.show()
         else:
@@ -102,7 +113,10 @@ class NcursesUI(object):
                 if nick == self.nick:
                     CursesDialog(self.screen, errors.SELF_CONNECT, errors.TITLE_SELF_CONNECT, isError=True, isBlocking=True).show()
                     continue
-                
+                if nick == '':
+                    CursesDialog(self.screen, errors.EMPTY_NICK, errors.TITLE_EMPTY_NICK, isError=True, isBlocking=True).show()
+                    continue
+
                 self.__connectToNick(nick)
                 break
 
@@ -136,6 +150,12 @@ class NcursesUI(object):
         clientConnected.release()
 
         connectingDialog.hide()
+
+        # If there was an error while connecting to the client, restart
+        if self.clientConnectError:
+            self.__restart()
+            return
+
         self.__startSendThread()
 
 
@@ -144,14 +164,20 @@ class NcursesUI(object):
 
 
     def __receiveMessageLoop(self):
+        self.inRecveiveLoop = True
+
         while True:
-            message = self.messageQueue.get()
-            mutex.acquire()
+            # Keyboard interrupts are ignored unless a timeout is specified
+            # See http://bugs.python.org/issue1360
+            message = self.messageQueue.get(True, 31536000)
+
+            if self.errorRaised.is_set():
+                self.__restart()
+                return
 
             prefix = "(%s) %s: " % (utils.getTimestamp(), message[1])
             self.appendMessage(prefix, message[2], curses.color_pair(2))
 
-            mutex.release()
             self.messageQueue.task_done()
 
 
@@ -172,8 +198,9 @@ class NcursesUI(object):
 
     def newClient(self, nick):
         # Only allow one client (TODO: support multiple clients)
-        if self.connectedNick is not None:
+        if self.connectedNick is not None or self.mode != constants.WAIT:
             self.connectionManager.newClientRejected(nick)
+            return
         
         self.waitingDialog.hide()
 
@@ -214,9 +241,9 @@ class NcursesUI(object):
         clientConnected.release()
 
 
-
     def handleError(self, nick, errorCode):
         # Stop the send thread after the user presses enter if it is running
+        clientConnectError = False
         waiting = False
         if hasattr(self, 'sendThread'):
             waiting = True
@@ -226,8 +253,10 @@ class NcursesUI(object):
             dialog = CursesDialog(self.screen, errors.CONNECTION_ENDED % (nick), errors.TITLE_CONNECTION_ENDED, isError=True)
         elif errorCode == errors.ERR_NICK_NOT_FOUND:
             dialog = CursesDialog(self.screen, errors.NICK_NOT_FOUND % (nick), errors.TITLE_NICK_NOT_FOUND, isError=True)
+            clientConnectError = True
         elif errorCode == errors.ERR_CONNECTION_REJECTED:
             dialog = CursesDialog(self.screen, errors.CONNECTION_REJECTED % (nick), errors.TITLE_CONNECTION_REJECTED, isError=True)
+            clientConnectError = True
         elif errorCode == errors.ERR_BAD_HANDSHAKE:
             dialog = CursesDialog(self.screen, errors.PROTOCOL_ERROR % (nick), errors.TITLE_PROTOCOL_ERROR, isError=True)
         elif errorCode == errors.ERR_CLIENT_EXISTS:
@@ -268,8 +297,22 @@ class NcursesUI(object):
 
         if dialog.isFatal:
             self.__quitApp()
+        elif self.inRecveiveLoop:
+            # If not fatal, the UI thread needs to restart, but it's blocked the message queue
+            # Set a flag and send an empty message to pump the message queue
+            self.errorRaised.set()
+            self.postMessage('', '', '')
+        elif clientConnectError:
+            self.__handleClientConnectingError()
         else:
             self.__restart()
+
+
+    def __handleClientConnectingError(self):
+        self.clientConnectError = True
+        clientConnected.acquire()
+        clientConnected.notify()
+        clientConnected.release()
 
 
     def __setColors(self):
@@ -451,11 +494,11 @@ class NcursesUI(object):
 
 class CursesSendThread(threading.Thread):
     def __init__(self, ncurses):
-        self.ncurses = ncurses
-        self.stop = threading.Event()
-
         threading.Thread.__init__(self)
         self.daemon = True
+
+        self.ncurses = ncurses
+        self.stop = threading.Event()
 
 
     def run(self):
@@ -464,8 +507,6 @@ class CursesSendThread(threading.Thread):
 
         while True:
             chatInput = self.ncurses.textbox.edit(self.inputValidator)
-
-            mutex.acquire()
 
             # Don't send anything if we're not connected to a nick
             if self.ncurses.connectedNick is None:
@@ -491,8 +532,6 @@ class CursesSendThread(threading.Thread):
 
             # Send the input to the client
             self.ncurses.connectionManager.getClient(self.ncurses.connectedNick).sendChatMessage(chatInput[:-1])
-
-            mutex.release()
 
 
     def inputValidator(self, char):
