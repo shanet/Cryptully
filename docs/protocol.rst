@@ -20,6 +20,7 @@ Basic Properties
   * ``destNick``: The nickname of the receiver
   * ``payload``: The content of the message. If an encrypted message, it is base64 encoded
   * ``hmac``: The HMAC as calculated by the sender to be verified against by the receiver
+  * ``iv``: If the payload is encrypted, the AES IV used for this message (base64 encoded and encrypted with RSA)
   * ``error``: The error code, if applicable
 
 * All commands *are* case sensitive
@@ -65,6 +66,8 @@ Encryption Details
 * Each client generates a unique RSA keypair and AES key for each connection. The exception being if the user
   saved an RSA keypair. Then each connection uses the same keypair, but an AES key is randomly generated for
   each connection.
+* The AES IV is randomly generated for each message and sent along with the message encrypted with the RSA keys
+  that are exchanged in the handshake.
 
 -----------------
 Handshake Details
@@ -86,8 +89,6 @@ The commands in the handshake must be performed in the following order:
 |(switch to RSA encryption) |
 +--------+---------+--------+
 |AES_KEY |   ->    |        |
-+--------+---------+--------+
-|AES_IV  |   ->    |        |
 +--------+---------+--------+
 |AES_SALT|   ->    |        |
 +--------+---------+--------+
