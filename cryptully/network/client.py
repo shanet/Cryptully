@@ -48,6 +48,14 @@ class Client(Thread):
         # Encrypt all outgoing data
         if payload is not None and self.encryptionType is not None:
             if self.encryptionType == self.AES:
+                # Generate and set the IV for the message
+                self.crypto.generateAESIv()
+
+                # Encrypt the IV with RSA to be sent to the client
+                encryptedIv = self.crypto.rsaEncrypt(self.crypto.aesIv)
+                message.setBinaryIv(encryptedIv)
+
+                # Encrypt the actual user's message
                 payload = self.crypto.aesEncrypt(payload)
 
                 # Generate and set the HMAC for the message
@@ -129,7 +137,6 @@ class Client(Thread):
 
             # Send the AES key, IV, and salt
             self.sendMessage(constants.COMMAND_AES_KEY, self.crypto.aesKey)
-            self.sendMessage(constants.COMMAND_AES_IV, self.crypto.aesIv)
             self.sendMessage(constants.COMMAND_AES_SALT, self.crypto.aesSalt)
 
             # Switch to AES encryption for the remainder of the connection
@@ -166,9 +173,6 @@ class Client(Thread):
             # Receive the AES key
             self.crypto.aesKey = self.__getHandshakeMessagePayload(constants.COMMAND_AES_KEY)
 
-            # Receive the AES IV
-            self.crypto.aesIv = self.__getHandshakeMessagePayload(constants.COMMAND_AES_IV)
-
             # Receive the AES salt
             self.crypto.aesSalt = self.__getHandshakeMessagePayload(constants.COMMAND_AES_SALT)
 
@@ -203,12 +207,16 @@ class Client(Thread):
 
     def __getDecryptedPayload(self, message):
         if self.encryptionType is not None:
-            payload = message.getEncryptedPayloadAsString()
+            payload = message.getEncryptedPayloadAsBinaryString()
             if self.encryptionType == self.AES:
                 # Check the HMAC
-                if not self.__verifyHmac(message.hmac, message.getEncryptedPayloadAsString()):
+                if not self.__verifyHmac(message.hmac, payload):
                     self.errorCallback(message.sourceNick, errors.ERR_BAD_HMAC)
                     raise exceptions.CryptoError(errors.BAD_HMAC)
+
+                # Update the crypto object with the new IV
+                iv = self.crypto.rsaDecrypt(message.getIvAsBinaryString())
+                self.crypto.aesIv = iv
 
                 try:
                     payload = self.crypto.aesDecrypt(payload)
