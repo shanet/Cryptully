@@ -205,7 +205,12 @@ class RecvThread(Thread):
 
     def run(self):
         # The first communcation with the client is registering a nick
-        message = Message.createFromJSON(self.sock.recv())
+        try:
+            message = Message.createFromJSON(self.sock.recv())
+        except KeyError:
+            printAndLog(str(self.sock) + ": send a command with missing JSON fields")
+            self.__handleError(errors.ERR_INVALID_COMMAND)
+            return
 
         # Check that the client sent the register command
         if message.serverCommand != constants.COMMAND_REGISTER:
@@ -231,7 +236,12 @@ class RecvThread(Thread):
 
         while True:
             try:
-                message = Message.createFromJSON(self.sock.recv())
+                try:
+                    message = Message.createFromJSON(self.sock.recv())
+                except KeyError:
+                    printAndLog(str(self.sock) + ": send a command with missing JSON fields")
+                    self.__handleError(errors.ERR_INVALID_COMMAND)
+                    return
             
                 if message.serverCommand == constants.COMMAND_END:
                     printAndLog(self.nick + ": requested to end connection")
