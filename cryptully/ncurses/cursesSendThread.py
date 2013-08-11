@@ -26,9 +26,9 @@ class CursesSendThread(threading.Thread):
 
             # Stop the thread if the stop flag is set
             if self.stop.is_set():
-                dialogDismissed.acquire()
-                dialogDismissed.notify()
-                dialogDismissed.release()
+                self.ncurses.dialogDismissed.acquire()
+                self.ncurses.dialogDismissed.notify()
+                self.ncurses.dialogDismissed.release()
                 return
 
             self.ncurses.screen.refresh()

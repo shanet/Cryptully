@@ -19,17 +19,12 @@ from cursesStatusWindow import CursesStatusWindow
 
 from network.client import Client
 from network.connectionManager import ConnectionManager
-from network import ncursesThreads
 
 from utils import constants
 from utils import errors
 from utils import exceptions
 from utils import utils
 from utils.crypto import Crypto
-
-
-dialogDismissed = threading.Condition()
-clientConnected = threading.Condition()
 
 
 class NcursesUI(object):
@@ -41,8 +36,11 @@ class NcursesUI(object):
         self.connectedNick      = None
         self.inRecveiveLoop     = False
         self.clientConnectError = False
-        self.errorRaised        = threading.Event()
         self.messageQueue       = Queue.Queue()
+
+        self.errorRaised     = threading.Event()
+        self.dialogDismissed = threading.Condition()
+        self.clientConnected = threading.Condition()
 
 
     def start(self):
@@ -151,9 +149,9 @@ class NcursesUI(object):
         connectingDialog.show()
         self.connectionManager.openChat(nick)
 
-        clientConnected.acquire()
-        clientConnected.wait()
-        clientConnected.release()
+        self.clientConnected.acquire()
+        self.clientConnected.wait()
+        self.clientConnected.release()
 
         connectingDialog.hide()
 
@@ -243,9 +241,9 @@ class NcursesUI(object):
         self.connectedNick = nick
         self.statusWindow.setText(nick)
 
-        clientConnected.acquire()
-        clientConnected.notify()
-        clientConnected.release()
+        self.clientConnected.acquire()
+        self.clientConnected.notify()
+        self.clientConnected.release()
 
 
     def handleError(self, nick, errorCode):
@@ -294,9 +292,9 @@ class NcursesUI(object):
         # Wait for the send thread to report that the dialog has been dismissed (enter was pressed)
         # or, if the send thread was not started yet, wait for a key press here
         if waiting:
-            dialogDismissed.acquire()
-            dialogDismissed.wait()
-            dialogDismissed.release()
+            self.dialogDismissed.acquire()
+            self.dialogDismissed.wait()
+            self.dialogDismissed.release()
         else:
             self.screen.getch()
 
@@ -317,9 +315,9 @@ class NcursesUI(object):
 
     def __handleClientConnectingError(self):
         self.clientConnectError = True
-        clientConnected.acquire()
-        clientConnected.notify()
-        clientConnected.release()
+        self.clientConnected.acquire()
+        self.clientConnected.notify()
+        self.clientConnected.release()
 
 
     def __setColors(self):
