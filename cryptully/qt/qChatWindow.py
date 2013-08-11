@@ -216,7 +216,7 @@ class QChatWindow(QMainWindow):
         tab = self.chatTabs.widget(index)
 
         # Change the window title to the nick
-        if tab.nick is None:
+        if tab is None or tab.nick is None:
             self.setWindowTitle("Cryptully")
         else:
             self.setWindowTitle(tab.nick)
