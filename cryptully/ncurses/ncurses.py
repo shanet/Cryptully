@@ -15,6 +15,7 @@ from cursesDialog import CursesDialog
 from cursesFingerprintDialog import CursesFingerprintDialog
 from cursesInputDialog import CursesInputDialog
 from cursesModeDialog import CursesModeDialog
+from cursesStatusWindow import CursesStatusWindow
 
 from network.client import Client
 from network.connectionManager import ConnectionManager
@@ -35,10 +36,11 @@ class NcursesUI(object):
         self.turn = turn
         self.port = port
 
-        self.connectedNick  = None
-        self.inRecveiveLoop = False
-        self.errorRaised    = threading.Event()
-        self.messageQueue   = Queue.Queue()
+        self.connectedNick      = None
+        self.inRecveiveLoop     = False
+        self.clientConnectError = False
+        self.errorRaised        = threading.Event()
+        self.messageQueue       = Queue.Queue()
 
 
     def start(self):
@@ -89,10 +91,12 @@ class NcursesUI(object):
         self.screen.clear()
         self.screen.border(0)
 
-        # Create the status and chat input windows
+        # Create the chat log and chat input windows
         self.makeChatWindow()
-        self.makeStatusWindow()
         self.makeChatInputWindow()
+
+        self.statusWindow = CursesStatusWindow(self.screen, "Disconnected")
+        self.statusWindow.show()
         self.screen.refresh()
 
 
@@ -213,7 +217,7 @@ class NcursesUI(object):
             return
 
         # Set who we're connected to in the status window
-        self.setStatusWindow(nick)
+        self.statusWindow.setText(nick)
         self.connectedNick = nick
 
         self.__startSendThread()
@@ -235,6 +239,7 @@ class NcursesUI(object):
 
     def clientReady(self, nick):
         self.connectedNick = nick
+        self.statusWindow.setText(nick)
 
         clientConnected.acquire()
         clientConnected.notify()
@@ -329,25 +334,12 @@ class NcursesUI(object):
         self.chatWindow.scrollok(True)
 
 
-    def makeStatusWindow(self):
-        self.statusWindow = self.screen.subwin(self.height-3, self.width-34)
-        self.statusWindow.border(0)
-        self.statusWindow.addstr(1, 1, "Disconnected")
-
-
     def makeChatInputWindow(self):
         self.textboxWindow = self.screen.subwin(1, self.width-36, self.height-2, 1)
 
         self.textbox = curses.textpad.Textbox(self.textboxWindow, insert_mode=True)
         curses.textpad.rectangle(self.screen, self.height-3, 0, self.height-1, self.width-35)
         self.textboxWindow.move(0, 0)
-
-
-    def setStatusWindow(self, nick):
-        self.statusWindow.clear()
-        self.statusWindow.border(0)
-        self.statusWindow.addstr(1, 1, nick)
-        self.statusWindow.refresh()
 
 
     def showOptionsMenuWindow(self):
