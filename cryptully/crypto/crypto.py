@@ -1,5 +1,4 @@
 import os
-import hmac
 import M2Crypto
 
 import exceptions
