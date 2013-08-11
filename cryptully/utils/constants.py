@@ -3,10 +3,6 @@ DEFAULT_PORT        = 9000
 
 NICK_MAX_LEN = 32
 
-# Operation modes
-MODE_SERVER = 0
-MODE_CLIENT = 1
-
 # Protocol commands
 
 # Server commands
