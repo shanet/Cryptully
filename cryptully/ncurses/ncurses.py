@@ -8,13 +8,12 @@ import sys
 import threading
 import time
 
-from getpass import getpass
-
 from cursesAcceptDialog import CursesAcceptDialog
 from cursesDialog import CursesDialog
 from cursesFingerprintDialog import CursesFingerprintDialog
 from cursesInputDialog import CursesInputDialog
 from cursesModeDialog import CursesModeDialog
+from cursesPassphraseDialog import CursesPassphraseDialog
 from cursesStatusWindow import CursesStatusWindow
 
 from network.client import Client
@@ -27,8 +26,10 @@ from utils import exceptions
 from utils import utils
 from utils.crypto import Crypto
 
+
 dialogDismissed = threading.Condition()
 clientConnected = threading.Condition()
+
 
 class NcursesUI(object):
     def __init__(self, nick, turn, port):
@@ -402,7 +403,7 @@ class NcursesUI(object):
                 menuWindow.refresh()
                 self.__restart()
             elif pos == 3:
-                passphrase = self.getKeypairPassphrase(True)
+                passphrase = cursesPassphraseDialog(self.screen, verify=True).show()
                 utils.saveKeypair(self.crypto, passphrase)
                 CursesDialog(self.screen, "This keypair will be used for all subsequent chats", "Keypair Saved", isBlocking=True).show()
             elif pos == 4:
@@ -425,51 +426,12 @@ class NcursesUI(object):
         menuWindow.refresh()
 
 
-    def getKeypairPassphrase(self, verify=False):
-        passphraseWindow = self.screen.subwin(3, 36, self.height/2 - 1, self.width/2 - 18)
-
-        # Turn on echo and wait for enter key to read buffer
-        curses.echo()
-        curses.nocbreak()
-
-        while True:
-            passphraseWindow.border(0)
-            passphraseWindow.addstr(1, 1, "Passphrase: ")
-            passphraseWindow.refresh()
-            passphrase = getpass('')
-
-            if not verify:
-                break
-
-            passphraseWindow.clear()
-            passphraseWindow.border(0)
-            passphraseWindow.addstr(1, 1, "Verify: ")
-            passphraseWindow.refresh()
-            verifyPassphrase = getpass('')
-
-            if passphrase == verifyPassphrase:
-                break
-            else:
-                curses.cbreak()
-                CursesDialog(self.screen, errors.VERIFY_PASSPHRASE_FAILED, '', isBlocking=True).show()
-                curses.nocbreak()
-
-        # Turn off echo and disable buffering
-        curses.cbreak()
-        curses.noecho()
-
-        # Get rid of the passphrase window
-        passphraseWindow.clear()
-        passphraseWindow.refresh()
-
-        return passphrase
-
-
     def __loadOrGenerateKepair(self):
         self.crypto = Crypto()
 
         if utils.doesSavedKeypairExist():
             while(True):
+                passphrase = CursesPassphraseDialog(self.screen).show()
                 try:
                     utils.loadKeypair(self.crypto, passphrase)
                     break
