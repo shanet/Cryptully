@@ -131,6 +131,10 @@ class QChatWindow(QMainWindow):
         self.chatTabs.setTabText(tabIndex, nick)
         tab.showNowChattingMessage()
 
+        # Set the window title if the tab is the selected tab
+        if tabIndex == self.chatTabs.currentIndex():
+            self.setWindowTitle(nick)
+
 
     def handleError(self, nick, errorCode):
         self.handleErrorSignal.emit(nick, errorCode)
