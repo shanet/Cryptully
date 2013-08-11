@@ -36,6 +36,11 @@ Cryptully builds and runs on Linux, Windows, and OS X. See the [building page](h
 
 Documentation is available at https://cryptully.readthedocs.org/en/latest/.
 
+### TODO
+
+* Send typing status to clients (issue 17)
+* Make ncurses client support multiple clients at once (issue 28)
+
 ### License
 
 Copyright (C) 2013 Shane Tully
