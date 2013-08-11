@@ -152,7 +152,10 @@ class Client(object):
         printAndLog(str(self.sock) + " -> " + nick)
         self.nick = nick
         nickMap[nick] = self
-        del ipMap[str(self.sock)]
+        try:
+            del ipMap[str(self.sock)]
+        except KeyError:
+            pass
 
 
     def disconnect(self):
