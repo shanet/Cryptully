@@ -1,3 +1,4 @@
+import copy
 import Queue
 import socket
 import sys
@@ -67,7 +68,7 @@ class ConnectionManager(object):
             self.errorCallback(nick, errors.ERR_ALREADY_CONNECTED)
             return
 
-        newClient = Client(self, nick, self.crypto, self.sendMessage, self.recvMessageCallback, self.handshakeDoneCallback, self.errorCallback, initiateHandshakeOnStart)
+        newClient = Client(self, nick, copy.copy(self.crypto), self.sendMessage, self.recvMessageCallback, self.handshakeDoneCallback, self.errorCallback, initiateHandshakeOnStart)
         self.clients[nick] = newClient
         newClient.start()
 
