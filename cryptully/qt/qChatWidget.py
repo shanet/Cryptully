@@ -106,7 +106,7 @@ class QChatWidget(QWidget):
             timestamp = ''
 
         # If the user has scrolled up (current value != maximum), do not move the scrollbar
-        # to the bottom after appending the message and show a notification of the new message
+        # to the bottom after appending the message
         shouldScroll = True
         scrollbar = self.chatLog.verticalScrollBar()
         if scrollbar.value() != scrollbar.maximum() and source != constants.SENDER:
