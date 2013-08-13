@@ -66,8 +66,7 @@ Encryption Details
 * HMAC's are the SHA256 digest of the AES key and the encrypted message payload. The receiver calculates
   and verfies the HMAC before attempting to decrypt the message payload.
 * Each client generates a unique RSA keypair and AES key for each connection. The exception being if the user
-  saved an RSA keypair. Then each connection uses the same keypair, but an AES key is randomly generated for
-  each connection.
+  saved an RSA keypair. Then each connection uses the same keypair, but AES keys are still randomly generated.
 * The AES key, IV, and salt are randomly generated for each message and sent along with the message encrypted
   with the RSA keys that are exchanged in the handshake.
 
