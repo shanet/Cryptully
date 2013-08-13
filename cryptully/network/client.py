@@ -14,9 +14,6 @@ from utils import utils
 
 
 class Client(Thread):
-    RSA = 0
-    AES = 1
-
     def __init__(self, connectionManager, remoteNick, crypto, sendMessageCallback, recvMessageCallback, handshakeDoneCallback, errorCallback, initiateHandkshakeOnStart=False):
         Thread.__init__(self)
         self.daemon = True
@@ -29,7 +26,7 @@ class Client(Thread):
         self.errorCallback = errorCallback
         self.initiateHandkshakeOnStart = initiateHandkshakeOnStart
 
-        self.encryptionType = None
+        self.isEncrypted = False
         self.wasHandshakeDone = False
         self.messageQueue = Queue.Queue()
 
@@ -46,26 +43,25 @@ class Client(Thread):
         message = Message(clientCommand=command, destNick=self.remoteNick)
 
         # Encrypt all outgoing data
-        if payload is not None and self.encryptionType is not None:
-            if self.encryptionType == self.AES:
-                # Generate and set the IV for the message
-                self.crypto.generateAESIv()
+        if payload is not None and self.isEncrypted:
+            # Generate a new AES key, IV, and salt for the message
+            self.crypto.generateAESKey()
 
-                # Encrypt the IV with RSA to be sent to the client
-                encryptedIv = self.crypto.rsaEncrypt(self.crypto.aesIv)
-                message.setBinaryIv(encryptedIv)
+            # Encrypt the AES key, IV, and salt with RSA to be sent to the client
+            encryptedKey  = self.crypto.rsaEncrypt(self.crypto.aesKey)
+            encryptedIv   = self.crypto.rsaEncrypt(self.crypto.aesIv)
+            encryptedSalt = self.crypto.rsaEncrypt(self.crypto.aesSalt)
 
-                # Encrypt the actual user's message
-                payload = self.crypto.aesEncrypt(payload)
+            message.setBinaryKey(encryptedKey)
+            message.setBinaryIv(encryptedIv)
+            message.setBinarySalt(encryptedSalt)
 
-                # Generate and set the HMAC for the message
-                message.setBinaryHmac(self.crypto.generateHmac(payload))
-            elif self.encryptionType == self.RSA:
-                payload = self.crypto.rsaEncrypt(payload)
-            else:
-                raise exceptions.CryptoError(errors.UNKNOWN_ENCRYPTION_TYPE)
-
+            # Encrypt the payload
+            payload = self.crypto.aesEncrypt(payload)
             message.setEncryptedPayload(payload)
+
+            # Generate and set the HMAC for the message
+            message.setBinaryHmac(self.crypto.generateHmac(payload))
         else:
             message.payload = payload
 
@@ -132,15 +128,8 @@ class Client(Thread):
             serverPublicKey = self.crypto.getLocalPubKeyAsString()
             self.sendMessage(constants.COMMAND_PUBLIC_KEY, serverPublicKey)
 
-            # Switch to RSA encryption to exchange the AES key, IV, and salt
-            self.encryptionType = self.RSA
-
-            # Send the AES key, IV, and salt
-            self.sendMessage(constants.COMMAND_AES_KEY, self.crypto.aesKey)
-            self.sendMessage(constants.COMMAND_AES_SALT, self.crypto.aesSalt)
-
             # Switch to AES encryption for the remainder of the connection
-            self.encryptionType = self.AES
+            self.isEncrypted = True
 
             self.wasHandshakeDone = True
             self.handshakeDoneCallback(self.remoteNick)
@@ -167,17 +156,8 @@ class Client(Thread):
             serverPublicKey = self.__getHandshakeMessagePayload(constants.COMMAND_PUBLIC_KEY)
             self.crypto.setRemotePubKey(serverPublicKey)
 
-            # Switch to RSA encryption to receive the AES key, IV, and salt
-            self.encryptionType = self.RSA
-
-            # Receive the AES key
-            self.crypto.aesKey = self.__getHandshakeMessagePayload(constants.COMMAND_AES_KEY)
-
-            # Receive the AES salt
-            self.crypto.aesSalt = self.__getHandshakeMessagePayload(constants.COMMAND_AES_SALT)
-
             # Switch to AES encryption for the remainder of the connection
-            self.encryptionType = self.AES
+            self.isEncrypted = True
 
             self.wasHandshakeDone = True
             self.handshakeDoneCallback(self.remoteNick)
@@ -206,31 +186,29 @@ class Client(Thread):
 
 
     def __getDecryptedPayload(self, message):
-        if self.encryptionType is not None:
+        if self.isEncrypted:
+            # Update the crypto object with the new AES key, IV, and salt
+            key  = self.crypto.rsaDecrypt(message.getKeyAsBinaryString())
+            iv   = self.crypto.rsaDecrypt(message.getIvAsBinaryString())
+            salt = self.crypto.rsaDecrypt(message.getSaltAsBinaryString())
+
+            self.crypto.aesKey  = key
+            self.crypto.aesIv   = iv
+            self.crypto.aesSalt = salt
+            
             payload = message.getEncryptedPayloadAsBinaryString()
-            if self.encryptionType == self.AES:
-                # Check the HMAC
-                if not self.__verifyHmac(message.hmac, payload):
-                    self.errorCallback(message.sourceNick, errors.ERR_BAD_HMAC)
-                    raise exceptions.CryptoError(errors.BAD_HMAC)
 
-                # Update the crypto object with the new IV
-                iv = self.crypto.rsaDecrypt(message.getIvAsBinaryString())
-                self.crypto.aesIv = iv
+            # Check the HMAC
+            if not self.__verifyHmac(message.hmac, payload):
+                self.errorCallback(message.sourceNick, errors.ERR_BAD_HMAC)
+                raise exceptions.CryptoError(errors.BAD_HMAC)
 
-                try:
-                    payload = self.crypto.aesDecrypt(payload)
-                except exceptions.CryptoError as ce:
-                    self.errorCallback(message.sourceNick, errors.ERR_BAD_DECRYPT)
-                    raise ce
-            elif self.encryptionType == self.RSA:
-                try:
-                    payload = self.crypto.rsaDecrypt(payload)
-                except exceptions.CryptoError as ce:
-                    self.errorCallback(message.sourceNick, errors.ERR_BAD_DECRYPT)
-                    raise ce
-            else:
-                raise exceptions.CryptoError(errors.UNKNOWN_ENCRYPTION_TYPE)
+            try:
+                # Decrypt the payload
+                payload = self.crypto.aesDecrypt(payload)
+            except exceptions.CryptoError as ce:
+                self.errorCallback(message.sourceNick, errors.ERR_BAD_DECRYPT)
+                raise ce
         else:
             payload = message.payload
 

@@ -47,12 +47,8 @@ class Crypto(object):
             raise exceptions.CryptoError("Invalid AES mode")
 
         self.aesKey  = M2Crypto.Rand.rand_bytes(self.aesBytes)
+        self.aesIv   = M2Crypto.Rand.rand_bytes(self.aesBytes)
         self.aesSalt = M2Crypto.Rand.rand_bytes(8)
-        self.generateAESIv()
-
-
-    def generateAESIv(self):
-        self.aesIv = M2Crypto.Rand.rand_bytes(self.aesBytes)
 
 
     def setRemotePubKey(self, pubKey):
