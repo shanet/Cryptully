@@ -58,6 +58,7 @@ class QChatWindow(QMainWindow):
         self.chatTabs.currentChanged.connect(self.tabChanged)
 
         self.systemTrayIcon = QSystemTrayIcon(self)
+        self.systemTrayIcon.setVisible(True)
 
         self.__setMenubar()
 
@@ -93,8 +94,7 @@ class QChatWindow(QMainWindow):
 
         # Show a system notifcation of the new client if not the current window
         if not self.isActiveWindow():
-            self.systemTrayIcon.setVisible(True)
-            self.systemTrayIcon.showMessage("Chat request from " + nick, '')
+            qtUtils.showDesktopNotification(self.systemTrayIcon, "Chat request from " + nick, '')
 
         # Show the accept dialog
         accept = QAcceptDialog.getAnswer(self, nick)
@@ -208,10 +208,12 @@ class QChatWindow(QMainWindow):
             tab.unreadCount += 1
             self.chatTabs.setTabText(tabIndex, tab.nick + (" (%d)" % tab.unreadCount))
 
-        # Show a system notifcation of the new message if not the current window or tab
-        if not self.isActiveWindow() or tabIndex != self.chatTabs.currentIndex():
-            self.systemTrayIcon.setVisible(True)
-            self.systemTrayIcon.showMessage(sourceNick, payload)
+        # Show a system notifcation of the new message if not the current window or tab or the
+        # scrollbar of the tab isn't at the bottom
+        chatLogScrollbar = tab.widgetStack.widget(2).chatLog.verticalScrollBar()
+        if not self.isActiveWindow() or tabIndex != self.chatTabs.currentIndex() or \
+           chatLogScrollbar.value() != chatLogScrollbar.maximum():
+            qtUtils.showDesktopNotification(self.systemTrayIcon, sourceNick, payload)
 
 
     @pyqtSlot(int)

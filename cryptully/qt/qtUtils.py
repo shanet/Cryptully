@@ -3,12 +3,12 @@ import signal
 
 
 from PyQt4.QtCore import QCoreApplication
-from PyQt4.QtGui  import QDesktopWidget
-from PyQt4.QtGui  import QIcon
-from PyQt4.QtGui  import QInputDialog
-from PyQt4.QtGui  import QMessageBox
-from PyQt4.QtGui  import QPixmap
-from PyQt4.QtGui  import QWidget
+from PyQt4.QtGui import QDesktopWidget
+from PyQt4.QtGui import QIcon
+from PyQt4.QtGui import QInputDialog
+from PyQt4.QtGui import QMessageBox
+from PyQt4.QtGui import QPixmap
+from PyQt4.QtGui import QWidget
 
 from qPassphraseDialog import QPassphraseDialog
 
@@ -64,6 +64,10 @@ def clearKeypair(parent=None):
     if confirm == QMessageBox.Yes:
         utils.clearKeypair()
         QMessageBox.information(parent, "Keys Cleared", "Encryption keys cleared. New keys will be generated. You should verify key integrity for all new connections now.")
+
+
+def showDesktopNotification(systemTrayIcon, title, message):
+    systemTrayIcon.showMessage(title, message)
 
 
 isLightTheme = False
