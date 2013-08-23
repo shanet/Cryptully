@@ -3,6 +3,8 @@ DEFAULT_PORT        = 9000
 
 NICK_MAX_LEN = 32
 
+DEFAULT_AES_MODE = 'aes_256_cbc'
+
 # Protocol commands
 
 # Server commands

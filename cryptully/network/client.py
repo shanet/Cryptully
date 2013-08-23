@@ -30,9 +30,8 @@ class Client(Thread):
         self.wasHandshakeDone = False
         self.messageQueue = Queue.Queue()
 
-        # We need to generate a new AES key so each client uses a unique AES key
         self.crypto = crypto
-        self.crypto.generateAESKey()
+        self.crypto.generateDHKey()
 
 
     def sendChatMessage(self, text):
@@ -44,19 +43,6 @@ class Client(Thread):
 
         # Encrypt all outgoing data
         if payload is not None and self.isEncrypted:
-            # Generate a new AES key, IV, and salt for the message
-            self.crypto.generateAESKey()
-
-            # Encrypt the AES key, IV, and salt with RSA to be sent to the client
-            encryptedKey  = self.crypto.rsaEncrypt(self.crypto.aesKey)
-            encryptedIv   = self.crypto.rsaEncrypt(self.crypto.aesIv)
-            encryptedSalt = self.crypto.rsaEncrypt(self.crypto.aesSalt)
-
-            message.setBinaryKey(encryptedKey)
-            message.setBinaryIv(encryptedIv)
-            message.setBinarySalt(encryptedSalt)
-
-            # Encrypt the payload
             payload = self.crypto.aesEncrypt(payload)
             message.setEncryptedPayload(payload)
 
@@ -122,11 +108,11 @@ class Client(Thread):
 
             # Receive the client's public key
             clientPublicKey = self.__getHandshakeMessagePayload(constants.COMMAND_PUBLIC_KEY)
-            self.crypto.setRemotePubKey(clientPublicKey[:-1])
+            self.crypto.computeDHSecret(long(base64.b64decode(clientPublicKey)))
 
-            # Send the server's public key
-            serverPublicKey = self.crypto.getLocalPubKeyAsString()
-            self.sendMessage(constants.COMMAND_PUBLIC_KEY, serverPublicKey)
+            # Send our public key
+            publicKey = base64.b64encode(str(self.crypto.getDHPubKey()))
+            self.sendMessage(constants.COMMAND_PUBLIC_KEY, publicKey)
 
             # Switch to AES encryption for the remainder of the connection
             self.isEncrypted = True
@@ -148,13 +134,13 @@ class Client(Thread):
             # Receive the redy command
             self.__getHandshakeMessagePayload(constants.COMMAND_REDY)
 
-            # Send the client's public key
-            clientPublicKey = self.crypto.getLocalPubKeyAsString()
-            self.sendMessage(constants.COMMAND_PUBLIC_KEY, clientPublicKey)
+            # Send our public key
+            publicKey = base64.b64encode(str(self.crypto.getDHPubKey()))
+            self.sendMessage(constants.COMMAND_PUBLIC_KEY, publicKey)
 
-            # Receive the server's public key
-            serverPublicKey = self.__getHandshakeMessagePayload(constants.COMMAND_PUBLIC_KEY)
-            self.crypto.setRemotePubKey(serverPublicKey)
+            # Receive the client's public key
+            clientPublicKey = self.__getHandshakeMessagePayload(constants.COMMAND_PUBLIC_KEY)
+            self.crypto.computeDHSecret(long(base64.b64decode(clientPublicKey)))
 
             # Switch to AES encryption for the remainder of the connection
             self.isEncrypted = True
@@ -187,15 +173,6 @@ class Client(Thread):
 
     def __getDecryptedPayload(self, message):
         if self.isEncrypted:
-            # Update the crypto object with the new AES key, IV, and salt
-            key  = self.crypto.rsaDecrypt(message.getKeyAsBinaryString())
-            iv   = self.crypto.rsaDecrypt(message.getIvAsBinaryString())
-            salt = self.crypto.rsaDecrypt(message.getSaltAsBinaryString())
-
-            self.crypto.aesKey  = key
-            self.crypto.aesIv   = iv
-            self.crypto.aesSalt = salt
-            
             payload = message.getEncryptedPayloadAsBinaryString()
 
             # Check the HMAC

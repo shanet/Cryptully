@@ -1,38 +1,37 @@
 import os
 import M2Crypto
 
-import exceptions
+from utils import constants
+from utils import exceptions
 
 class Crypto(object):
     ENCRYPT = 1;
     DECRYPT = 0;
 
+    dhPrime = 162259276829213363391578010288127
+    dhGenerator= 5
 
-    def __init__(self, generateKeys=False):
+    def __init__(self):
         self.localKeypair  = None
         self.remoteKeypair = None
         self.aesKey        = None
         self.aesIv         = None
         self.aesSalt       = None
+        self.dh            = None
+        self.aesMode       = constants.DEFAULT_AES_MODE
 
-        if generateKeys:
-            self.generateKeys()
 
-
-    def generateKeys(self, rsaBits=2048, aesMode='aes_256_cbc'):
+    def generateKeys(self, rsaBits=2048, aesMode=constants.DEFAULT_AES_MODE):
         self.generateRSAKeypair(rsaBits)
         self.generateAESKey(aesMode)
 
 
     def generateRSAKeypair(self, bits=2048):
-        # Seed the random number generator with the number of bytes requested (bits/8)
-        M2Crypto.Rand.rand_seed(M2Crypto.Rand.rand_bytes(bits/8))
-
         # Generate the keypair (65537 as the public exponent)
         self.localKeypair = M2Crypto.RSA.gen_key(bits, 65537, self.__generateKeypairCallback)
 
 
-    def generateAESKey(self, aesMode='aes_256_cbc'):
+    def generateAESKey(self, aesMode=constants.DEFAULT_AES_MODE):
         self.aesMode = aesMode
 
         # Generate the AES key and IV
@@ -49,6 +48,19 @@ class Crypto(object):
         self.aesKey  = M2Crypto.Rand.rand_bytes(self.aesBytes)
         self.aesIv   = M2Crypto.Rand.rand_bytes(self.aesBytes)
         self.aesSalt = M2Crypto.Rand.rand_bytes(8)
+
+
+    def generateDHKey(self):
+        self.dh = M2Crypto.DH.set_params(decToMpi(self.dhPrime), decToMpi(self.dhGenerator))
+        self.dh.gen_key()
+
+
+    def computeDHSecret(self, publicKey):
+        secret = binToDec(self.dh.compute_key(decToMpi(publicKey)))
+        hash = self.hash(str(secret), 'sha512')
+        self.aesKey = hash[0:32]
+        self.aesIv = hash[32:64]
+        self.aesSalt = hash[56:64]
 
 
     def setRemotePubKey(self, pubKey):
@@ -96,13 +108,24 @@ class Crypto(object):
 
 
     def __aesGetCipher(self, op):
-        return M2Crypto.EVP.Cipher(alg='aes_256_cbc', key=self.aesKey, iv=self.aesIv, salt=self.aesSalt, d='sha256', op=op)
+        return M2Crypto.EVP.Cipher(alg=self.aesMode, key=self.aesKey, iv=self.aesIv, salt=self.aesSalt, d='sha256', op=op)
 
 
     def generateHmac(self, message):
         hmac = M2Crypto.EVP.HMAC(self.aesKey, 'sha256')
         hmac.update(message)
         return hmac.digest()
+
+
+    def hash(self, message, type='sha256'):
+        hash = M2Crypto.EVP.MessageDigest(type)
+        hash.update(message)
+        return hash.final()
+
+
+    def stringHash(self, message):
+        digest = self.hash(message)
+        return hex(self.__octx_to_num(digest))[2:-1].upper()
 
 
     def readLocalKeypairFromFile(self, file, passphrase):
@@ -120,7 +143,7 @@ class Crypto(object):
     def writeLocalKeypairToFile(self, file, passphrase):
         self.__checkLocalKeypair()
         self._keypairPassphrase = passphrase
-        self.localKeypair.save_key(file, 'aes_256_cbc', self.__passphraseCallback)
+        self.localKeypair.save_key(file, self.aesMode, self.__passphraseCallback)
 
 
     def writeLocalPubKeyToFile(self, file):
@@ -149,7 +172,7 @@ class Crypto(object):
 
     def getKeypairAsString(self, passphrase):
         self._keypairPassphrase = passphrase
-        return self.localKeypair.as_pem('aes_256_cbc', self.__passphraseCallback)
+        return self.localKeypair.as_pem(self.aesMode, self.__passphraseCallback)
 
 
     def getLocalFingerprint(self):
@@ -163,11 +186,7 @@ class Crypto(object):
 
 
     def __generateFingerprint(self, key):
-        # Create the fingerprint by running the key through md5
-        md = M2Crypto.EVP.MessageDigest('md5')
-        md.update(key)
-        digest = md.final()
-        digest = hex(self.__octx_to_num(digest))[2:-1].upper()
+        digest = self.stringHash(key)
 
         # Add colons between every 2 characters of the fingerprint
         fingerprint = ''
@@ -187,6 +206,10 @@ class Crypto(object):
         return converted
 
 
+    def getDHPubKey(self):
+        return mpiToDec(self.dh.pub)
+
+
     def __checkLocalKeypair(self):
         if self.localKeypair is None:
             raise exceptions.CryptoError("Local keypair not set.")
@@ -203,3 +226,20 @@ class Crypto(object):
 
     def __passphraseCallback(self, ignore, prompt1=None, prompt2=None):
         return self._keypairPassphrase
+
+
+def mpiToDec(mpi): 
+    bn = M2Crypto.m2.mpi_to_bn(mpi)
+    hex = M2Crypto.m2.bn_to_hex(bn)
+    return int(hex, 16)
+
+
+def binToDec(binval):
+    bn = M2Crypto.m2.bin_to_bn(binval)
+    hex = M2Crypto.m2.bn_to_hex(bn)
+    return int(hex, 16)
+
+
+def decToMpi(dec):
+    bn = M2Crypto.m2.dec_to_bn('%s' % dec)
+    return M2Crypto.m2.bn_to_mpi(bn)
