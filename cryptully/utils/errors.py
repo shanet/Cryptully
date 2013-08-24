@@ -27,6 +27,9 @@ TITLE_BAD_HMAC            = "Tampering Detected"
 TITLE_BAD_DECRYPT         = "Decryption Error"
 TITLE_NICK_IN_USE         = "Nickname Not Available"
 TITLE_KICKED              = "Kicked"
+TITLE_SMP_MATCH_FAILED    = "Eavesdropping Detected"
+TITLE_MESSAGE_REPLAY      = "Tampering detected"
+TITLE_MESSAGE_DELETION    = "Tampering detected"
 
 UNEXPECTED_CLOSE_CONNECTION = "Server unexpectedly closed connection"
 CLOSE_CONNECTION            = "The server closed the connection"
@@ -59,6 +62,9 @@ BAD_HMAC                    = "Warning: Automatic data integrity check failed. S
 BAD_DECRYPT                 = "Unable to decrypt incoming message. This usually happens when the client sends malformed data."
 NICK_IN_USE                 = "Sorry, someone else is already using that nickname"
 KICKED                      = "You have been kicked off the server"
+SMP_MATCH_FAILED            = "Warning: Man-in-the-middle attack detected. Someone may be attempting to eavesdrop on your conversation."
+MESSAGE_REPLAY              = "Warning: Old message recieved multiple times. Someone may be tampering with your conversation." 
+MESSAGE_DELETION            = "Warning: Message deletion detected. Someone may be tampering with your conversation."
 
 # Error codes
 ERR_CONNECTION_ENDED    = 0
@@ -77,4 +83,8 @@ ERR_INVALID_NICK        = 12
 ERR_NICK_IN_USE         = 13
 ERR_CLOSED_CONNECTION   = 14
 ERR_KICKED              = 15
+ERR_SMP_CHECK_FAILED    = 16
+ERR_SMP_MATCH_FAILED    = 17
+ERR_MESSAGE_REPLAY      = 18
+ERR_MESSAGE_DELETION    = 19
 

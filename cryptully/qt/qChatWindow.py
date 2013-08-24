@@ -25,7 +25,6 @@ from PyQt4.QtGui import QWidget
 
 from qChatTab import QChatTab
 from qAcceptDialog import QAcceptDialog
-from qFingerprintDialog import QFingerprintDialog
 from qHelpDialog import QHelpDialog
 import qtUtils
 
@@ -184,6 +183,16 @@ class QChatWindow(QMainWindow):
         elif errorCode == errors.ERR_NICK_IN_USE:
             QMessageBox.warning(self, errors.TITLE_NICK_IN_USE, errors.NICK_IN_USE)
             self.restartCallback()
+        elif errorCode == errors.ERR_SMP_CHECK_FAILED:
+            QMessageBox.warning(self, errors.TITLE_PROTOCOL_ERROR, errors.PROTOCOL_ERROR % (nick))
+            tab.nick = None
+        elif errorCode == errors.ERR_SMP_MATCH_FAILED:
+            QMessageBox.critical(self, errors.TITLE_SMP_MATCH_FAILED, errors.SMP_MATCH_FAILED)
+            tab.nick = None
+        elif errorCode == errors.ERR_MESSAGE_REPLAY:
+            QMessageBox.critical(self, errors.TITLE_MESSAGE_REPLAY, errors.MESSAGE_REPLAY)
+        elif errorCode == errors.ERR_MESSAGE_DELETION:
+            QMessageBox.critical(self, errors.TITLE_MESSAGE_DELETION, errors.MESSAGE_DELETION)
         else:
             QMessageBox.warning(self, errors.TITLE_UNKNOWN_ERROR, errors.UNKNOWN_ERROR % (nick))
 
@@ -262,55 +271,37 @@ class QChatWindow(QMainWindow):
 
     def __setMenubar(self):
         newChatIcon     = QIcon(qtUtils.getAbsoluteImagePath('new_chat.png'))
-        fingerprintIcon = QIcon(qtUtils.getAbsoluteImagePath('fingerprint.png'))
-        saveIcon        = QIcon(qtUtils.getAbsoluteImagePath('save.png'))
-        clearIcon       = QIcon(qtUtils.getAbsoluteImagePath('delete.png'))
         helpIcon        = QIcon(qtUtils.getAbsoluteImagePath('help.png'))
         exitIcon        = QIcon(qtUtils.getAbsoluteImagePath('exit.png'))
         menuIcon        = QIcon(qtUtils.getAbsoluteImagePath('menu.png'))
 
         newChatAction      = QAction(newChatIcon, '&New chat', self)
-        fingerprintAction  = QAction(fingerprintIcon, '&Verify key integrity', self)
-        saveKeypairAction  = QAction(saveIcon, '&Save current encryption keys', self)
-        clearKeypairAction = QAction(clearIcon, 'C&lear saved encryption keys', self)
         helpAction         = QAction(helpIcon, 'Show &help', self)
         exitAction         = QAction(exitIcon, '&Exit', self)
 
         newChatAction.triggered.connect(lambda: self.addNewTab())
-        fingerprintAction.triggered.connect(self.__showFingerprintDialog)
-        saveKeypairAction.triggered.connect(self.__showSaveKeypairDialog)
-        clearKeypairAction.triggered.connect(self.__clearKeypair)
         helpAction.triggered.connect(self.__showHelpDialog)
         exitAction.triggered.connect(self.__exit)
 
         newChatAction.setShortcut('Ctrl+N')
-        fingerprintAction.setShortcut('Ctrl+I')
-        saveKeypairAction.setShortcut('Ctrl+S')
-        clearKeypairAction.setShortcut('Ctrl+L')
         helpAction.setShortcut('Ctrl+H')
         exitAction.setShortcut('Ctrl+Q')
 
         optionsMenu = QMenu()
 
         optionsMenu.addAction(newChatAction)
-        optionsMenu.addAction(fingerprintAction)
-        optionsMenu.addAction(saveKeypairAction)
-        optionsMenu.addAction(clearKeypairAction)
         optionsMenu.addAction(helpAction)
         optionsMenu.addAction(exitAction)
 
         optionsMenuButton = QToolButton()
         newChatButton     = QToolButton()
-        fingerprintButton = QToolButton()
         exitButton        = QToolButton()
 
         newChatButton.clicked.connect(lambda: self.addNewTab())
-        fingerprintButton.clicked.connect(self.__showFingerprintDialog)
         exitButton.clicked.connect(self.__exit)
 
         optionsMenuButton.setIcon(menuIcon)
         newChatButton.setIcon(newChatIcon)
-        fingerprintButton.setIcon(fingerprintIcon)
         exitButton.setIcon(exitIcon)
 
         optionsMenuButton.setMenu(optionsMenu)
@@ -319,37 +310,8 @@ class QChatWindow(QMainWindow):
         toolbar = QToolBar(self)
         toolbar.addWidget(optionsMenuButton)
         toolbar.addWidget(newChatButton)
-        toolbar.addWidget(fingerprintButton)
         toolbar.addWidget(exitButton)
         self.addToolBar(Qt.LeftToolBarArea, toolbar)
-
-
-    def __showFingerprintDialog(self):
-        try:
-            crypto = self.connectionManager.getClient(self.chatTabs.currentWidget().nick).crypto
-            QFingerprintDialog(crypto).exec_()
-        except AttributeError:
-            QMessageBox.information(self, "Not Available", "Encryption keys are not available until you are chatting with someone")
-
-
-    def __showSaveKeypairDialog(self):
-        if utils.doesSavedKeypairExist():
-            QMessageBox.warning(self, "Keys Already Saved", "The current encryption keys have already been saved")
-            return
-
-        QMessageBox.information(self, "Save Keys", "For extra security, your encryption keys will be protected with a passphrase. You'll need to enter this each time you start the app")
-        passphrase = qtUtils.getKeypairPassphrase(self, verify=True, showForgotButton=False)
-
-        # Return if the user did not provide a passphrase
-        if passphrase is None:
-            return
-
-        utils.saveKeypair(self.connectionManager.crypto, passphrase)
-        QMessageBox.information(self, "Keys Saved", "Encryption keys saved. The current keys will be used for all subsequent connections")
-
-
-    def __clearKeypair(self):
-        qtUtils.clearKeypair(self)
 
 
     def __showHelpDialog(self):

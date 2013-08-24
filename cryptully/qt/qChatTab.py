@@ -12,7 +12,6 @@ from PyQt4.QtGui import QWidget
 import qtUtils
 from qChatWidget import QChatWidget
 from qConnectingWidget import QConnectingWidget
-from qFingerprintDialog import QFingerprintDialog
 from qHelpDialog import QHelpDialog
 from qNickInputWidget import QNickInputWidget
 

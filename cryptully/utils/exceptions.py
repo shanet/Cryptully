@@ -1,22 +1,25 @@
 class GenericError(Exception):
-    pass
-
-
-class NetworkError(Exception):
-    def __init__(self, message, errno=0):
-        Exception.__init__(self, message)
-        self.errno = errno
-
-
-class ProtocolError(Exception):
-    def __init__(self, errno=0):
+    def __init__(self, message=None, errno=0):
         Exception.__init__(self)
-        self.errno = errno
+        self.message = message
+        self.errno   = errno
 
 
-class ProtocolEnd(Exception):
-    pass
+class NetworkError(GenericError):
+    def __init__(self, message=None, errno=0):
+        GenericError.__init__(self, message, errno)
 
 
-class CryptoError(Exception):
-    pass
+class ProtocolError(GenericError):
+    def __init__(self, message=None, errno=0):
+        GenericError.__init__(self, message, errno)
+
+
+class ProtocolEnd(GenericError):
+    def __init__(self, message=None, errno=0):
+        GenericError.__init__(self, message, errno)
+
+
+class CryptoError(GenericError):
+    def __init__(self, message=None, errno=0):
+        GenericError.__init__(self, message, errno)

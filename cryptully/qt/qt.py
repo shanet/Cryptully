@@ -1,8 +1,6 @@
 import sys
 import time
 
-from crypto.crypto import Crypto
-
 from network.client import Client
 from network.connectionManager import ConnectionManager
 from network import qtThreads
@@ -34,7 +32,6 @@ class QtUI(QApplication):
         self.nick = nick
         self.turn = turn
         self.port = port
-        self.crypto = None
         self.isEventLoopRunning = False
 
         qtUtils.setIsLightTheme(self.palette().color(QPalette.Window))
@@ -60,8 +57,6 @@ class QtUI(QApplication):
         # Show the chat window
         self.chatWindow = QChatWindow(self.restart)
         self.chatWindow.show()
-
-        self.__loadOrGenerateKepair()
 
         self.__connectToServer()
 
@@ -93,31 +88,9 @@ class QtUI(QApplication):
         self.start()
 
 
-    def __loadOrGenerateKepair(self):
-        self.crypto = Crypto()
-
-        if utils.doesSavedKeypairExist():
-            while(True):
-                passphrase = qtUtils.getKeypairPassphrase()
-
-                # Restart the application if the user did not provide a passphrase
-                if passphrase is None:
-                    self.restart()
-                    return
-
-                try:
-                    utils.loadKeypair(self.crypto, str(passphrase))
-                    break
-                except exceptions.CryptoError:
-                    QMessageBox.warning(self.chatWindow, errors.BAD_PASSPHRASE, errors.BAD_PASSPHRASE_VERBOSE)
-        else:
-            # Only generate an RSA keypair; a unique AES key will be generated later for each client
-            self.crypto.generateRSAKeypair()
-
-
     def __connectToServer(self):
         # Create the connection manager to manage all communcation to the server
-        self.connectionManager = ConnectionManager(self.nick, (self.turn, self.port), self.crypto, self.chatWindow.postMessage, self.chatWindow.newClient, self.chatWindow.clientReady, self.chatWindow.handleError)
+        self.connectionManager = ConnectionManager(self.nick, (self.turn, self.port), self.chatWindow.postMessage, self.chatWindow.newClient, self.chatWindow.clientReady, self.chatWindow.handleError)
         self.chatWindow.connectionManager = self.connectionManager
 
         # Start the connect thread

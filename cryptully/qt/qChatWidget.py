@@ -91,9 +91,6 @@ class QChatWidget(QWidget):
         self.appendMessage("You are now securely chatting with " + self.nick + " :)",
                            constants.SERVICE, showTimestampAndNick=False)
 
-        self.appendMessage("It's a good idea to verify the communcation is secure by selecting "
-                           "\"verify key integrity\" in the options menu.", constants.SERVICE, showTimestampAndNick=False)
-
 
     def appendMessage(self, message, source, showTimestampAndNick=True):
         color = self.__getColor(source)

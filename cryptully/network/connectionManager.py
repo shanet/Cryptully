@@ -1,4 +1,3 @@
-import copy
 import Queue
 import socket
 import sys
@@ -17,12 +16,11 @@ from utils import utils
 
 
 class ConnectionManager(object):
-    def __init__(self, nick, serverAddr, crypto, recvMessageCallback, newClientCallback, handshakeDoneCallback, errorCallback):
+    def __init__(self, nick, serverAddr, recvMessageCallback, newClientCallback, handshakeDoneCallback, errorCallback):
         self.clients = {}
 
         self.nick = nick
         self.sock = Socket(serverAddr)
-        self.crypto = crypto
         self.recvMessageCallback = recvMessageCallback
         self.newClientCallback = newClientCallback
         self.handshakeDoneCallback = handshakeDoneCallback
@@ -68,7 +66,7 @@ class ConnectionManager(object):
             self.errorCallback(nick, errors.ERR_ALREADY_CONNECTED)
             return
 
-        newClient = Client(self, nick, copy.copy(self.crypto), self.sendMessage, self.recvMessageCallback, self.handshakeDoneCallback, self.errorCallback, initiateHandshakeOnStart)
+        newClient = Client(self, nick, self.sendMessage, self.recvMessageCallback, self.handshakeDoneCallback, self.errorCallback, initiateHandshakeOnStart)
         self.clients[nick] = newClient
         newClient.start()
 

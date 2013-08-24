@@ -10,14 +10,11 @@ import time
 
 from cursesAcceptDialog import CursesAcceptDialog
 from cursesDialog import CursesDialog
-from cursesFingerprintDialog import CursesFingerprintDialog
 from cursesInputDialog import CursesInputDialog
 from cursesModeDialog import CursesModeDialog
 from cursesPassphraseDialog import CursesPassphraseDialog
 from cursesSendThread import CursesSendThread
 from cursesStatusWindow import CursesStatusWindow
-
-from crypto.crypto import Crypto
 
 from network.client import Client
 from network.connectionManager import ConnectionManager
@@ -75,9 +72,6 @@ class NcursesUI(object):
 
         self.__drawUI()
 
-        # Try to load a keypair if one was saved or generate a new keypair
-        self.__loadOrGenerateKepair()
-
         # Get the nick if not given
         if self.nick == None:
             self.nick = CursesInputDialog(self.screen, "Nickname: ").show()
@@ -130,7 +124,7 @@ class NcursesUI(object):
 
     def __connectToServer(self):
         # Create the connection manager to manage all communication to the server
-        self.connectionManager = ConnectionManager(self.nick, (self.turn, self.port), self.crypto, self.postMessage, self.newClient, self.clientReady, self.handleError)
+        self.connectionManager = ConnectionManager(self.nick, (self.turn, self.port), self.postMessage, self.newClient, self.clientReady, self.handleError)
 
         dialogWindow = CursesDialog(self.screen, "Connecting to server...", "", False)
         dialogWindow.show()
@@ -285,6 +279,14 @@ class NcursesUI(object):
             dialog = CursesDialog(self.screen, errors.KICKED, errors.TITLE_KICKED, isError=True)
         elif errorCode == errors.ERR_NICK_IN_USE:
             dialog = CursesDialog(self.screen, errors.NICK_IN_USE, errors.TITLE_NICK_IN_USE, isError=True, isFatal=True)
+        elif errorCode == errors.ERR_SMP_CHECK_FAILED:
+            dialog = CursesDialog(self.screen, errors.PROTOCOL_ERROR, errors.TITLE_PROTOCOL_ERROR, isError=True)
+        elif errorCode == errors.ERR_SMP_MATCH_FAILED:
+            dialog = CursesDialog(self.screen, errors.SMP_MATCH_FAILED, errors.TITLE_SMP_MATCH_FAILED, isError=True)
+        elif errorCode == errors.ERR_MESSAGE_REPLAY:
+            dialog = CursesDialog(self.screen, errors.MESSAGE_REPLAY, errors.TITLE_MESSAGE_REPLAY, isError=True)
+        elif errorCode == errors.ERR_MESSAGE_DELETION:
+            dialog = CursesDialog(self.screen, errors.MESSAGE_DELETION, errors.TITLE_MESSAGE_DELETION, isError=True)
         else:
             dialog = CursesDialog(self.screen, errors.UNKNOWN_ERROR % (nick), errors.TITLE_UNKNOWN_ERROR, isError=True)
 
@@ -344,7 +346,7 @@ class NcursesUI(object):
 
 
     def showOptionsMenuWindow(self):
-        numMenuEntires = 7
+        numMenuEntires = 4
         menuWindow = self.screen.subwin(numMenuEntires+2, 34, 3, self.width/2 - 14)
 
         # Enable arrow key detection for this window
@@ -361,19 +363,13 @@ class NcursesUI(object):
 
             while True:
                 item = 1
-                menuWindow.addstr(item, 1, str(item) + ".| Show public key fingerprints", curses.color_pair(4) if pos == item else curses.color_pair(1))
+                menuWindow.addstr(item, 1, str(item) + ".| End current chat", curses.color_pair(4) if pos == item else curses.color_pair(1))
                 item += 1
-                menuWindow.addstr(item, 1, str(item) + ".| End current chat            ", curses.color_pair(4) if pos == item else curses.color_pair(1))
+                menuWindow.addstr(item, 1, str(item) + ".| Show help       ", curses.color_pair(4) if pos == item else curses.color_pair(1))
                 item += 1
-                menuWindow.addstr(item, 1, str(item) + ".| Save current keypair        ", curses.color_pair(4) if pos == item else curses.color_pair(1))
+                menuWindow.addstr(item, 1, str(item) + ".| Close menu      ", curses.color_pair(4) if pos == item else curses.color_pair(1))
                 item += 1
-                menuWindow.addstr(item, 1, str(item) + ".| Clear saved keypair         ", curses.color_pair(4) if pos == item else curses.color_pair(1))
-                item += 1
-                menuWindow.addstr(item, 1, str(item) + ".| Show help                   ", curses.color_pair(4) if pos == item else curses.color_pair(1))
-                item += 1
-                menuWindow.addstr(item, 1, str(item) + ".| Close menu                  ", curses.color_pair(4) if pos == item else curses.color_pair(1))
-                item += 1
-                menuWindow.addstr(item, 1, str(item) + ".| Quit application            ", curses.color_pair(4) if pos == item else curses.color_pair(1))
+                menuWindow.addstr(item, 1, str(item) + ".| Quit application", curses.color_pair(4) if pos == item else curses.color_pair(1))
 
                 menuWindow.refresh()
                 key = menuWindow.getch()
@@ -393,29 +389,17 @@ class NcursesUI(object):
 
             # Process the selected option
             if pos == 1:
-                try:
-                    CursesFingerprintDialog(self.screen, self.crypto.getLocalFingerprint(), self.crypto.getRemoteFingerprint()).show()
-                except exceptions.CryptoError:
-                    CursesDialog(self.screen, "Public key(s) not generated/received yet.", isBlocking=True).show()
-            elif pos == 2:
                 self.connectionManager.closeChat(self.connectedNick)
                 menuWindow.clear()
                 menuWindow.refresh()
                 self.__restart()
-            elif pos == 3:
-                passphrase = cursesPassphraseDialog(self.screen, verify=True).show()
-                utils.saveKeypair(self.crypto, passphrase)
-                CursesDialog(self.screen, "This keypair will be used for all subsequent chats", "Keypair Saved", isBlocking=True).show()
-            elif pos == 4:
-                utils.clearKeypair()
-                CursesDialog(self.screen, "Keypair cleared", isBlocking=True).show()
-            elif pos == 5:
+            elif pos == 2:
                 CursesDialog(self.screen, "Read the docs at https://cryptully.readthedocs.org/en/latest/", isBlocking=True).show()
-            elif pos == 6:
+            elif pos == 3:
                 # Move the cursor back to the chat input textbox
                 self.textboxWindow.move(0, 0)
                 break
-            elif pos == 7:
+            elif pos == 4:
                 os.kill(os.getpid(), signal.SIGINT)
 
         # Re-enable the cursor
@@ -424,22 +408,6 @@ class NcursesUI(object):
         # Get rid of the accept window
         menuWindow.clear()
         menuWindow.refresh()
-
-
-    def __loadOrGenerateKepair(self):
-        self.crypto = Crypto()
-
-        if utils.doesSavedKeypairExist():
-            while(True):
-                passphrase = CursesPassphraseDialog(self.screen).show()
-                try:
-                    utils.loadKeypair(self.crypto, passphrase)
-                    break
-                except exceptions.CryptoError:
-                    CursesDialog(self.screen, errors.BAD_PASSPHRASE, '', isBlocking=True).show()
-        else:
-            # Only generate an RSA keypair; a unique AES key will be generated later for each client
-            self.crypto.generateRSAKeypair()
 
 
     def __quitApp(self):

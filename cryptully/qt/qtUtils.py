@@ -27,45 +27,6 @@ def resizeWindow(window, width, height):
     window.setGeometry(0, 0, width, height)
 
 
-def getKeypairPassphrase(parent=None, verify=False, showForgotButton=True):
-    if parent is None:
-        parent = QWidget()
-
-    while True:
-        passphrase, button = QPassphraseDialog.getPassphrase(False, showForgotButton)
-        if button == constants.BUTTON_CANCEL:
-            return
-        if button == constants.BUTTON_FORGOT:
-            clearKeypair(parent)
-            return
-
-        if not verify:
-            return passphrase
-
-        verifyPassphrase, button = QPassphraseDialog.getPassphrase(verify, showForgotButton)
-        if button == constants.BUTTON_CANCEL:
-            return
-
-        if passphrase == verifyPassphrase:
-            return passphrase
-        else:
-            QMessageBox.critical(parent, "Keypair Passphrase", "Passphrases do not match")
-
-
-def clearKeypair(parent=None):
-    if parent == None:
-        parent = QWidget()
-
-    if not utils.doesSavedKeypairExist():
-        QMessageBox.warning(parent, "No Keys Saved", "No encryption keys have been saved yet.")
-        return
-
-    confirm = QMessageBox.question(parent, 'Clear Keys', "Are you sure you want to clear your saved encryption keys?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-    if confirm == QMessageBox.Yes:
-        utils.clearKeypair()
-        QMessageBox.information(parent, "Keys Cleared", "Encryption keys cleared. New keys will be generated. You should verify key integrity for all new connections now.")
-
-
 def showDesktopNotification(systemTrayIcon, title, message):
     systemTrayIcon.showMessage(title, message)
 

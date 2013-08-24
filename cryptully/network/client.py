@@ -2,6 +2,7 @@ import base64
 import Queue
 
 from crypto.crypto import Crypto
+from crypto.smp import SMP
 
 from message import Message
 
@@ -14,7 +15,7 @@ from utils import utils
 
 
 class Client(Thread):
-    def __init__(self, connectionManager, remoteNick, crypto, sendMessageCallback, recvMessageCallback, handshakeDoneCallback, errorCallback, initiateHandkshakeOnStart=False):
+    def __init__(self, connectionManager, remoteNick, sendMessageCallback, recvMessageCallback, handshakeDoneCallback, errorCallback, initiateHandkshakeOnStart=False):
         Thread.__init__(self)
         self.daemon = True
 
@@ -30,7 +31,7 @@ class Client(Thread):
         self.wasHandshakeDone = False
         self.messageQueue = Queue.Queue()
 
-        self.crypto = crypto
+        self.crypto = Crypto()
         self.crypto.generateDHKey()
 
 
@@ -64,6 +65,9 @@ class Client(Thread):
         else:
             self.__doHandshake()
 
+        if not self.wasHandshakeDone:
+            return
+
         while True:
             message = self.messageQueue.get()
 
@@ -95,7 +99,7 @@ class Client(Thread):
     def disconnect(self):
         try:
             self.sendMessage(constants.COMMAND_END)
-        except Exception:
+        except:
             pass
 
 
@@ -117,13 +121,17 @@ class Client(Thread):
             # Switch to AES encryption for the remainder of the connection
             self.isEncrypted = True
 
+            # Do SMP
+            secret = long(self.crypto.dhSecret)
+            self.__doSMP(SMP(secret))
+
             self.wasHandshakeDone = True
             self.handshakeDoneCallback(self.remoteNick)
         except exceptions.ProtocolEnd:
             self.disconnect()
             self.connectionManager.destroyClient(self.remoteNick)
-        except exceptions.ProtocolError as pe:
-            self.__handleHandshakeError(pe)
+        except (exceptions.ProtocolError, exceptions.CryptoError) as e:
+            self.__handleHandshakeError(e)
 
 
     def __initiateHandshake(self):
@@ -145,13 +153,17 @@ class Client(Thread):
             # Switch to AES encryption for the remainder of the connection
             self.isEncrypted = True
 
+            # Do SMP
+            secret = long(self.crypto.dhSecret)
+            self.__initiateSMP(SMP(secret))
+
             self.wasHandshakeDone = True
             self.handshakeDoneCallback(self.remoteNick)
         except exceptions.ProtocolEnd:
             self.disconnect()
             self.connectionManager.destroyClient(self.remoteNick)
-        except exceptions.ProtocolError as pe:
-            self.__handleHandshakeError(pe)
+        except (exceptions.ProtocolError, exceptions.CryptoError) as e:
+            self.__handleHandshakeError(e)
 
 
     def __getHandshakeMessagePayload(self, expectedCommand):
@@ -161,9 +173,9 @@ class Client(Thread):
             if message.clientCommand == constants.COMMAND_END:
                 raise exceptions.ProtocolEnd
             elif message.clientCommand == constants.COMMAND_REJECT:
-                raise exceptions.ProtocolError(errors.ERR_CONNECTION_REJECTED)
+                raise exceptions.ProtocolError(errno=errors.ERR_CONNECTION_REJECTED)
             else:
-                raise exceptions.ProtocolError(errors.ERR_BAD_HANDSHAKE)
+                raise exceptions.ProtocolError(errno=errors.ERR_BAD_HANDSHAKE)
 
         payload = self.__getDecryptedPayload(message)
 
@@ -178,7 +190,7 @@ class Client(Thread):
             # Check the HMAC
             if not self.__verifyHmac(message.hmac, payload):
                 self.errorCallback(message.sourceNick, errors.ERR_BAD_HMAC)
-                raise exceptions.CryptoError(errors.BAD_HMAC)
+                raise exceptions.CryptoError(errno=errors.BAD_HMAC)
 
             try:
                 # Decrypt the payload
@@ -197,12 +209,42 @@ class Client(Thread):
         return utils.secureStrcmp(generatedHmac, base64.b64decode(givenHmac))
 
 
+    def __initiateSMP(self, smp):
+        buffer = smp.step1()
+        self.sendMessage(constants.COMMAND_SMP_1, buffer)
+
+        buffer = self.__getHandshakeMessagePayload(constants.COMMAND_SMP_2)
+        buffer = smp.step3(buffer)
+        self.sendMessage(constants.COMMAND_SMP_3, buffer)
+
+        buffer = self.__getHandshakeMessagePayload(constants.COMMAND_SMP_4)
+        smp.step5(buffer)
+
+        self.__checkSMP(smp)
+
+
+    def __doSMP(self, smp):
+        buffer = self.__getHandshakeMessagePayload(constants.COMMAND_SMP_1)
+        buffer = smp.step2(buffer)
+        self.sendMessage(constants.COMMAND_SMP_2, buffer)
+
+        buffer = self.__getHandshakeMessagePayload(constants.COMMAND_SMP_3)
+        buffer = smp.step4(buffer)
+        self.sendMessage(constants.COMMAND_SMP_4, buffer)
+
+        self.__checkSMP(smp)
+
+
+    def __checkSMP(self, smp):
+        if not smp.match:
+            raise exceptions.CryptoError(errno=errors.ERR_SMP_MATCH_FAILED)
+
+
     def __handleHandshakeError(self, exception):
         self.errorCallback(self.remoteNick, exception.errno)
 
         # For all errors except the connection being rejected, tell the client there was an error
-        if hasattr(exception, 'errno') and exception.errno != errors.ERR_CONNECTION_REJECTED:
+        if exception.errno != errors.ERR_CONNECTION_REJECTED:
             self.sendMessage(constants.COMMAND_ERR)
-        # For reject errors, delete this client
         else:
             self.connectionManager.destroyClient(self.remoteNick)

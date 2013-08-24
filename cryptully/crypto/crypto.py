@@ -56,8 +56,8 @@ class Crypto(object):
 
 
     def computeDHSecret(self, publicKey):
-        secret = binToDec(self.dh.compute_key(decToMpi(publicKey)))
-        hash = self.hash(str(secret), 'sha512')
+        self.dhSecret = binToDec(self.dh.compute_key(decToMpi(publicKey)))
+        hash = self.hash(str(self.dhSecret), 'sha512')
         self.aesKey = hash[0:32]
         self.aesIv = hash[32:64]
         self.aesSalt = hash[56:64]
