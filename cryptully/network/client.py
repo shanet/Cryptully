@@ -27,6 +27,8 @@ class Client(Thread):
         self.errorCallback = errorCallback
         self.initiateHandkshakeOnStart = initiateHandkshakeOnStart
 
+        self.incomingMessageNum = 0
+        self.outgoingMessageNum = 0
         self.isEncrypted = False
         self.wasHandshakeDone = False
         self.messageQueue = Queue.Queue()
@@ -49,6 +51,10 @@ class Client(Thread):
 
             # Generate and set the HMAC for the message
             message.setBinaryHmac(self.crypto.generateHmac(payload))
+
+            # Encrypt the message number of the message
+            message.setBinaryMessageNum(self.crypto.aesEncrypt(str(self.outgoingMessageNum)))
+            self.outgoingMessageNum += 1
         else:
             message.payload = payload
 
@@ -186,6 +192,7 @@ class Client(Thread):
     def __getDecryptedPayload(self, message):
         if self.isEncrypted:
             payload = message.getEncryptedPayloadAsBinaryString()
+            encryptedMessageNumber = message.getMessageNumAsBinaryString()
 
             # Check the HMAC
             if not self.__verifyHmac(message.hmac, payload):
@@ -193,6 +200,17 @@ class Client(Thread):
                 raise exceptions.CryptoError(errno=errors.BAD_HMAC)
 
             try:
+                # Check the message number
+                messageNumber = int(self.crypto.aesDecrypt(encryptedMessageNumber))
+
+                # If the message number is less than what we're expecting, the message is being replayed
+                if self.incomingMessageNum > messageNumber:
+                    raise exceptions.ProtocolError(errno=errors.ERR_MESSAGE_REPLAY)
+                # If the message number is greater than what we're expecting, messages are being deleted
+                elif self.incomingMessageNum < messageNumber:
+                    raise exceptions.ProtocolError(errno=errors.ERR_MESSAGE_DELETION)
+                self.incomingMessageNum += 1
+
                 # Decrypt the payload
                 payload = self.crypto.aesDecrypt(payload)
             except exceptions.CryptoError as ce:
