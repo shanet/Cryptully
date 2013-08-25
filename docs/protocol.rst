@@ -20,10 +20,8 @@ Basic Properties
   * ``destNick``: The nickname of the receiver
   * ``payload``: The content of the message. If an encrypted message, it is base64 encoded
   * ``hmac``: The HMAC as calculated by the sender to be verified against by the receiver
-  * ``key``: If the payload is encrypted, the AES key used for this message (base64 encoded and encrypted with RSA)
-  * ``iv``: If the payload is encrypted, the AES IV used for this message (base64 encoded and encrypted with RSA)
-  * ``salt``: If the payload is encrypted, the AES salt used for this message (base64 encoded and encrypted with RSA)
   * ``error``: The error code, if applicable
+  * ``num``: The message number, starting from 0 and monotonically increasing with sequential numbers.
 
 * All commands *are* case sensitive
 * After the initial handshake is complete, the connection is kept alive indefinitely in a message loop until
@@ -49,26 +47,48 @@ Client Commands
 * ``REDY``: The client is ready to initiate a handshake
 * ``REJ``: If the client rejected a connection from another client
 * ``PUB_KEY [arg]``
-* ``AES_KEY [arg]``
-* ``AES_IV [arg]``
-* ``AES_SALT [arg]``
+* ``SMP1 [arg]``
+* ``SMP2 [arg]``
+* ``SMP3 [arg]``
+* ``SMP4 [arg]``
 * ``MSG [arg]``
+* ``TYPING [arg]``
 * ``END``
 * ``ERR``
+
+^^^^^^^^^^^^^
+Typing Status
+^^^^^^^^^^^^^
+
+A client may optional give the typing status of the user to the remote client by issuing the ``TYPING``
+command. The ``TYPING`` command takes one of three possible arguments:
+
+* ``0``: The user is currently typing
+* ``1``: The user has stopped typing and deleted all text from the buffer
+* ``2``: The user has stopped typing, but left some text in the buffer
 
 ------------------
 Encryption Details
 ------------------
 
-* AES is 256 bits in CBC mode with randomly generated key, IV and 8 byte salt.
-* RSA is 2048 bits with a public exponent of 65537.
-* RSA fingerprints are the MD5 digest of a client's public key.
+* 1568-bit secret is exchanged via Diffie-Hellman.
+* The Socialist Millionaire protocol (as defined by Off-The-Record) is used to verify the Diffie-Hellman secret.
+* An AES key is the first 32 bytes of the SHA512 digest of the Diffie-Hellman secret. The IV last 32 bytes of this hash.
+* All AES operations are with a 256-bit key in CBC mode.
 * HMAC's are the SHA256 digest of the AES key and the encrypted message payload. The receiver calculates
-  and verfies the HMAC before attempting to decrypt the message payload.
-* Each client generates a unique RSA keypair and AES key for each connection. The exception being if the user
-  saved an RSA keypair. Then each connection uses the same keypair, but AES keys are still randomly generated.
-* The AES key, IV, and salt are randomly generated for each message and sent along with the message encrypted
-  with the RSA keys that are exchanged in the handshake.
+  and verifies the HMAC before attempting to decrypt the message payload.
+
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Socialist Millionaire Protocol
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The Socialist Millionaire Protocol (SMP) is a method for determining whether two clients share the same secret,
+but without exchanging the secret itself. In |project|'s case, it is used to determine whether a MITM
+attack has occurred or is occurring and compromised the Diffie-Hellman key exchange protocol.
+
+The SMP is relatively complex so it is best to defer to the documentation of it's implementation
+as defined in the Off-The-Record (OTR) protocol version 3.
 
 -----------------
 Handshake Details
@@ -89,6 +109,14 @@ The commands in the handshake must be performed in the following order:
 +--------+---------+--------+
 |(switch to AES encryption) |
 +--------+---------+--------+
+|        |   <-    |SMP1    |
++--------+---------+--------+
+|SMP2    |   ->    |        |
++--------+---------+--------+
+|        |   <-    |SMP3    |
++--------+---------+--------+
+|SMP4    |   ->    |        |
++--------+---------+--------+
 
 The client may reject a connection with the ``REJ`` command instead of sending the ``REDY`` command.
 
@@ -98,10 +126,12 @@ Message Loop Details
 
 Clients may send messages any order including multiple messages in a row.
 
-+--------+---------+-------+
-|Server  |direction| Client|
-+========+=========+=======+
-|MSG     |   <->   |MSG    |
-+--------+---------+-------+
-|END     |   <->   |END    |
-+--------+---------+-------+
++--------+---------+--------+
+|Client A|direction|Client B|
++========+=========+========+
+|MSG     |   <->   |MSG     |
++--------+---------+--------+
+|TYPING  |   <->   |TYPING  |
++--------+---------+--------+
+|END     |   <->   |END     |
++--------+---------+--------+

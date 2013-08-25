@@ -23,7 +23,6 @@ Features
 * Runs on Linux, Windows, and Mac OS X
 * No registration or software installation required
 * Chat with multiple people simultaneously
-* Ability to set own RSA keys
 * Ability to host your own server (for the technically inclined)
 * Graphical UI and command line (Curses) UI
 * Open source (LGPL license)
@@ -32,12 +31,9 @@ Features
 How does it work and how is it secure?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-|project| works by relaying messages from one person to another through a relay server. When the program
-starts it generates encryption keys (2048bit RSA and 256bit AES) that all communications are encrypted
-with before leaving your computer and then decrypted on your friend's computer. Further, to ensure that
-no one is listening in on your conversation, the fingerprints of the encryption keys are provided.
-You can use this to verify with your friend that no one is listening. More on this in the :ref:`using-|project|`
-section though.
+|project| works by relaying messages from one person to another through a relay server. It generates
+per-session encryption keys (256bit AES) that all communications are encrypted with before leaving
+your computer and then decrypted on the destination computer.
 
 -----------
 Quick Start
@@ -47,7 +43,7 @@ Quick Start
 2. Launch the executable (no need to install anything).
 3. Select a nickname and connect to the server.
 4. Enter the nickname of the person you want to chat with.
-5. You should now be chatting! (but you should verify the key integrity in the options menu)
+5. You should now be chatting!
 
 Need more info? See the :ref:`using-|project|` page for much more detailed instructions.
 
