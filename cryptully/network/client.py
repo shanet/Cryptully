@@ -41,6 +41,10 @@ class Client(Thread):
         self.sendMessage(constants.COMMAND_MSG, text)
 
 
+    def sendTypingMessage(self, status):
+        self.sendMessage(constants.COMMAND_TYPING, str(status))
+
+
     def sendMessage(self, command, payload=None):
         message = Message(clientCommand=command, destNick=self.remoteNick)
 

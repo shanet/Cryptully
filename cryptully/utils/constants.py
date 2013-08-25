@@ -5,6 +5,8 @@ NICK_MAX_LEN = 32
 
 DEFAULT_AES_MODE = 'aes_256_cbc'
 
+TYPING_TIMEOUT = 1500
+
 # Protocol commands
 
 # Server commands
@@ -25,14 +27,20 @@ COMMAND_SMP_4      = "SMP4"
 
 # Loop commands
 COMMAND_MSG        = "MSG"
+COMMAND_TYPING     = "TYPING"
 COMMAND_END        = "END"
 COMMAND_ERR        = "ERR"
-LOOP_COMMANDS = [COMMAND_MSG, COMMAND_END, COMMAND_ERR]
+LOOP_COMMANDS      = [COMMAND_MSG, COMMAND_TYPING, COMMAND_END, COMMAND_ERR]
 
 # Message sources
 SENDER   = 0
 RECEIVER = 1
 SERVICE  = 2
+
+# Typing statuses
+TYPING_START             = 0
+TYPING_STOP_WITHOUT_TEXT = 1
+TYPING_STOP_WITH_TEXT    = 2
 
 # QT UI custom button codes
 BUTTON_OKAY   = 0

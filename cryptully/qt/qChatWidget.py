@@ -1,6 +1,7 @@
 import re
 
 from PyQt4.QtCore import Qt
+from PyQt4.QtCore import QTimer
 from PyQt4.QtGui import QFontMetrics
 from PyQt4.QtGui import QHBoxLayout
 from PyQt4.QtGui import QLabel
@@ -58,15 +59,33 @@ class QChatWidget(QWidget):
         hbox.addWidget(splitter)
         self.setLayout(hbox)
 
+        self.typingTimer = QTimer()
+        self.typingTimer.setSingleShot(True)
+        self.typingTimer.timeout.connect(self.stoppedTyping)
+
 
     def chatInputTextChanged(self):
         if str(self.chatInput.toPlainText())[-1:] == '\n':
             self.sendMessage()
+        else:
+            # Start a timer to check for the user stopping typing
+            self.typingTimer.start(constants.TYPING_TIMEOUT)
+            self.sendTypingStatus(constants.TYPING_START)
+
+
+    def stoppedTyping(self):
+        self.typingTimer.stop()
+        if str(self.chatInput.toPlainText()) == '':
+            self.sendTypingStatus(constants.TYPING_STOP_WITHOUT_TEXT)
+        else:
+            self.sendTypingStatus(constants.TYPING_STOP_WITH_TEXT)
 
 
     def sendMessage(self):
         if self.isDisabled:
             return
+
+        self.typingTimer.stop()
 
         text = str(self.chatInput.toPlainText())[:-1]
 
@@ -84,6 +103,10 @@ class QChatWidget(QWidget):
         self.chatInput.clear()
 
         self.appendMessage(text, constants.SENDER)
+
+
+    def sendTypingStatus(self, status):
+        self.connectionManager.getClient(self.nick).sendTypingMessage(status)
 
 
     def showNowChattingMessage(self, nick):

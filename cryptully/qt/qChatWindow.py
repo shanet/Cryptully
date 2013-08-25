@@ -56,6 +56,7 @@ class QChatWindow(QMainWindow):
         self.chatTabs.tabCloseRequested.connect(self.closeTab)
         self.chatTabs.currentChanged.connect(self.tabChanged)
 
+        self.statusBar = self.statusBar()
         self.systemTrayIcon = QSystemTrayIcon(self)
         self.systemTrayIcon.setVisible(True)
 
@@ -209,20 +210,33 @@ class QChatWindow(QMainWindow):
 
     @pyqtSlot(str, str, str)
     def sendMessageToTab(self, command, sourceNick, payload):
-        self.getTabByNick(sourceNick)[0].appendMessage(payload, constants.RECEIVER)
-
-        # Update the unread message count if the message is not intended for the currently selected tab
+        # If a typing command, update the typing status in the tab, otherwise
+        # show the message in the tab
         tab, tabIndex = self.getTabByNick(sourceNick)
-        if tabIndex != self.chatTabs.currentIndex():
-            tab.unreadCount += 1
-            self.chatTabs.setTabText(tabIndex, tab.nick + (" (%d)" % tab.unreadCount))
+        if command == constants.COMMAND_TYPING:
+            # Show the typing status in the status bar if the tab is the selected tab
+            if tabIndex == self.chatTabs.currentIndex():
+                payload = int(payload)
+                if payload == constants.TYPING_START:
+                    self.statusBar.showMessage("%s is typing" % sourceNick)
+                elif payload == constants.TYPING_STOP_WITHOUT_TEXT:
+                    self.statusBar.showMessage('')
+                elif payload == constants.TYPING_STOP_WITH_TEXT:
+                    self.statusBar.showMessage("%s has entered text" % sourceNick)
+        else:
+            tab.appendMessage(payload, constants.RECEIVER)
 
-        # Show a system notifcation of the new message if not the current window or tab or the
-        # scrollbar of the tab isn't at the bottom
-        chatLogScrollbar = tab.widgetStack.widget(2).chatLog.verticalScrollBar()
-        if not self.isActiveWindow() or tabIndex != self.chatTabs.currentIndex() or \
-           chatLogScrollbar.value() != chatLogScrollbar.maximum():
-            qtUtils.showDesktopNotification(self.systemTrayIcon, sourceNick, payload)
+            # Update the unread message count if the message is not intended for the currently selected tab
+            if tabIndex != self.chatTabs.currentIndex():
+                tab.unreadCount += 1
+                self.chatTabs.setTabText(tabIndex, tab.nick + (" (%d)" % tab.unreadCount))
+
+            # Show a system notifcation of the new message if not the current window or tab or the
+            # scrollbar of the tab isn't at the bottom
+            chatLogScrollbar = tab.widgetStack.widget(2).chatLog.verticalScrollBar()
+            if not self.isActiveWindow() or tabIndex != self.chatTabs.currentIndex() or \
+               chatLogScrollbar.value() != chatLogScrollbar.maximum():
+                qtUtils.showDesktopNotification(self.systemTrayIcon, sourceNick, payload)
 
 
     @pyqtSlot(int)
