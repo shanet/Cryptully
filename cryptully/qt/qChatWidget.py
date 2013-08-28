@@ -23,6 +23,7 @@ class QChatWidget(QWidget):
 
         self.connectionManager = connectionManager
         self.isDisabled = False
+        self.wasCleared = False
 
         self.urlRegex = re.compile(constants.URL_REGEX)
 
@@ -65,6 +66,11 @@ class QChatWidget(QWidget):
 
 
     def chatInputTextChanged(self):
+        # Check if the text changed was the text box being cleared to avoid sending an invalid typing status
+        if self.wasCleared:
+            self.wasCleared = False
+            return
+
         if str(self.chatInput.toPlainText())[-1:] == '\n':
             self.sendMessage()
         else:
@@ -100,6 +106,7 @@ class QChatWidget(QWidget):
         self.connectionManager.getClient(self.nick).sendChatMessage(text)
 
         # Clear the chat input
+        self.wasCleared = True
         self.chatInput.clear()
 
         self.appendMessage(text, constants.SENDER)

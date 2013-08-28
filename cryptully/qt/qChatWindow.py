@@ -230,6 +230,9 @@ class QChatWindow(QMainWindow):
             if tabIndex != self.chatTabs.currentIndex():
                 tab.unreadCount += 1
                 self.chatTabs.setTabText(tabIndex, tab.nick + (" (%d)" % tab.unreadCount))
+            else:
+                # Clear the typing status if the current tab
+                self.statusBar.showMessage('')
 
             # Show a system notifcation of the new message if not the current window or tab or the
             # scrollbar of the tab isn't at the bottom
