@@ -12,7 +12,7 @@ Cryptully
 2. Launch the executable (no need to install anything).
 3. Select a nickname and connect to the server.
 4. Enter the nickname of the person you want to chat with.
-5. You should now be chatting! (but you should verify the key integrity in the options menu)
+5. You should now be chatting!
 
 Need more info? See the [documentation](https://cryptully.readthedocs.org/en/latest/) for much more detailed instructions.
 
@@ -38,7 +38,6 @@ Documentation is available at https://cryptully.readthedocs.org/en/latest/.
 
 ### TODO
 
-* Send typing status to clients (issue 17)
 * Make ncurses client support multiple clients at once (issue 28)
 
 ### License
