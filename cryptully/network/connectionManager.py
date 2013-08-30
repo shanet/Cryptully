@@ -119,9 +119,10 @@ class ConnectionManager(object):
             if int(message.error) == errors.ERR_NICK_NOT_FOUND:
                 try:
                     del self.clients[str(message.destNick)]
-                    self.errorCallback(message.destNick, int(message.error))
                 except:
                     pass
+            
+            self.errorCallback(message.destNick, int(message.error))
             return
         elif message.serverCommand == constants.COMMAND_END:
             self.errorCallback('', int(message.error))
