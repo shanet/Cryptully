@@ -65,4 +65,4 @@ elif arg == 'clean':
     clean()
 
 else:
-    print "Invalid option\nPossible options: package, deb, rpm, install, source, run, test, clean"
+    print "Invalid option\nPossible options: dist, deb, rpm, install, source, run, test, clean"
