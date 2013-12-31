@@ -131,10 +131,6 @@ class Client(Thread):
             # Switch to AES encryption for the remainder of the connection
             self.isEncrypted = True
 
-            # Do SMP
-            secret = long(self.crypto.dhSecret)
-            self.__doSMP(SMP(secret))
-
             self.wasHandshakeDone = True
             self.handshakeDoneCallback(self.remoteNick)
         except exceptions.ProtocolEnd:
@@ -162,10 +158,6 @@ class Client(Thread):
 
             # Switch to AES encryption for the remainder of the connection
             self.isEncrypted = True
-
-            # Do SMP
-            secret = long(self.crypto.dhSecret)
-            self.__initiateSMP(SMP(secret))
 
             self.wasHandshakeDone = True
             self.handshakeDoneCallback(self.remoteNick)
@@ -245,7 +237,7 @@ class Client(Thread):
         self.__checkSMP(smp)
 
 
-    def __doSMP(self, smp):
+    def __respondToSMP(self, smp):
         buffer = self.__getHandshakeMessagePayload(constants.COMMAND_SMP_1)
         buffer = smp.step2(buffer)
         self.sendMessage(constants.COMMAND_SMP_2, buffer)
