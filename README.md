@@ -4,8 +4,7 @@ Cryptully
 ### An encrypted chat program for those that don't know crypto.
 #### Shane Tully (shane@shanetully.com / shanetully.com)
 
-### The default server, cryptully.com, has been taken down due to a lack of server to host it on. For the program to work, you will need to host your own 
-server. If you are interested in providing hosting (only running a small Python script), contact me.
+### The default server, cryptully.com, has been taken down due to a lack of server to host it on. For the program to work, you will need to host your own server. If you are interested in providing hosting (only running a small Python script), contact me.
 
 ### Quick Start
 
