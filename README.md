@@ -39,6 +39,7 @@ Documentation is available at https://cryptully.readthedocs.org/en/latest/.
 ### TODO
 
 * Make ncurses client support multiple clients at once (issue 28)
+* Finish writing the tests
 
 ### License
 
