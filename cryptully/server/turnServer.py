@@ -81,6 +81,33 @@ class Console(Thread):
         Thread.__init__(self)
         self.daemon = True
 
+        self.commands = {
+            'list': {
+                'callback': self.list,
+                'help': 'list\t\tlist active connections'
+            },
+            'zombies': {
+                'callback': self.zombies,
+                'help': 'zombies\t\tlist zombie connections'
+            },
+            'kick': {
+                'callback': self.kick,
+                'help': 'kick [nick]\tkick the given nick from the server'
+            },
+            'kill': {
+                'callback': self.kill,
+                'help': 'kill [ip]\tkill the zombie with the given IP'
+            },
+            'stop': {
+                'callback': self.stop,
+                'help': 'stop\t\tstop the server'
+            },
+            'help': {
+                'callback': self.help,
+                'help': 'help\t\tdisplay this message'
+            },
+        }
+
 
     def run(self):
         while True:
@@ -90,46 +117,62 @@ class Console(Thread):
                 continue
 
             command = input[0]
+            arg = input[1] if len(input) == 2 else None
 
-            if command == 'list' or command == 'nicks':
-                print "Registered nicks"
-                print "================"
-                for nick, client in nickMap.iteritems():
-                    print nick + " - " + str(client.sock)
-
-            elif command == 'zombies':
-                print "Zombie Connections"
-                print "=================="
-                for addr, client in ipMap.iteritems():
-                    print addr
-
-            elif command == 'kick':
-                if len(input) != 2:
-                    print "Kick command requires an argument"
-                else:
-                    try:
-                        client = nickMap[input[1]]
-                        client.kick()
-                        print input[1] + " kicked from server"
-                    except KeyError:
-                        print input[1] + " is not a registered nick"
-
-            elif command == 'kill':
-                if len(input) != 2:
-                    print "Kill command requires an argument"
-                else:
-                    try:
-                        client = ipMap[input[1]]
-                        client.kick()
-                        print input[1] + " killed"
-                    except KeyError:
-                        print input[1] + " is not a zombie"
-
-            elif command == 'stop':
-                os.kill(os.getpid(), signal.SIGINT)
-
-            else:
+            try:
+                self.commands[command]['callback'](arg)
+            except KeyError:
                 print "Unrecognized command"
+
+
+    def list(self, arg):
+        print "Registered nicks"
+        print "================"
+        for nick, client in nickMap.iteritems():
+            print nick + " - " + str(client.sock)
+
+
+    def zombies(self, arg):
+        print "Zombie Connections"
+        print "=================="
+        for addr, client in ipMap.iteritems():
+            print addr
+
+
+    def kick(self, nick):
+        if not nick:
+            print "Kick command requires a nick"
+            return
+
+        try:
+            client = nickMap[nick]
+            client.kick()
+            print "%s kicked from server" % nick
+        except KeyError:
+            print "%s is not a registered nick" % nick
+
+
+    def kill(self, ip):
+        if not ip:
+            print "Kill command requires an IP"
+            return
+
+        try:
+            client = ipMap[ip]
+            client.kick()
+            print "%s killed" % ip
+        except KeyError:
+            print "%s is not a zombie" % ip
+
+
+    def stop(self, arg):
+        os.kill(os.getpid(), signal.SIGINT)
+
+
+    def help(self, arg):
+        delimeter = '\n\t'
+        helpMessages = map(lambda (_, command): command['help'], self.commands.iteritems())
+        print "Available commands:%s%s" % (delimeter, delimeter.join(helpMessages))
 
 
 class Client(object):
@@ -242,7 +285,7 @@ class RecvThread(Thread):
                     printAndLog(str(self.sock) + ": send a command with missing JSON fields")
                     self.__handleError(errors.ERR_INVALID_COMMAND)
                     return
-            
+
                 if message.serverCommand == constants.COMMAND_END:
                     printAndLog(self.nick + ": requested to end connection")
                     nickMap[self.nick].disconnect()
@@ -258,7 +301,7 @@ class RecvThread(Thread):
                     if utils.isValidNick(destNick) != errors.VALID_NICK:
                         printAndLog(self.nick + ": requested to send message to invalid nick")
                         self.__handleError(errors.ERR_INVALID_NICK)
-                        
+
                     client = nickMap[destNick.lower()]
 
                     # Rewrite the source nick to prevent nick spoofing
