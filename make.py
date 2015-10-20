@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python2
 
 import os
 import shutil
@@ -38,27 +38,27 @@ if arg == 'dist':
     else:
         pyinstallerPath = raw_input("Path to pyinstaller: ")
     clean()
-    subprocess.call(['python', os.path.join(pyinstallerPath, 'pyinstaller.py'), 'cryptully.spec'])
+    subprocess.call(['python2', os.path.join(pyinstallerPath, 'pyinstaller.py'), 'cryptully.spec'])
 
 elif arg == 'deb':
     print "Ensure you have the python-stdeb package installed!"
-    subprocess.call(['python', 'setup.py', '--command-packages=stdeb.command', 'bdist_deb'])
+    subprocess.call(['python2', 'setup.py', '--command-packages=stdeb.command', 'bdist_deb'])
 
 elif arg == 'rpm':
-    subprocss.call(['python', 'setup.py', 'bdist_rpm', '--post-install=rpm/postinstall', '--pre-uninstall=rpm/preuninstall'])
+    subprocss.call(['python2', 'setup.py', 'bdist_rpm', '--post-install=rpm/postinstall', '--pre-uninstall=rpm/preuninstall'])
 
 elif arg == 'install':
-    subprocess.call(['python', 'setup.py', 'install'])
+    subprocess.call(['python2', 'setup.py', 'install'])
 
 elif arg == 'source':
-    subprocess.call(['python', 'setup.py', 'sdist'])
+    subprocess.call(['python2', 'setup.py', 'sdist'])
 
 elif arg == 'run':
-    subprocess.call(['python', os.path.join('cryptully', 'cryptully.py')])
+    subprocess.call(['python2', os.path.join('cryptully', 'cryptully.py')])
 
 elif arg == 'test':
     # Carry the exit code from the tests
-    exitCode = subprocess.call(['python', os.path.join('cryptully', 'test_cryptully.py')])
+    exitCode = subprocess.call(['python2', os.path.join('cryptully', 'test_cryptully.py')])
     sys.exit(exitCode)
 
 elif arg == 'clean':
