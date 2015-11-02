@@ -15,7 +15,7 @@ from utils import utils
 
 
 class Client(Thread):
-    def __init__(self, connectionManager, remoteNick, sendMessageCallback, recvMessageCallback, handshakeDoneCallback, errorCallback, initiateHandkshakeOnStart=False):
+    def __init__(self, connectionManager, remoteNick, sendMessageCallback, recvMessageCallback, handshakeDoneCallback, smpRequestCallback, errorCallback, initiateHandkshakeOnStart=False):
         Thread.__init__(self)
         self.daemon = True
 
@@ -24,6 +24,7 @@ class Client(Thread):
         self.sendMessageCallback = sendMessageCallback
         self.recvMessageCallback = recvMessageCallback
         self.handshakeDoneCallback = handshakeDoneCallback
+        self.smpRequestCallback = smpRequestCallback
         self.errorCallback = errorCallback
         self.initiateHandkshakeOnStart = initiateHandkshakeOnStart
 
@@ -35,6 +36,7 @@ class Client(Thread):
 
         self.crypto = Crypto()
         self.crypto.generateDHKey()
+        self.smp = None
 
 
     def sendChatMessage(self, text):
@@ -69,6 +71,19 @@ class Client(Thread):
         self.messageQueue.put(message)
 
 
+    def initiateSMP(self, question, answer):
+        self.sendMessage(constants.COMMAND_SMP_0, question)
+
+        self.smp = SMP(answer)
+        buffer = self.smp.step1()
+        self.sendMessage(constants.COMMAND_SMP_1, buffer)
+
+
+    def respondSMP(self, answer):
+        self.smp = SMP(answer)
+        self.__doSMPStep1(self.smpStep1)
+
+
     def run(self):
         if self.initiateHandkshakeOnStart:
             self.__initiateHandshake()
@@ -99,7 +114,12 @@ class Client(Thread):
             payload = self.__getDecryptedPayload(message)
 
             self.messageQueue.task_done()
-            self.recvMessageCallback(command, message.sourceNick, payload)
+
+            # Handle SMP commands specially
+            if command in constants.SMP_COMMANDS:
+               self.__handleSMPCommand(command, payload)
+            else:
+                self.recvMessageCallback(command, message.sourceNick, payload)
 
 
     def connect(self):
@@ -223,35 +243,63 @@ class Client(Thread):
         return utils.secureStrcmp(generatedHmac, base64.b64decode(givenHmac))
 
 
-    def __initiateSMP(self, smp):
-        buffer = smp.step1()
-        self.sendMessage(constants.COMMAND_SMP_1, buffer)
+    def __handleSMPCommand(self, command, payload):
+        try:
+            if command == constants.COMMAND_SMP_0:
+                # Fire the SMP request callback with the given question
+                self.smpRequestCallback(constants.SMP_CALLBACK_REQUEST, self.remoteNick, payload)
+            elif command == constants.COMMAND_SMP_1:
+                # If there's already an smp object, go ahead to step 1.
+                # Otherwise, save the payload until we have an answer from the user to respond with
+                if self.smp:
+                    self.__doSMPStep1(payload)
+                else:
+                    self.smpStep1 = payload
+            elif command == constants.COMMAND_SMP_2:
+                self.__doSMPStep2(payload)
+            elif command == constants.COMMAND_SMP_3:
+                self.__doSMPStep3(payload)
+            elif command == constants.COMMAND_SMP_4:
+                self.__doSMPStep4(payload)
+            else:
+                # This shouldn't happen
+                raise exceptions.CryptoError(errno=errors.ERR_SMP_CHECK_FAILED)
+        except exceptions.CryptoError as ce:
+            self.smpRequestCallback(constants.SMP_CALLBACK_ERROR, self.remoteNick, '', ce.errno)
 
-        buffer = self.__getHandshakeMessagePayload(constants.COMMAND_SMP_2)
-        buffer = smp.step3(buffer)
-        self.sendMessage(constants.COMMAND_SMP_3, buffer)
 
-        buffer = self.__getHandshakeMessagePayload(constants.COMMAND_SMP_4)
-        smp.step5(buffer)
-
-        self.__checkSMP(smp)
-
-
-    def __respondToSMP(self, smp):
-        buffer = self.__getHandshakeMessagePayload(constants.COMMAND_SMP_1)
-        buffer = smp.step2(buffer)
+    def __doSMPStep1(self, payload):
+        buffer = self.smp.step2(payload)
         self.sendMessage(constants.COMMAND_SMP_2, buffer)
 
-        buffer = self.__getHandshakeMessagePayload(constants.COMMAND_SMP_3)
-        buffer = smp.step4(buffer)
+
+    def __doSMPStep2(self, payload):
+        buffer = self.smp.step3(payload)
+        self.sendMessage(constants.COMMAND_SMP_3, buffer)
+
+
+    def __doSMPStep3(self, payload):
+        buffer = self.smp.step4(payload)
         self.sendMessage(constants.COMMAND_SMP_4, buffer)
 
-        self.__checkSMP(smp)
+        # Destroy the SMP object now that we're done
+        self.smp = None
 
 
-    def __checkSMP(self, smp):
-        if not smp.match:
+    def __doSMPStep4(self, payload):
+        self.smp.step5(payload)
+
+        if self.__checkSMP():
+            self.smpRequestCallback(constants.SMP_CALLBACK_COMPLETE, self.remoteNick)
+
+        # Destroy the SMP object now that we're done
+        self.smp = None
+
+
+    def __checkSMP(self):
+        if not self.smp.match:
             raise exceptions.CryptoError(errno=errors.ERR_SMP_MATCH_FAILED)
+        return True
 
 
     def __handleHandshakeError(self, exception):

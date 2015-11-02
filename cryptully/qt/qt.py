@@ -90,7 +90,7 @@ class QtUI(QApplication):
 
     def __connectToServer(self):
         # Create the connection manager to manage all communcation to the server
-        self.connectionManager = ConnectionManager(self.nick, (self.turn, self.port), self.chatWindow.postMessage, self.chatWindow.newClient, self.chatWindow.clientReady, self.chatWindow.handleError)
+        self.connectionManager = ConnectionManager(self.nick, (self.turn, self.port), self.chatWindow.postMessage, self.chatWindow.newClient, self.chatWindow.clientReady, self.chatWindow.smpRequest, self.chatWindow.handleError)
         self.chatWindow.connectionManager = self.connectionManager
 
         # Start the connect thread

@@ -16,7 +16,7 @@ from utils import utils
 
 
 class ConnectionManager(object):
-    def __init__(self, nick, serverAddr, recvMessageCallback, newClientCallback, handshakeDoneCallback, errorCallback):
+    def __init__(self, nick, serverAddr, recvMessageCallback, newClientCallback, handshakeDoneCallback, smpRequestCallback, errorCallback):
         self.clients = {}
 
         self.nick = nick
@@ -24,6 +24,7 @@ class ConnectionManager(object):
         self.recvMessageCallback = recvMessageCallback
         self.newClientCallback = newClientCallback
         self.handshakeDoneCallback = handshakeDoneCallback
+        self.smpRequestCallback = smpRequestCallback
         self.errorCallback = errorCallback
         self.sendThread = SendThread(self.sock, self.errorCallback)
         self.recvThread = RecvThread(self.sock, self.recvMessage, self.errorCallback)
@@ -66,7 +67,7 @@ class ConnectionManager(object):
             self.errorCallback(nick, errors.ERR_ALREADY_CONNECTED)
             return
 
-        newClient = Client(self, nick, self.sendMessage, self.recvMessageCallback, self.handshakeDoneCallback, self.errorCallback, initiateHandshakeOnStart)
+        newClient = Client(self, nick, self.sendMessage, self.recvMessageCallback, self.handshakeDoneCallback, self.smpRequestCallback, self.errorCallback, initiateHandshakeOnStart)
         self.clients[nick] = newClient
         newClient.start()
 
@@ -121,7 +122,7 @@ class ConnectionManager(object):
                     del self.clients[str(message.destNick)]
                 except:
                     pass
-            
+
             self.errorCallback(message.destNick, int(message.error))
             return
         elif message.serverCommand == constants.COMMAND_END:
@@ -146,6 +147,10 @@ class ConnectionManager(object):
     def newClientRejected(self, nick):
         # If rejected, send the rejected command to the client
         self.sendMessage(Message(clientCommand=constants.COMMAND_REJECT, destNick=nick))
+
+
+    def respondSMP(self, nick, answer):
+        self.clients[nick].respondSMP(answer)
 
 
 class RecvThread(Thread):

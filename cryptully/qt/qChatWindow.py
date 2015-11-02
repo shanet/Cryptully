@@ -26,6 +26,8 @@ from PyQt4.QtGui import QWidget
 from qChatTab import QChatTab
 from qAcceptDialog import QAcceptDialog
 from qHelpDialog import QHelpDialog
+from qSMPInitiateDialog import QSMPInitiateDialog
+from qSMPRespondDialog import QSMPRespondDialog
 import qtUtils
 
 from utils import constants
@@ -36,6 +38,7 @@ from utils import utils
 class QChatWindow(QMainWindow):
     newClientSignal = pyqtSignal(str)
     clientReadySignal = pyqtSignal(str)
+    smpRequestSignal = pyqtSignal(int, str, str, int)
     handleErrorSignal = pyqtSignal(str, int)
     sendMessageToTabSignal = pyqtSignal(str, str, str)
 
@@ -47,6 +50,7 @@ class QChatWindow(QMainWindow):
         self.messageQueue = messageQueue
         self.newClientSignal.connect(self.newClientSlot)
         self.clientReadySignal.connect(self.clientReadySlot)
+        self.smpRequestSignal.connect(self.smpRequestSlot)
         self.handleErrorSignal.connect(self.handleErrorSlot)
         self.sendMessageToTabSignal.connect(self.sendMessageToTab)
 
@@ -94,7 +98,7 @@ class QChatWindow(QMainWindow):
 
         # Show a system notifcation of the new client if not the current window
         if not self.isActiveWindow():
-            qtUtils.showDesktopNotification(self.systemTrayIcon, "Chat request from " + nick, '')
+            qtUtils.showDesktopNotification(self.systemTrayIcon, "Chat request from %s" % nick, '')
 
         # Show the accept dialog
         accept = QAcceptDialog.getAnswer(self, nick)
@@ -134,6 +138,27 @@ class QChatWindow(QMainWindow):
         # Set the window title if the tab is the selected tab
         if tabIndex == self.chatTabs.currentIndex():
             self.setWindowTitle(nick)
+
+
+    def smpRequest(self, type, nick, question='', errno=0):
+        self.smpRequestSignal.emit(type, nick, question, errno)
+
+
+    @pyqtSlot(int, str, str, int)
+    def smpRequestSlot(self, type, nick, question='', errno=0):
+        if type == constants.SMP_CALLBACK_REQUEST:
+            answer, clickedButton = QSMPRespondDialog.getAnswer(nick, question)
+
+            if clickedButton == constants.BUTTON_OKAY:
+                self.connectionManager.respondSMP(str(nick), str(answer))
+        elif type == constants.SMP_CALLBACK_COMPLETE:
+            QMessageBox.information(self, "%s Authenticated" % nick,
+                "Your chat session with %s has been succesfully authenticated. The conversation is verfied as secure." % nick)
+        elif type == constants.SMP_CALLBACK_ERROR:
+            if errno == errors.ERR_SMP_CHECK_FAILED:
+                QMessageBox.warning(self, errors.TITLE_PROTOCOL_ERROR, errors.PROTOCOL_ERROR % (nick))
+            elif errno == errors.ERR_SMP_MATCH_FAILED:
+                QMessageBox.critical(self, errors.TITLE_SMP_MATCH_FAILED, errors.SMP_MATCH_FAILED)
 
 
     def handleError(self, nick, errorCode):
@@ -184,12 +209,6 @@ class QChatWindow(QMainWindow):
         elif errorCode == errors.ERR_NICK_IN_USE:
             QMessageBox.warning(self, errors.TITLE_NICK_IN_USE, errors.NICK_IN_USE)
             self.restartCallback()
-        elif errorCode == errors.ERR_SMP_CHECK_FAILED:
-            QMessageBox.warning(self, errors.TITLE_PROTOCOL_ERROR, errors.PROTOCOL_ERROR % (nick))
-            tab.nick = None
-        elif errorCode == errors.ERR_SMP_MATCH_FAILED:
-            QMessageBox.critical(self, errors.TITLE_SMP_MATCH_FAILED, errors.SMP_MATCH_FAILED)
-            tab.nick = None
         elif errorCode == errors.ERR_MESSAGE_REPLAY:
             QMessageBox.critical(self, errors.TITLE_MESSAGE_REPLAY, errors.MESSAGE_REPLAY)
         elif errorCode == errors.ERR_MESSAGE_DELETION:
@@ -223,13 +242,15 @@ class QChatWindow(QMainWindow):
                     self.statusBar.showMessage('')
                 elif payload == constants.TYPING_STOP_WITH_TEXT:
                     self.statusBar.showMessage("%s has entered text" % sourceNick)
+        elif command == constants.COMMAND_SMP_0:
+            print('got request for smp in tab %d' % (tabIndex))
         else:
             tab.appendMessage(payload, constants.RECEIVER)
 
             # Update the unread message count if the message is not intended for the currently selected tab
             if tabIndex != self.chatTabs.currentIndex():
                 tab.unreadCount += 1
-                self.chatTabs.setTabText(tabIndex, tab.nick + (" (%d)" % tab.unreadCount))
+                self.chatTabs.setTabText(tabIndex, "%s (%d)" % (tab.nick, tab.unreadCount))
             else:
                 # Clear the typing status if the current tab
                 self.statusBar.showMessage('')
@@ -287,16 +308,18 @@ class QChatWindow(QMainWindow):
 
 
     def __setMenubar(self):
-        newChatIcon     = QIcon(qtUtils.getAbsoluteImagePath('new_chat.png'))
-        helpIcon        = QIcon(qtUtils.getAbsoluteImagePath('help.png'))
-        exitIcon        = QIcon(qtUtils.getAbsoluteImagePath('exit.png'))
-        menuIcon        = QIcon(qtUtils.getAbsoluteImagePath('menu.png'))
+        newChatIcon = QIcon(qtUtils.getAbsoluteImagePath('new_chat.png'))
+        helpIcon    = QIcon(qtUtils.getAbsoluteImagePath('help.png'))
+        exitIcon    = QIcon(qtUtils.getAbsoluteImagePath('exit.png'))
+        menuIcon    = QIcon(qtUtils.getAbsoluteImagePath('menu.png'))
 
-        newChatAction      = QAction(newChatIcon, '&New chat', self)
-        helpAction         = QAction(helpIcon, 'Show &help', self)
-        exitAction         = QAction(exitIcon, '&Exit', self)
+        newChatAction  = QAction(newChatIcon, '&New chat', self)
+        authChatAction = QAction(newChatIcon, '&Authenticate chat', self)
+        helpAction     = QAction(helpIcon, 'Show &help', self)
+        exitAction     = QAction(exitIcon, '&Exit', self)
 
         newChatAction.triggered.connect(lambda: self.addNewTab())
+        authChatAction.triggered.connect(self.__showAuthDialog)
         helpAction.triggered.connect(self.__showHelpDialog)
         exitAction.triggered.connect(self.__exit)
 
@@ -307,6 +330,7 @@ class QChatWindow(QMainWindow):
         optionsMenu = QMenu()
 
         optionsMenu.addAction(newChatAction)
+        optionsMenu.addAction(authChatAction)
         optionsMenu.addAction(helpAction)
         optionsMenu.addAction(exitAction)
 
@@ -329,6 +353,22 @@ class QChatWindow(QMainWindow):
         toolbar.addWidget(newChatButton)
         toolbar.addWidget(exitButton)
         self.addToolBar(Qt.LeftToolBarArea, toolbar)
+
+
+    def __showAuthDialog(self):
+        client = self.connectionManager.getClient(self.chatTabs.currentWidget().nick)
+
+        if client is None:
+            QMessageBox.information(self, "Not Available", "You must be chatting with someone before you can authenticate the connection.")
+            return
+
+        try:
+            question, answer, clickedButton = QSMPInitiateDialog.getQuestionAndAnswer()
+        except AttributeError:
+            QMessageBox.information(self, "Not Available", "Encryption keys are not available until you are chatting with someone")
+
+        if clickedButton == constants.BUTTON_OKAY:
+            client.initiateSMP(str(question), str(answer))
 
 
     def __showHelpDialog(self):

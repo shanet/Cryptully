@@ -30,6 +30,7 @@ class QNickInputWidget(QWidget):
         self.nickEdit = QLineEdit(nick, self)
         self.nickEdit.setMaxLength(constants.NICK_MAX_LEN)
         self.nickEdit.returnPressed.connect(self.__connectClicked)
+        self.nickEdit.setFocus()
 
         # Connect button
         self.connectButton = QPushButton("Connect", self)

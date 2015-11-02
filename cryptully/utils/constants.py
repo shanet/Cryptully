@@ -20,17 +20,37 @@ COMMAND_HELO       = "HELO"
 COMMAND_REDY       = "REDY"
 COMMAND_REJECT     = "REJ"
 COMMAND_PUBLIC_KEY = "PUB_KEY"
-COMMAND_SMP_1      = "SMP1"
-COMMAND_SMP_2      = "SMP2"
-COMMAND_SMP_3      = "SMP3"
-COMMAND_SMP_4      = "SMP4"
 
 # Loop commands
 COMMAND_MSG        = "MSG"
 COMMAND_TYPING     = "TYPING"
 COMMAND_END        = "END"
 COMMAND_ERR        = "ERR"
-LOOP_COMMANDS      = [COMMAND_MSG, COMMAND_TYPING, COMMAND_END, COMMAND_ERR]
+COMMAND_SMP_0      = "SMP0"
+COMMAND_SMP_1      = "SMP1"
+COMMAND_SMP_2      = "SMP2"
+COMMAND_SMP_3      = "SMP3"
+COMMAND_SMP_4      = "SMP4"
+
+SMP_COMMANDS = [
+  COMMAND_SMP_0,
+  COMMAND_SMP_1,
+  COMMAND_SMP_2,
+  COMMAND_SMP_3,
+  COMMAND_SMP_4,
+]
+
+LOOP_COMMANDS = [
+  COMMAND_MSG,
+  COMMAND_TYPING,
+  COMMAND_END,
+  COMMAND_ERR,
+  COMMAND_SMP_0,
+  COMMAND_SMP_1,
+  COMMAND_SMP_2,
+  COMMAND_SMP_3,
+  COMMAND_SMP_4,
+]
 
 # Message sources
 SENDER   = 0
@@ -53,5 +73,9 @@ REJECT = 1
 
 CONNECT = 0
 WAIT    = 1
+
+SMP_CALLBACK_REQUEST = 0
+SMP_CALLBACK_COMPLETE = 1
+SMP_CALLBACK_ERROR = 2
 
 URL_REGEX = r"(?i)\b((?:[a-z][\w-]+:(?:/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?]))"

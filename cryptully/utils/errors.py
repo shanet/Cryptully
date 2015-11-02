@@ -45,7 +45,7 @@ FAILED_TO_ACCEPT_CLIENT     = "Error accepting client connection"
 FAILED_TO_CONNECT           = "Error connecting to server"
 CLIENT_ENDED_CONNECTION     = "The client requested to end the connection"
 INVALID_NICK_CONTENT        = "Sorry, nicknames can only contain numbers and letters"
-INVALID_NICK_LENGTH         = "Sorry, nicknames must be less than " + str(constants.NICK_MAX_LEN) + " characters"
+INVALID_NICK_LENGTH         = "Sorry, nicknames must be less than %d characters" % constants.NICK_MAX_LEN
 NICK_NOT_FOUND              = "%s is not connected to the server"
 CONNECTION_REJECTED         = "%s rejected your connection"
 PROTOCOL_ERROR              = "%s sent unexpected data"
@@ -62,8 +62,8 @@ BAD_HMAC                    = "Warning: Automatic data integrity check failed. S
 BAD_DECRYPT                 = "Unable to decrypt incoming message. This usually happens when the client sends malformed data."
 NICK_IN_USE                 = "Sorry, someone else is already using that nickname"
 KICKED                      = "You have been kicked off the server"
-SMP_MATCH_FAILED            = "Warning: Man-in-the-middle attack detected. Someone may be attempting to eavesdrop on your conversation."
-MESSAGE_REPLAY              = "Warning: Old message recieved multiple times. Someone may be tampering with your conversation." 
+SMP_MATCH_FAILED            = "Chat authentication failed. Either your buddy provided the wrong answer to the question or someone may be attempting to eavesdrop on your conversation. Note that answers are case sensitive."
+MESSAGE_REPLAY              = "Warning: Old message recieved multiple times. Someone may be tampering with your conversation."
 MESSAGE_DELETION            = "Warning: Message deletion detected. Someone may be tampering with your conversation."
 
 # Error codes

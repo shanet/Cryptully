@@ -12,13 +12,13 @@ class Crypto(object):
     dhGenerator= 5
 
     def __init__(self):
-        self.localKeypair  = None
-        self.remoteKeypair = None
-        self.aesKey        = None
-        self.aesIv         = None
-        self.aesSalt       = None
-        self.dh            = None
-        self.aesMode       = constants.DEFAULT_AES_MODE
+        self.localKeypair   = None
+        self.remoteKeypair  = None
+        self.aesKey         = None
+        self.aesIv          = None
+        self.aesSalt        = None
+        self.dh             = None
+        self.aesMode        = constants.DEFAULT_AES_MODE
 
 
     def generateKeys(self, rsaBits=2048, aesMode=constants.DEFAULT_AES_MODE):
@@ -128,6 +128,17 @@ class Crypto(object):
         return hex(self.__octx_to_num(digest))[2:-1].upper()
 
 
+    def mapStringToInt(self, string):
+        num = 0
+        shift = 0
+
+        for char in reversed(string):
+          num |= ord(char) << shift
+          shift += 8
+
+        return num
+
+
     def readLocalKeypairFromFile(self, file, passphrase):
         self._keypairPassphrase = passphrase
         try:
@@ -176,12 +187,10 @@ class Crypto(object):
 
 
     def getLocalFingerprint(self):
-        self.__checkLocalKeypair()
         return self.__generateFingerprint(self.getLocalPubKeyAsString())
 
 
     def getRemoteFingerprint(self):
-        self.__checkRemoteKeypair()
         return self.__generateFingerprint(self.getRemotePubKeyAsString())
 
 
@@ -228,7 +237,7 @@ class Crypto(object):
         return self._keypairPassphrase
 
 
-def mpiToDec(mpi): 
+def mpiToDec(mpi):
     bn = M2Crypto.m2.mpi_to_bn(mpi)
     hex = M2Crypto.m2.bn_to_hex(bn)
     return int(hex, 16)

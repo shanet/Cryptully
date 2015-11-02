@@ -11,9 +11,9 @@ class SMP(object):
         self.mod = 0xFFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E088A67CC74020BBEA63B139B22514A08798E3404DDEF9519B3CD3A431B302B0A6DF25F14374FE1356D6D51C245E485B576625E7EC6F44C42E9A637ED6B0BFF5CB6F406B7EDEE386BFB5A899FA5AE9F24117C4B1FE649286651ECE45B3DC2007CB8A163BF0598DA48361C55D39A69163FA8FD24CF5F83655D23DCA3AD961C62F356208552BB9ED529077096966D670C354E4ABC9804F1746C08CA18217C32905E462E36CE3BE39E772C180E86039B2783A2EC07A28FB5C55DF06F4C52C9DE2BCBF6955817183995497CEA956AE515D2261898FA051015728E5A8AACAA68FFFFFFFFFFFFFFFF
         self.modOrder = (self.mod-1) / 2
         self.gen = 2
-        self.secret = secret
         self.match = False
         self.crypto = crypto.Crypto()
+        self.secret = self.crypto.mapStringToInt(secret)
 
 
     def step1(self):
@@ -77,7 +77,7 @@ class SMP(object):
 
         if not self.checkLogProof('3', g2b, c3, d3):
             raise exceptions.CryptoError("Proof 3 check failed", errors.ERR_SMP_CHECK_FAILED)
-            
+
         if not self.checkLogProof('4', g3b, c4, d4):
             raise exceptions.CryptoError("Proof 4 check failed", errors.ERR_SMP_CHECK_FAILED)
 
@@ -183,7 +183,6 @@ class SMP(object):
 
     def checkCoordsProof(self, version, c, d1, d2, g2, g3, p, q):
         tmp1 = mulm(pow(g3, d1, self.mod), pow(p, c, self.mod), self.mod)
-
         tmp2 = mulm(mulm(pow(self.gen, d1, self.mod), pow(g2, d2, self.mod), self.mod), pow(q, c, self.mod), self.mod)
 
         cprime = self.hash(version + str(tmp1) + str(tmp2))
@@ -206,10 +205,10 @@ class SMP(object):
 
     def checkEqualLogs(self, version, c, d, g3, qab, r):
         tmp1 = mulm(pow(self.gen, d, self.mod), pow(g3, c, self.mod), self.mod)
-
         tmp2 = mulm(pow(qab, d, self.mod), pow(r, c, self.mod), self.mod)
 
         cprime = self.hash(version + str(tmp1) + str(tmp2))
+
         return (c == cprime)
 
 
