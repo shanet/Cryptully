@@ -29,6 +29,7 @@ class CursesDialog:
 
         # Determine the max width of the dialog window
         dialogWidth = max(len(self.title), len(self.message), len(exitMessage)) + 2
+
         if self.title:
             dialogHeight = 7
         elif self.isError or self.isBlocking:

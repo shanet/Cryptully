@@ -35,6 +35,8 @@ class NcursesUI(object):
         self.inRecveiveLoop     = False
         self.clientConnectError = False
         self.messageQueue       = Queue.Queue()
+        self.connectionManager  = None
+        self.sendThread         = None
 
         self.errorRaised     = threading.Event()
         self.dialogDismissed = threading.Condition()
@@ -46,7 +48,7 @@ class NcursesUI(object):
 
 
     def stop(self):
-        if hasattr(self, 'connectionManager'):
+        if self.connectionManager is not None:
             self.connectionManager.disconnectFromServer()
 
         # Give the send thread time to get the disconnect messages out before exiting
@@ -54,6 +56,7 @@ class NcursesUI(object):
         time.sleep(.25)
 
         curses.endwin()
+
 
     def __restart(self):
         self.__drawUI()
@@ -124,7 +127,7 @@ class NcursesUI(object):
 
     def __connectToServer(self):
         # Create the connection manager to manage all communication to the server
-        self.connectionManager = ConnectionManager(self.nick, (self.turn, self.port), self.postMessage, self.newClient, self.clientReady, self.handleError)
+        self.connectionManager = ConnectionManager(self.nick, (self.turn, self.port), self.postMessage, self.newClient, self.clientReady, self.smpRequest, self.handleError)
 
         dialogWindow = CursesDialog(self.screen, "Connecting to server...", "", False)
         dialogWindow.show()
@@ -135,7 +138,7 @@ class NcursesUI(object):
             dialogWindow.hide()
             CursesDialog(self.screen, str(ge), "Error connecting to server", isError=True, isFatal=True, isBlocking=True).show()
             self.__quitApp()
-        
+
         dialogWindow.hide()
 
 
@@ -200,7 +203,7 @@ class NcursesUI(object):
         if self.connectedNick is not None or self.mode != constants.WAIT:
             self.connectionManager.newClientRejected(nick)
             return
-        
+
         self.waitingDialog.hide()
 
         # Show the accept dialog
@@ -226,7 +229,7 @@ class NcursesUI(object):
         self.screen.refresh()
 
         # Show the now chatting message
-        self.appendMessage('', "Now chatting with " + self.connectedNick, curses.color_pair(0))
+        self.appendMessage('', "Now chatting with %s" % self.connectedNick, curses.color_pair(0))
 
         self.sendThread = CursesSendThread(self)
         self.sendThread.start()
@@ -241,11 +244,26 @@ class NcursesUI(object):
         self.clientConnected.release()
 
 
+    def smpRequest(self, type, nick, question='', errno=0):
+        if type == constants.SMP_CALLBACK_REQUEST:
+            # Set the SMP request event and pump the message queue to fire it in the UI thread
+            self.appendMessage("Chat authentication request (case senstitive):", ' ' + question, curses.color_pair(4))
+            self.sendThread.smpRequested.set()
+        elif type == constants.SMP_CALLBACK_COMPLETE:
+            CursesDialog(self.screen, "Chat with %s authenticated successfully." % nick, isBlocking=True).show()
+        elif type == constants.SMP_CALLBACK_ERROR:
+            self.handleError(nick, errno)
+
+
+    def setSmpAnswer(self, answer):
+        self.connectionManager.respondSMP(self.connectedNick, answer)
+
+
     def handleError(self, nick, errorCode):
         # Stop the send thread after the user presses enter if it is running
         clientConnectError = False
         waiting = False
-        if hasattr(self, 'sendThread'):
+        if self.sendThread is not None:
             waiting = True
             self.sendThread.stop.set()
 
@@ -282,7 +300,7 @@ class NcursesUI(object):
         elif errorCode == errors.ERR_SMP_CHECK_FAILED:
             dialog = CursesDialog(self.screen, errors.PROTOCOL_ERROR, errors.TITLE_PROTOCOL_ERROR, isError=True)
         elif errorCode == errors.ERR_SMP_MATCH_FAILED:
-            dialog = CursesDialog(self.screen, errors.SMP_MATCH_FAILED, errors.TITLE_SMP_MATCH_FAILED, isError=True)
+            dialog = CursesDialog(self.screen, errors.SMP_MATCH_FAILED_SHORT, errors.TITLE_SMP_MATCH_FAILED, isError=True)
         elif errorCode == errors.ERR_MESSAGE_REPLAY:
             dialog = CursesDialog(self.screen, errors.MESSAGE_REPLAY, errors.TITLE_MESSAGE_REPLAY, isError=True)
         elif errorCode == errors.ERR_MESSAGE_DELETION:
@@ -346,7 +364,7 @@ class NcursesUI(object):
 
 
     def showOptionsMenuWindow(self):
-        numMenuEntires = 4
+        numMenuEntires = 5
         menuWindow = self.screen.subwin(numMenuEntires+2, 34, 3, self.width/2 - 14)
 
         # Enable arrow key detection for this window
@@ -363,13 +381,15 @@ class NcursesUI(object):
 
             while True:
                 item = 1
-                menuWindow.addstr(item, 1, str(item) + ".| End current chat", curses.color_pair(4) if pos == item else curses.color_pair(1))
+                menuWindow.addstr(item, 1, str(item) + ".| End current chat ", curses.color_pair(4) if pos == item else curses.color_pair(1))
                 item += 1
-                menuWindow.addstr(item, 1, str(item) + ".| Show help       ", curses.color_pair(4) if pos == item else curses.color_pair(1))
+                menuWindow.addstr(item, 1, str(item) + ".| Authenticate chat", curses.color_pair(4) if pos == item else curses.color_pair(1))
                 item += 1
-                menuWindow.addstr(item, 1, str(item) + ".| Close menu      ", curses.color_pair(4) if pos == item else curses.color_pair(1))
+                menuWindow.addstr(item, 1, str(item) + ".| Show help        ", curses.color_pair(4) if pos == item else curses.color_pair(1))
                 item += 1
-                menuWindow.addstr(item, 1, str(item) + ".| Quit application", curses.color_pair(4) if pos == item else curses.color_pair(1))
+                menuWindow.addstr(item, 1, str(item) + ".| Close menu       ", curses.color_pair(4) if pos == item else curses.color_pair(1))
+                item += 1
+                menuWindow.addstr(item, 1, str(item) + ".| Quit application ", curses.color_pair(4) if pos == item else curses.color_pair(1))
 
                 menuWindow.refresh()
                 key = menuWindow.getch()
@@ -394,12 +414,21 @@ class NcursesUI(object):
                 menuWindow.refresh()
                 self.__restart()
             elif pos == 2:
-                CursesDialog(self.screen, "Read the docs at https://cryptully.readthedocs.org/en/latest/", isBlocking=True).show()
+                if self.connectionManager is None:
+                    CursesDialog(self.screen, "Chat authentication is not available until you are chatting with someone.", isBlocking=True).show()
+                    return
+
+                question = CursesInputDialog(self.screen, "Question: ").show()
+                answer = CursesInputDialog(self.screen, "Answer (case senstitive): ").show()
+
+                self.connectionManager.getClient(self.connectedNick).initiateSMP(question, answer)
             elif pos == 3:
+                CursesDialog(self.screen, "Read the docs at https://cryptully.readthedocs.org/en/latest/", isBlocking=True).show()
+            elif pos == 4:
                 # Move the cursor back to the chat input textbox
                 self.textboxWindow.move(0, 0)
                 break
-            elif pos == 4:
+            elif pos == 5:
                 os.kill(os.getpid(), signal.SIGINT)
 
         # Re-enable the cursor

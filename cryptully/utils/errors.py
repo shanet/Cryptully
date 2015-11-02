@@ -63,6 +63,7 @@ BAD_DECRYPT                 = "Unable to decrypt incoming message. This usually 
 NICK_IN_USE                 = "Sorry, someone else is already using that nickname"
 KICKED                      = "You have been kicked off the server"
 SMP_MATCH_FAILED            = "Chat authentication failed. Either your buddy provided the wrong answer to the question or someone may be attempting to eavesdrop on your conversation. Note that answers are case sensitive."
+SMP_MATCH_FAILED_SHORT      = "Chat authentication failed. Note that answers are case sensitive."
 MESSAGE_REPLAY              = "Warning: Old message recieved multiple times. Someone may be tampering with your conversation."
 MESSAGE_DELETION            = "Warning: Message deletion detected. Someone may be tampering with your conversation."
 
