@@ -35,6 +35,7 @@ class ConnectionManager(object):
         self.sock.connect()
         self.sendThread.start()
         self.recvThread.start()
+        self.__sendProtocolVersion()
         self.__registerNick()
 
 
@@ -93,6 +94,10 @@ class ConnectionManager(object):
             return self.clients[nick]
         except KeyError:
             return None
+
+
+    def __sendProtocolVersion(self):
+        self.__sendServerCommand(constants.COMMAND_VERSION, constants.PROTOCOL_VERSION)
 
 
     def __registerNick(self):

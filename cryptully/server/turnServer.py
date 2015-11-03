@@ -247,31 +247,51 @@ class RecvThread(Thread):
 
 
     def run(self):
-        # The first communcation with the client is registering a nick
+        # The client should send the protocol version its using first
         try:
             message = Message.createFromJSON(self.sock.recv())
         except KeyError:
-            printAndLog(str(self.sock) + ": send a command with missing JSON fields")
+            printAndLog("%s: send a command with missing JSON fields" % self.sock)
+            self.__handleError(errors.ERR_INVALID_COMMAND)
+            return
+
+        # Check that the client sent the version command
+        if message.serverCommand != constants.COMMAND_VERSION:
+            printAndLog("%s: did not send version command" % self.sock)
+            self.__handleError(errors.ERR_INVALID_COMMAND)
+            return
+
+        # Check the protocol versions match
+        if message.payload != constants.PROTOCOL_VERSION:
+            printAndLog("%s: is using a mismatched protocol version" % self.sock)
+            self.__handleError(errors.ERR_PROTOCOL_VERSION_MISMATCH)
+            return
+
+        # The client should then register a nick
+        try:
+            message = Message.createFromJSON(self.sock.recv())
+        except KeyError:
+            printAndLog("%s: send a command with missing JSON fields" % self.sock)
             self.__handleError(errors.ERR_INVALID_COMMAND)
             return
 
         # Check that the client sent the register command
         if message.serverCommand != constants.COMMAND_REGISTER:
-            printAndLog(str(self.sock) + ": did not register a nick")
+            printAndLog("%s: did not register a nick" % self.sock)
             self.__handleError(errors.ERR_INVALID_COMMAND)
             return
 
         # Check that the nick is valid
         self.nick = message.sourceNick
         if utils.isValidNick(self.nick) != errors.VALID_NICK:
-            printAndLog(str(self.sock) + ": tried to register an invalid nick")
+            printAndLog("%s: tried to register an invalid nick" % self.sock)
             self.__handleError(errors.ERR_INVALID_NICK)
             return
 
         # Check that the nick is not already in use
         self.nick = self.nick.lower()
         if self.nick in nickMap:
-            printAndLog(str(self.sock) + ": tried to register an in-use nick")
+            printAndLog("%s: tried to register an in-use nick" % self.sock)
             self.__handleError(errors.ERR_NICK_IN_USE)
             return
 
@@ -282,16 +302,16 @@ class RecvThread(Thread):
                 try:
                     message = Message.createFromJSON(self.sock.recv())
                 except KeyError:
-                    printAndLog(str(self.sock) + ": send a command with missing JSON fields")
+                    printAndLog("%s: send a command with missing JSON fields" % self.sock)
                     self.__handleError(errors.ERR_INVALID_COMMAND)
                     return
 
                 if message.serverCommand == constants.COMMAND_END:
-                    printAndLog(self.nick + ": requested to end connection")
+                    printAndLog("%s: requested to end connection" % self.nick)
                     nickMap[self.nick].disconnect()
                     return
                 elif message.serverCommand != constants.COMMAND_RELAY:
-                    printAndLog(self.nick + ": sent invalid command")
+                    printAndLog("%s: sent invalid command" % self.nick)
                     self.__handleError(errors.ERR_INVALID_COMMAND)
                     return
 
@@ -299,7 +319,7 @@ class RecvThread(Thread):
                     destNick = message.destNick
                     # Validate the destination nick
                     if utils.isValidNick(destNick) != errors.VALID_NICK:
-                        printAndLog(self.nick + ": requested to send message to invalid nick")
+                        printAndLog("%s: requested to send message to invalid nick" % self.nick)
                         self.__handleError(errors.ERR_INVALID_NICK)
 
                     client = nickMap[destNick.lower()]
@@ -309,11 +329,11 @@ class RecvThread(Thread):
 
                     client.send(message)
                 except KeyError:
-                    printAndLog(self.nick + ": sent message to non-existant nick")
+                    printAndLog("%s: sent message to non-existant nick" % self.nick)
                     self.sock.send(str(Message(serverCommand=constants.COMMAND_ERR, destNick=message.destNick, error=errors.ERR_NICK_NOT_FOUND)))
             except Exception as e:
                 if hasattr(e, 'errno') and e.errno != errors.ERR_CLOSED_CONNECTION:
-                    printAndLog(self.nick + ": error receiving from: " + str(e))
+                    printAndLog("%s: error receiving from: %s" % (self.nick, str(e)))
 
                 if self.nick in nickMap:
                     nickMap[self.nick].disconnect()

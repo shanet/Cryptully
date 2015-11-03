@@ -200,8 +200,8 @@ class Client(Thread):
                 raise exceptions.ProtocolError(errno=errors.ERR_BAD_HANDSHAKE)
 
         payload = self.__getDecryptedPayload(message)
-
         self.messageQueue.task_done()
+
         return payload
 
 

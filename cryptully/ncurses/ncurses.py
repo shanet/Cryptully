@@ -305,6 +305,8 @@ class NcursesUI(object):
             dialog = CursesDialog(self.screen, errors.MESSAGE_REPLAY, errors.TITLE_MESSAGE_REPLAY, isError=True)
         elif errorCode == errors.ERR_MESSAGE_DELETION:
             dialog = CursesDialog(self.screen, errors.MESSAGE_DELETION, errors.TITLE_MESSAGE_DELETION, isError=True)
+        elif errorCode == errors.ERR_PROTOCOL_VERSION_MISMATCH:
+            dialog = CursesDialog(self.screen, errors.PROTOCOL_VERSION_MISMATCH, errors.TITLE_PROTOCOL_VERSION_MISMATCH, isError=True, isFatal=True)
         else:
             dialog = CursesDialog(self.screen, errors.UNKNOWN_ERROR % (nick), errors.TITLE_UNKNOWN_ERROR, isError=True)
 

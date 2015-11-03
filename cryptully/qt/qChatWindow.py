@@ -161,12 +161,12 @@ class QChatWindow(QMainWindow):
                 QMessageBox.critical(self, errors.TITLE_SMP_MATCH_FAILED, errors.SMP_MATCH_FAILED)
 
 
-    def handleError(self, nick, errorCode):
-        self.handleErrorSignal.emit(nick, errorCode)
+    def handleError(self, nick, errno):
+        self.handleErrorSignal.emit(nick, errno)
 
 
     @pyqtSlot(str, int)
-    def handleErrorSlot(self, nick, errorCode):
+    def handleErrorSlot(self, nick, errno):
         # If no nick was given, disable all tabs
         nick = str(nick)
         if nick == '':
@@ -178,41 +178,44 @@ class QChatWindow(QMainWindow):
             except:
                 self.__disableAllTabs()
 
-        if errorCode == errors.ERR_CONNECTION_ENDED:
+        if errno == errors.ERR_CONNECTION_ENDED:
             QMessageBox.warning(self, errors.TITLE_CONNECTION_ENDED, errors.CONNECTION_ENDED % (nick))
-        elif errorCode == errors.ERR_NICK_NOT_FOUND:
+        elif errno == errors.ERR_NICK_NOT_FOUND:
             QMessageBox.information(self, errors.TITLE_NICK_NOT_FOUND, errors.NICK_NOT_FOUND % (nick))
             tab.nick = None
-        elif errorCode == errors.ERR_CONNECTION_REJECTED:
+        elif errno == errors.ERR_CONNECTION_REJECTED:
             QMessageBox.warning(self, errors.TITLE_CONNECTION_REJECTED, errors.CONNECTION_REJECTED % (nick))
             tab.nick = None
-        elif errorCode == errors.ERR_BAD_HANDSHAKE:
+        elif errno == errors.ERR_BAD_HANDSHAKE:
             QMessageBox.warning(self, errors.TITLE_PROTOCOL_ERROR, errors.PROTOCOL_ERROR % (nick))
-        elif errorCode == errors.ERR_CLIENT_EXISTS:
+        elif errno == errors.ERR_CLIENT_EXISTS:
             QMessageBox.information(self, errors.TITLE_CLIENT_EXISTS, errors.CLIENT_EXISTS % (nick))
-        elif errorCode == errors.ERR_SELF_CONNECT:
+        elif errno == errors.ERR_SELF_CONNECT:
             QMessageBox.warning(self, errors.TITLE_SELF_CONNECT, errors.SELF_CONNECT)
-        elif errorCode == errors.ERR_SERVER_SHUTDOWN:
+        elif errno == errors.ERR_SERVER_SHUTDOWN:
             QMessageBox.critical(self, errors.TITLE_SERVER_SHUTDOWN, errors.SERVER_SHUTDOWN)
-        elif errorCode == errors.ERR_ALREADY_CONNECTED:
+        elif errno == errors.ERR_ALREADY_CONNECTED:
             QMessageBox.information(self, errors.TITLE_ALREADY_CONNECTED, errors.ALREADY_CONNECTED % (nick))
-        elif errorCode == errors.ERR_INVALID_COMMAND:
+        elif errno == errors.ERR_INVALID_COMMAND:
             QMessageBox.warning(self, errors.TITLE_INVALID_COMMAND, errors.INVALID_COMMAND % (nick))
-        elif errorCode == errors.ERR_NETWORK_ERROR:
+        elif errno == errors.ERR_NETWORK_ERROR:
             QMessageBox.critical(self, errors.TITLE_NETWORK_ERROR, errors.NETWORK_ERROR)
-        elif errorCode == errors.ERR_BAD_HMAC:
+        elif errno == errors.ERR_BAD_HMAC:
             QMessageBox.critical(self, errors.TITLE_BAD_HMAC, errors.BAD_HMAC)
-        elif errorCode == errors.ERR_BAD_DECRYPT:
+        elif errno == errors.ERR_BAD_DECRYPT:
             QMessageBox.warning(self, errors.TITLE_BAD_DECRYPT, errors.BAD_DECRYPT)
-        elif errorCode == errors.ERR_KICKED:
+        elif errno == errors.ERR_KICKED:
             QMessageBox.critical(self, errors.TITLE_KICKED, errors.KICKED)
-        elif errorCode == errors.ERR_NICK_IN_USE:
+        elif errno == errors.ERR_NICK_IN_USE:
             QMessageBox.warning(self, errors.TITLE_NICK_IN_USE, errors.NICK_IN_USE)
             self.restartCallback()
-        elif errorCode == errors.ERR_MESSAGE_REPLAY:
+        elif errno == errors.ERR_MESSAGE_REPLAY:
             QMessageBox.critical(self, errors.TITLE_MESSAGE_REPLAY, errors.MESSAGE_REPLAY)
-        elif errorCode == errors.ERR_MESSAGE_DELETION:
+        elif errno == errors.ERR_MESSAGE_DELETION:
             QMessageBox.critical(self, errors.TITLE_MESSAGE_DELETION, errors.MESSAGE_DELETION)
+        elif errno == errors.ERR_PROTOCOL_VERSION_MISMATCH:
+            QMessageBox.critical(self, errors.TITLE_PROTOCOL_VERSION_MISMATCH, errors.PROTOCOL_VERSION_MISMATCH)
+            self.restartCallback()
         else:
             QMessageBox.warning(self, errors.TITLE_UNKNOWN_ERROR, errors.UNKNOWN_ERROR % (nick))
 
