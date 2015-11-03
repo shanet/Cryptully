@@ -29,23 +29,49 @@ Let's run through the process of connecting with a friend.
 
 .. image:: images/new_chat.png
 
-4. If the connection was succesful, the person being connected to will see a dialog asking to accept
+4. If the connection was successful, the person being connected to will see a dialog asking to accept
    or reject the connection.
 
 .. image:: images/accept_dialog.png
 
-6. Upon accepting the connection, both people are chatting securely!
+5. Upon accepting the connection, both people are chatting securely!
 
 .. image:: images/chatting.png
+
+-------------------
+Chat Authentication
+-------------------
+
+In order to verify the person you're chatting with is not an impersonator and that no one is
+eavesdropping on your conversation, |project| uses a secret question and answer method.
+
+To authenticate a chat session:
+
+1. When chatting, select "Authenticate Chat" from the options menu.
+
+.. image:: images/options_menu.png
+
+2. Enter a question and answer that only you are your buddy knows the answer to. Note that the answer is case sensitive.
+
+.. image:: images/smp_request_dialog.png
+
+3. Your buddy will then have a window open that allows the answer to the given question to be entered.
+
+.. image:: images/smp_response_dialog.png
+
+4. If your buddy entered the same answer as you, the chat will be successfully authenticated. A failure to
+   authenticate means either the wrong answer was entered or someone is listening in on your conversation.
+
+.. image:: images/smp_success.png
 
 -------------------------------
 Command Line Options (advanced)
 -------------------------------
 
-Advanced users may utilize command line options of |project|::
+Advanced users may utilize command line options of |project|:
 
   usage: cryptully.py [-h] [-k [NICK]] [-r [TURN]] [-p [PORT]] [-s] [-n]
-  
+
   optional arguments:
     -h, --help            show this help message and exit
     -k [NICK], --nick [NICK]
@@ -65,5 +91,5 @@ Running Your Own Server (advanced)
 
 If you don't want to use the default relay server, you can host your own.
 
-This is as easy as downloading a pre-built binary, or getting the source and running Cryptully with
+This is as easy as downloading a pre-built binary, or getting the source and running |project| with
 the ``--server`` command line argument.

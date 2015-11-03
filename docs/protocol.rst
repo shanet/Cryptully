@@ -36,6 +36,7 @@ List of All Commands
 Server Commands
 ^^^^^^^^^^^^^^^
 
+* ``VERSION``: Tell the server what protocol version the client is using
 * ``REG``: Register a nickname with the server
 * ``REL``: Relay a message to the client as specified in the ``destClient`` field
 
@@ -47,12 +48,13 @@ Client Commands
 * ``REDY``: The client is ready to initiate a handshake
 * ``REJ``: If the client rejected a connection from another client
 * ``PUB_KEY [arg]``
+* ``SMP0 [arg]``: The question the SMP initiator is asking
 * ``SMP1 [arg]``
 * ``SMP2 [arg]``
 * ``SMP3 [arg]``
 * ``SMP4 [arg]``
-* ``MSG [arg]``
-* ``TYPING [arg]``
+* ``MSG [arg]``: The user has sent a chat message
+* ``TYPING [arg]``: The user is currently typing or has stopped typing
 * ``END``
 * ``ERR``
 
@@ -87,8 +89,27 @@ The Socialist Millionaire Protocol (SMP) is a method for determining whether two
 but without exchanging the secret itself. In |project|'s case, it is used to determine whether a MITM
 attack has occurred or is occurring and compromised the Diffie-Hellman key exchange protocol.
 
-The SMP is relatively complex so it is best to defer to the documentation of it's implementation
+The innards of the SMP is relatively complex so it is best to defer to the documentation of it's implementation
 as defined in the Off-The-Record (OTR) protocol version 3.
+
+|project|'s implementation uses the following commands:
+
++--------+---------+--------+
+|Client A|direction|Client B|
++========+=========+========+
+|        |   <-    |SMP0    |
++--------+---------+--------+
+|        |   <-    |SMP1    |
++--------+---------+--------+
+|SMP2    |   ->    |        |
++--------+---------+--------+
+|        |   <-    |SMP3    |
++--------+---------+--------+
+|SMP4    |   ->    |        |
++--------+---------+--------+
+
+``SMP0`` contains the question the initiator is asking. The remaining commands may be sent at any time, as long as they are
+completed in order and another SMP request is not started before the previous one is completed.
 
 -----------------
 Handshake Details
@@ -109,14 +130,7 @@ The commands in the handshake must be performed in the following order:
 +--------+---------+--------+
 |(switch to AES encryption) |
 +--------+---------+--------+
-|        |   <-    |SMP1    |
-+--------+---------+--------+
-|SMP2    |   ->    |        |
-+--------+---------+--------+
-|        |   <-    |SMP3    |
-+--------+---------+--------+
-|SMP4    |   ->    |        |
-+--------+---------+--------+
+
 
 The client may reject a connection with the ``REJ`` command instead of sending the ``REDY`` command.
 
