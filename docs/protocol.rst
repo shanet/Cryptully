@@ -73,8 +73,7 @@ command. The ``TYPING`` command takes one of three possible arguments:
 Encryption Details
 ------------------
 
-* 2048-bit prime is used to generate and exchange a shared secret via Diffie-Hellman.
-* The Socialist Millionaire protocol (as defined by Off-The-Record) is used to verify the Diffie-Hellman secret.
+* 4096-bit prime is used to generate and exchange a shared secret via Diffie-Hellman.
 * An AES key is the first 32 bytes of the SHA512 digest of the Diffie-Hellman secret. The IV last 32 bytes of this hash.
 * All AES operations are with a 256-bit key in CBC mode.
 * HMAC's are the SHA256 digest of the AES key and the encrypted message payload. The receiver calculates
