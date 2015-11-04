@@ -19,7 +19,7 @@ though. The core dependencies are:
 * Python 2.7
 * PyQt4
 * M2Crypto
-* PyInstaller (only if you want to build a binary, otherwise it is not needed)
+* PyInstaller 2 (only if you want to build a binary, otherwise it is not needed)
 
 Depending what platform you're building on, you'll need a few more things, but those are documented
 in the relevant sections below.

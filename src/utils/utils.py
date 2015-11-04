@@ -30,13 +30,13 @@ def getAbsoluteResourcePath(relativePath):
         # If not running as a PyInstaller created binary, try to find the data file as
         # an installed Python egg
         try:
-            basePath = os.path.dirname(sys.modules['cryptully'].__file__)
+            basePath = os.path.dirname(sys.modules['src'].__file__)
         except Exception:
             basePath = ''
 
         # If the egg path does not exist, assume we're running as non-packaged
         if not os.path.exists(os.path.join(basePath, relativePath)):
-            basePath = 'cryptully'
+            basePath = 'src'
 
     path = os.path.join(basePath, relativePath)
 
@@ -49,7 +49,7 @@ def getAbsoluteResourcePath(relativePath):
 
 def secureStrcmp(left, right):
     equal = True
-    
+
     if len(left) != len(right):
         equal = False
 

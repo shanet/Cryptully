@@ -37,6 +37,7 @@ if arg == 'dist':
         pyinstallerPath = sys.argv[2]
     else:
         pyinstallerPath = raw_input("Path to pyinstaller: ")
+
     clean()
     subprocess.call(['python2', os.path.join(pyinstallerPath, 'pyinstaller.py'), 'cryptully.spec'])
 
@@ -54,11 +55,11 @@ elif arg == 'source':
     subprocess.call(['python2', 'setup.py', 'sdist'])
 
 elif arg == 'run':
-    subprocess.call(['python2', os.path.join('cryptully', 'cryptully.py')])
+    subprocess.call(['python2', os.path.join('src', 'cryptully.py')])
 
 elif arg == 'test':
     # Carry the exit code from the tests
-    exitCode = subprocess.call(['python2', os.path.join('cryptully', 'test_cryptully.py')])
+    exitCode = subprocess.call(['python2', os.path.join('src', 'test_cryptully.py')])
     sys.exit(exitCode)
 
 elif arg == 'clean':

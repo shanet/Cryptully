@@ -5,7 +5,7 @@ from setuptools import find_packages
 
 setup(
     name='Cryptully',
-    version='2.1.0',
+    version='4.1.3',
     author='Shane Tully',
     author_email='shane@shanetully.com',
     url='https://github.com/shanet/Cryptully',
