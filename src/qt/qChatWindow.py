@@ -120,6 +120,7 @@ class QChatWindow(QMainWindow):
         newTab = QChatTab(self, nick)
         self.chatTabs.addTab(newTab, nick if nick is not None else "New Chat")
         self.chatTabs.setCurrentWidget(newTab)
+        newTab.setFocus()
 
 
     def clientReady(self, nick):
