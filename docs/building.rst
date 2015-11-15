@@ -94,17 +94,18 @@ OS X
 2. Run ``$ brew doctor`` to make sure everything is okay. You'll probably need to install the
    OS X Command Line Tools.
 3. ``$ brew install python`` (OS X comes with a version of Python, but it's best to use the homebrew version)
-4. ``$ brew install pyqt``
-5. Download the relevant M2Crpyto .egg for your version of OS X from http://chandlerproject.org/Projects/MeTooCrypto#Downloads
-6. Copy the M2Crypto .egg to ``/usr/local/bin/python2.7/site-packages``
-7. Download and extract PyInstaller from http://www.pyinstaller.org **At the time of this writing
+4. If not done already, set your Python path with: ``export PYTHONPATH=/usr/local/lib/python2.7/site-packages:$PYTHONPATH``
+5. ``$ brew install pyqt``
+6. Download the relevant M2Crpyto .egg for your version of OS X from http://chandlerproject.org/Projects/MeTooCrypto#Downloads
+7. Copy the M2Crypto .egg to ``/usr/local/lib/python2.7/site-packages``
+8. Download and extract PyInstaller from http://www.pyinstaller.org **At the time of this writing
    the development version of PyInstaller must be used!** Stable version 2.0 will not work. Future stable
    versions may or may not.
 
 It's probably a good idea to do the sanity check as described in the sanity check above at this point.
 
-8. ``$ cd /path/to/cryptully/``
-9. ``$ python make.py dist /path/to/pyinstaller/``
+9. ``$ cd /path/to/cryptully/``
+10. ``$ python make.py dist /path/to/pyinstaller/``
 
 If everything went as intended, the packaged application should be in ``dist\``.
 
