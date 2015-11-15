@@ -20,16 +20,19 @@ def main():
     if args.server:
         from server.turnServer import TURNServer
         global turnServer
+
         turnServer = TURNServer(args.port)
         turnServer.start()
     elif args.ncurses:
         from ncurses.ncurses import NcursesUI
         global ncursesUI
+
         ncursesUI = NcursesUI(args.nick, args.turn, args.port)
         ncursesUI.start()
     else:
         from qt.qt import QtUI
         global qtUI
+
         qtUI = QtUI(sys.argv, args.nick, args.turn, args.port)
         qtUI.start()
 
@@ -61,6 +64,7 @@ def signalHandler(signal, frame):
         ncursesUI.stop()
     elif qtUI is not None:
         qtUI.stop()
+
     sys.exit(0)
 
 

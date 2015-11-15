@@ -7,6 +7,8 @@ import time
 
 from threading import Thread
 
+from console import Console
+
 from network.message import Message
 from network.sock import Socket
 
@@ -22,42 +24,45 @@ nickMap = {}
 # Dict for new clients that haven't registered a nick yet
 ipMap = {}
 
+quiet = False
+
+
 class TURNServer(object):
-    def __init__(self, listenPort):
+    def __init__(self, listenPort, showConsole=True):
         self.listenPort = listenPort
+
+        global quiet
+        quiet = showConsole
 
 
     def start(self):
-        global logFile
-        try:
-            logFile = open('cryptully.log', 'a')
-        except:
-            logFile = None
-            print "Error opening logfile"
+        self.openLog()
+        self.serversock = self.startServer()
 
-        Console().start()
-        serversock = self.startServer()
+        if quiet:
+            Console().start()
 
         while True:
             # Wait for a client to connect
-            #print "Waiting for client..."
-            (clientSock, clientAddr) = serversock.accept()
+            (clientSock, clientAddr) = self.serversock.accept()
 
             # Wrap the socket in our socket object
             clientSock = Socket(clientAddr, clientSock)
 
             # Store the client's IP and port in the IP map
-            printAndLog("Got connection: " + str(clientSock))
+            printAndLog("Got connection: %s" % str(clientSock))
             ipMap[str(clientSock)] = Client(clientSock)
 
 
     def startServer(self):
         printAndLog("Starting server...")
         serversock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
         try:
             serversock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             serversock.bind(('0.0.0.0', self.listenPort))
             serversock.listen(10)
+
             return serversock
         except exceptions.NetworkError as ne:
             printAndLog("Failed to start server")
@@ -66,6 +71,7 @@ class TURNServer(object):
 
     def stop(self):
         printAndLog("Requested to stop server")
+
         for nick, client in nickMap.iteritems():
             client.send(Message(serverCommand=constants.COMMAND_END, destNick=nick, error=errors.ERR_SERVER_SHUTDOWN))
 
@@ -76,103 +82,13 @@ class TURNServer(object):
             logFile.close()
 
 
-class Console(Thread):
-    def __init__(self):
-        Thread.__init__(self)
-        self.daemon = True
-
-        self.commands = {
-            'list': {
-                'callback': self.list,
-                'help': 'list\t\tlist active connections'
-            },
-            'zombies': {
-                'callback': self.zombies,
-                'help': 'zombies\t\tlist zombie connections'
-            },
-            'kick': {
-                'callback': self.kick,
-                'help': 'kick [nick]\tkick the given nick from the server'
-            },
-            'kill': {
-                'callback': self.kill,
-                'help': 'kill [ip]\tkill the zombie with the given IP'
-            },
-            'stop': {
-                'callback': self.stop,
-                'help': 'stop\t\tstop the server'
-            },
-            'help': {
-                'callback': self.help,
-                'help': 'help\t\tdisplay this message'
-            },
-        }
-
-
-    def run(self):
-        while True:
-            input = raw_input(">> ").split()
-
-            if len(input) == 0:
-                continue
-
-            command = input[0]
-            arg = input[1] if len(input) == 2 else None
-
-            try:
-                self.commands[command]['callback'](arg)
-            except KeyError:
-                print "Unrecognized command"
-
-
-    def list(self, arg):
-        print "Registered nicks"
-        print "================"
-        for nick, client in nickMap.iteritems():
-            print nick + " - " + str(client.sock)
-
-
-    def zombies(self, arg):
-        print "Zombie Connections"
-        print "=================="
-        for addr, client in ipMap.iteritems():
-            print addr
-
-
-    def kick(self, nick):
-        if not nick:
-            print "Kick command requires a nick"
-            return
-
+    def openLog(self):
+        global logFile
         try:
-            client = nickMap[nick]
-            client.kick()
-            print "%s kicked from server" % nick
-        except KeyError:
-            print "%s is not a registered nick" % nick
-
-
-    def kill(self, ip):
-        if not ip:
-            print "Kill command requires an IP"
-            return
-
-        try:
-            client = ipMap[ip]
-            client.kick()
-            print "%s killed" % ip
-        except KeyError:
-            print "%s is not a zombie" % ip
-
-
-    def stop(self, arg):
-        os.kill(os.getpid(), signal.SIGINT)
-
-
-    def help(self, arg):
-        delimeter = '\n\t'
-        helpMessages = map(lambda (_, command): command['help'], self.commands.iteritems())
-        print "Available commands:%s%s" % (delimeter, delimeter.join(helpMessages))
+            logFile = open('cryptully.log', 'a')
+        except:
+            logFile = None
+            print "Error opening logfile"
 
 
 class Client(object):
@@ -192,7 +108,7 @@ class Client(object):
 
     def __nickRegistered(self, nick):
         # Add the client to the nick map and remove it from the ip map
-        printAndLog(str(self.sock) + " -> " + nick)
+        printAndLog("%s -> %s" % (str(self.sock), nick))
         self.nick = nick
         nickMap[nick] = self
         try:
@@ -230,7 +146,7 @@ class SendThread(Thread):
                 self.sock.send(str(message))
             except Exception as e:
                 nick = message.destNick
-                printAndLog(nick + ": error sending data to: " + str(e))
+                printAndLog("%s: error sending data to: %s" % (nick, str(e)))
                 nickMap[nick].disconnect()
                 return
             finally:
@@ -358,12 +274,14 @@ class RecvThread(Thread):
 
 
 def printAndLog(message):
-    sys.stdout.write("\b\b\b" + message + "\n>> ")
-    sys.stdout.flush()
+    if quiet:
+        sys.stdout.write("\b\b\b%s\n>> " % message)
+        sys.stdout.flush()
+
     log(message)
 
 
 def log(message):
     if logFile is not None:
-        logFile.write(message + '\n')
+        logFile.write('%s\n' % message)
         logFile.flush()

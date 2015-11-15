@@ -70,16 +70,16 @@ MESSAGE_DELETION            = "Warning: Message deletion detected. Someone may b
 PROTOCOL_VERSION_MISMATCH   = "The server is reporting that you are using an outdated version of the program. Are you running the most recent version?"
 
 # Error codes
-ERR_CONNECTION_ENDED           = 0
-ERR_NICK_NOT_FOUND             = 1
-ERR_CONNECTION_REJECTED        = 2
-ERR_BAD_HANDSHAKE              = 3
-ERR_CLIENT_EXISTS              = 4
-ERR_SELF_CONNECT               = 5
-ERR_SERVER_SHUTDOWN            = 6
-ERR_INVALID_COMMAND            = 7
-ERR_ALREADY_CONNECTED          = 8
-ERR_NETWORK_ERROR              = 9
+ERR_CONNECTION_ENDED          = 0
+ERR_NICK_NOT_FOUND            = 1
+ERR_CONNECTION_REJECTED       = 2
+ERR_BAD_HANDSHAKE             = 3
+ERR_CLIENT_EXISTS             = 4
+ERR_SELF_CONNECT              = 5
+ERR_SERVER_SHUTDOWN           = 6
+ERR_INVALID_COMMAND           = 7
+ERR_ALREADY_CONNECTED         = 8
+ERR_NETWORK_ERROR             = 9
 ERR_BAD_HMAC                  = 10
 ERR_BAD_DECRYPT               = 11
 ERR_INVALID_NICK              = 12
