@@ -5,7 +5,7 @@ python:
 
 before_install:
   - sudo apt-get update -qq
-  - sudo apt-get install -qq python-qt4-dev python-m2crypto
+  - sudo apt-get install -qq python-qt4-dev python-m2crypto python-mock
 
 # Skip the install stage
 install: true
