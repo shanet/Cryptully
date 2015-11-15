@@ -112,7 +112,9 @@ If everything went as intended, the packaged application should be in ``dist\``.
 Unit Tests
 ----------
 
-Units tests are located in the ``cryptully/tests`` directory. Running them is as simple as ``python make.py test``.
+Install the Python Mock package first.
+
+Units tests are located in the ``src/tests`` directory. Running them is as simple as ``python make.py test``.
 
 -------------
 Documentation
