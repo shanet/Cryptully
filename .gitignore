@@ -1,4 +1,5 @@
 cryptully.log
+logdict*
 
 *.py[cod]
 _build

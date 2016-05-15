@@ -1,6 +1,4 @@
-import os
 import Queue
-import signal
 import socket
 import sys
 import time
@@ -40,7 +38,7 @@ class TURNServer(object):
         self.serversock = self.startServer()
 
         if quiet:
-            Console().start()
+            Console(nickMap, ipMap).start()
 
         while True:
             # Wait for a client to connect
