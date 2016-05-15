@@ -6,10 +6,6 @@ Cryptully
 
 [![Build Status](https://travis-ci.org/shanet/Cryptully.png)](https://travis-ci.org/shanet/Cryptully)
 
----
-#### The default server, cryptully.com, has been taken down due to a lack of server to host it on. You will need to host your own server for the program to work. If you are interested in providing hosting, only running a small Python script, contact me.
----
-
 ### Quick Start
 
 1. Download the executable for your platform on the releases page.
