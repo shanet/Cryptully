@@ -14,7 +14,7 @@ Cryptully
 4. Enter the nickname of the person you want to chat with.
 5. You should now be chatting!
 
-Need more info? See the [documentation](https://cryptully.readthedocs.org/en/latest/) for much more detailed instructions.
+Need more info? See the [documentation](https://cryptully.readthedocs.io/en/latest/) for much more detailed instructions.
 
 ### Running From Source
 
@@ -26,15 +26,16 @@ Install the following:
 * Python Curses
 * Clone the repo and run `python make.py run`.
 
-Detailed instructions are on the [building page](https://cryptully.readthedocs.org/en/latest/building.html) of the documentation.
+Detailed instructions are on the [building page](https://cryptully.readthedocs.io/en/latest/building.html) of the documentation.
 
 ### Building
 
-Cryptully builds and runs on Linux, Windows, and OS X. See the [building page](https://cryptully.readthedocs.org/en/latest/building.html) for detailed instructions.
+Cryptully builds and runs on Linux, Windows, and OS X. See the [building page](https://cryptully.readthedocs.io/en/latest/building.html) for detailed 
+instructions.
 
 ### Documentation
 
-Documentation is available at https://cryptully.readthedocs.org/en/latest/.
+Documentation is available at https://cryptully.readthedocs.io/en/latest/.
 
 ### License
 
