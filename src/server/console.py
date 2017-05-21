@@ -41,7 +41,7 @@ class Console(Thread):
     def run(self):
         while True:
             try:
-                input = raw_input(">> ").split()
+                input = input(">> ").split()
 
                 if len(input) == 0:
                     continue
@@ -53,49 +53,49 @@ class Console(Thread):
             except EOFError:
                 self.stop()
             except KeyError:
-                print "Unrecognized command"
+                print("Unrecognized command")
 
 
     def list(self, arg):
-        print "Registered nicks"
-        print "================"
+        print("Registered nicks")
+        print("================")
 
-        for nick, client in self.nickMap.iteritems():
-            print nick + " - " + str(client.sock)
+        for nick, client in self.nickMap.items():
+            print(nick + " - " + str(client.sock))
 
 
     def zombies(self, arg):
-        print "Zombie Connections"
-        print "=================="
+        print("Zombie Connections")
+        print("==================")
 
-        for addr, client in self.ipMap.iteritems():
-            print addr
+        for addr, client in self.ipMap.items():
+            print(addr)
 
 
     def kick(self, nick):
         if not nick:
-            print "Kick command requires a nick"
+            print("Kick command requires a nick")
             return
 
         try:
             client = self.nickMap[nick]
             client.kick()
-            print "%s kicked from server" % nick
+            print("%s kicked from server" % nick)
         except KeyError:
-            print "%s is not a registered nick" % nick
+            print("%s is not a registered nick" % nick)
 
 
     def kill(self, ip):
         if not ip:
-            print "Kill command requires an IP"
+            print("Kill command requires an IP")
             return
 
         try:
             client = self.ipMap[ip]
             client.kick()
-            print "%s killed" % ip
+            print("%s killed" % ip)
         except KeyError:
-            print "%s is not a zombie" % ip
+            print("%s is not a zombie" % ip)
 
 
     def stop(self, arg=None):
@@ -104,5 +104,5 @@ class Console(Thread):
 
     def help(self, arg):
         delimeter = '\n\t'
-        helpMessages = map(lambda (_, command): command['help'], self.commands.iteritems())
-        print "Available commands:%s%s" % (delimeter, delimeter.join(helpMessages))
+        helpMessages = [__command[1]['help'] for __command in iter(self.commands.items())]
+        print("Available commands:%s%s" % (delimeter, delimeter.join(helpMessages)))

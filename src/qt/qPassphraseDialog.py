@@ -9,7 +9,7 @@ from PyQt4.QtGui import QLineEdit
 from PyQt4.QtGui import QPushButton
 from PyQt4.QtGui import QVBoxLayout
 
-import qtUtils
+from . import qtUtils
 
 from utils import constants
 

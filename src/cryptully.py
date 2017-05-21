@@ -4,7 +4,7 @@ import sys
 import signal
 import argparse
 
-from utils import constants
+from .utils import constants
 
 
 turnServer = None
@@ -18,19 +18,19 @@ def main():
     signal.signal(signal.SIGINT, signalHandler)
 
     if args.server:
-        from server.turnServer import TURNServer
+        from .server.turnServer import TURNServer
         global turnServer
 
         turnServer = TURNServer(args.port)
         turnServer.start()
     elif args.ncurses:
-        from ncurses.ncurses import NcursesUI
+        from .ncurses.ncurses import NcursesUI
         global ncursesUI
 
         ncursesUI = NcursesUI(args.nick, args.turn, args.port)
         ncursesUI.start()
     else:
-        from qt.qt import QtUI
+        from .qt.qt import QtUI
         global qtUI
 
         qtUI = QtUI(sys.argv, args.nick, args.turn, args.port)
@@ -51,7 +51,7 @@ def parse_cmdline_args():
 
     # Check the port range
     if args.port <= 0 or args.port > 65536:
-        print "The port must be between 1 and 65536 inclusive."
+        print("The port must be between 1 and 65536 inclusive.")
         sys.exit(1)
 
     return args

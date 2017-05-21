@@ -1,4 +1,4 @@
-import constants
+from . import constants
 
 # Nick validation statuses
 VALID_NICK           = 0

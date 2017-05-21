@@ -11,7 +11,7 @@ from PyQt4.QtGui import QTextBrowser
 from PyQt4.QtGui import QTextEdit
 from PyQt4.QtGui import QWidget
 
-import qtUtils
+from . import qtUtils
 
 from utils import constants
 from utils import utils

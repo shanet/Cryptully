@@ -1,11 +1,11 @@
-import Queue
+import queue
 import socket
 import sys
 import time
 
 from threading import Thread
 
-from console import Console
+from .console import Console
 
 from network.message import Message
 from network.sock import Socket
@@ -70,7 +70,7 @@ class TURNServer(object):
     def stop(self):
         printAndLog("Requested to stop server")
 
-        for nick, client in nickMap.iteritems():
+        for nick, client in nickMap.items():
             client.send(Message(serverCommand=constants.COMMAND_END, destNick=nick, error=errors.ERR_SERVER_SHUTDOWN))
 
         # Give the send threads time to get their messages out
@@ -86,7 +86,7 @@ class TURNServer(object):
             logFile = open('cryptully.log', 'a')
         except:
             logFile = None
-            print "Error opening logfile"
+            print("Error opening logfile")
 
 
 class Client(object):
@@ -133,7 +133,7 @@ class SendThread(Thread):
         self.daemon = True
 
         self.sock = sock
-        self.queue = Queue.Queue()
+        self.queue = queue.Queue()
 
 
     def run(self):

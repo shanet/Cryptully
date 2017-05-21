@@ -13,11 +13,11 @@ from PyQt4.QtGui import QMessageBox
 from PyQt4.QtGui import QPalette
 from PyQt4.QtGui import QWidget
 
-from qAcceptDialog import QAcceptDialog
-from qChatWindow import QChatWindow
-from qLoginWindow import QLoginWindow
-import qtUtils
-from qWaitingDialog import QWaitingDialog
+from .qAcceptDialog import QAcceptDialog
+from .qChatWindow import QChatWindow
+from .qLoginWindow import QLoginWindow
+from . import qtUtils
+from .qWaitingDialog import QWaitingDialog
 
 from utils import constants
 from utils import errors

@@ -9,11 +9,11 @@ from PyQt4.QtGui import QMessageBox
 from PyQt4.QtGui import QStackedWidget
 from PyQt4.QtGui import QWidget
 
-import qtUtils
-from qChatWidget import QChatWidget
-from qConnectingWidget import QConnectingWidget
-from qHelpDialog import QHelpDialog
-from qNickInputWidget import QNickInputWidget
+from . import qtUtils
+from .qChatWidget import QChatWidget
+from .qConnectingWidget import QConnectingWidget
+from .qHelpDialog import QHelpDialog
+from .qNickInputWidget import QNickInputWidget
 
 from utils import errors
 

@@ -1,8 +1,8 @@
 import os
 import sys
 
-import constants
-import errors
+from . import constants
+from . import errors
 
 from time import localtime
 from time import strftime

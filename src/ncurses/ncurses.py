@@ -2,19 +2,19 @@ import curses
 import curses.ascii
 import curses.textpad
 import os
-import Queue
+import queue
 import signal
 import sys
 import threading
 import time
 
-from cursesAcceptDialog import CursesAcceptDialog
-from cursesDialog import CursesDialog
-from cursesInputDialog import CursesInputDialog
-from cursesModeDialog import CursesModeDialog
-from cursesPassphraseDialog import CursesPassphraseDialog
-from cursesSendThread import CursesSendThread
-from cursesStatusWindow import CursesStatusWindow
+from .cursesAcceptDialog import CursesAcceptDialog
+from .cursesDialog import CursesDialog
+from .cursesInputDialog import CursesInputDialog
+from .cursesModeDialog import CursesModeDialog
+from .cursesPassphraseDialog import CursesPassphraseDialog
+from .cursesSendThread import CursesSendThread
+from .cursesStatusWindow import CursesStatusWindow
 
 from network.client import Client
 from network.connectionManager import ConnectionManager
@@ -34,7 +34,7 @@ class NcursesUI(object):
         self.connectedNick      = None
         self.inRecveiveLoop     = False
         self.clientConnectError = False
-        self.messageQueue       = Queue.Queue()
+        self.messageQueue       = queue.Queue()
         self.connectionManager  = None
         self.sendThread         = None
 

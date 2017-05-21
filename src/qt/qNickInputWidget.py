@@ -8,7 +8,7 @@ from PyQt4.QtGui import QPushButton
 from PyQt4.QtGui import QVBoxLayout
 from PyQt4.QtGui import QWidget
 
-import qtUtils
+from . import qtUtils
 
 from utils import constants
 from utils import errors

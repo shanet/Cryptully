@@ -11,8 +11,8 @@ from PyQt4.QtGui import QPixmap
 from PyQt4.QtGui import QPushButton
 from PyQt4.QtGui import QVBoxLayout
 
-from qLine import QLine
-import qtUtils
+from .qLine import QLine
+from . import qtUtils
 
 from utils import constants
 

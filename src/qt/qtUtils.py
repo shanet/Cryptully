@@ -10,7 +10,7 @@ from PyQt4.QtGui import QMessageBox
 from PyQt4.QtGui import QPixmap
 from PyQt4.QtGui import QWidget
 
-from qPassphraseDialog import QPassphraseDialog
+from .qPassphraseDialog import QPassphraseDialog
 
 from utils import constants
 from utils import utils

@@ -10,9 +10,9 @@ from PyQt4.QtGui import QLineEdit
 from PyQt4.QtGui import QPushButton
 from PyQt4.QtGui import QVBoxLayout
 
-from qNickInputWidget import QNickInputWidget
-from qLinkLabel import QLinkLabel
-import qtUtils
+from .qNickInputWidget import QNickInputWidget
+from .qLinkLabel import QLinkLabel
+from . import qtUtils
 
 from utils import constants
 from utils import utils

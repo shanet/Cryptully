@@ -1,4 +1,4 @@
-from client import Client
+from .client import Client
 
 from PyQt4.QtCore import QThread
 from PyQt4.QtCore import pyqtSignal

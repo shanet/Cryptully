@@ -1,13 +1,13 @@
-import Queue
+import queue
 import socket
 import sys
 import traceback
 
 from threading import Thread
 
-from client import Client
-from message import Message
-from sock import Socket
+from .client import Client
+from .message import Message
+from .sock import Socket
 
 from utils import constants
 from utils import exceptions
@@ -28,7 +28,7 @@ class ConnectionManager(object):
         self.errorCallback = errorCallback
         self.sendThread = SendThread(self.sock, self.errorCallback)
         self.recvThread = RecvThread(self.sock, self.recvMessage, self.errorCallback)
-        self.messageQueue = Queue.Queue()
+        self.messageQueue = queue.Queue()
 
 
     def connectToServer(self):
@@ -43,7 +43,7 @@ class ConnectionManager(object):
         if self.sock.isConnected:
             try:
                 # Send the end command to all clients
-                for nick, client in self.clients.iteritems():
+                for nick, client in self.clients.items():
                     client.disconnect()
 
                 # Send the end command to the server
@@ -189,7 +189,7 @@ class SendThread(Thread):
 
         self.sock = sock
         self.errorCallback = errorCallback
-        self.messageQueue = Queue.Queue()
+        self.messageQueue = queue.Queue()
 
 
     def run(self):

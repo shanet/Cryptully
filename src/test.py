@@ -2,8 +2,8 @@
 
 import sys
 
-from tests.mockServer import MockServer
-from tests.mockClient import MockClient, Client1, Client2
+from .tests.mockServer import MockServer
+from .tests.mockClient import MockClient, Client1, Client2
 
 
 def test():
@@ -27,7 +27,7 @@ def test():
     for client in clients:
         client.join()
 
-    print ''
+    print('')
 
     for client in clients:
         client.printExceptions()

@@ -1,4 +1,4 @@
-import crypto
+from . import crypto
 import M2Crypto
 import struct
 
@@ -221,7 +221,7 @@ class SMP(object):
 
 
     def hash(self, message):
-        return long(self.crypto.stringHash(message), 16)
+        return int(self.crypto.stringHash(message), 16)
 
 
 
@@ -263,8 +263,8 @@ def bytesToLong(bytes):
 
 def longToBytes(long):
     bytes = ''
-    while long != 0:
-        bytes = longToByte(long & 0xff) + bytes
+    while int != 0:
+        bytes = longToByte(int & 0xff) + bytes
         long >>= 8
     return bytes
 
@@ -274,7 +274,7 @@ def byteToLong(byte):
 
 
 def longToByte(long):
-    return struct.pack('B', long)
+    return struct.pack('B', int)
 
 
 def mulm(x, y, mod):

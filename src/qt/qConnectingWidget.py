@@ -4,7 +4,7 @@ from PyQt4.QtGui import QLabel
 from PyQt4.QtGui import QMovie
 from PyQt4.QtGui import QWidget
 
-import qtUtils
+from . import qtUtils
 
 
 class QConnectingWidget(QWidget):

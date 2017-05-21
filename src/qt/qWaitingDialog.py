@@ -6,8 +6,8 @@ from PyQt4.QtGui  import QLabel
 from PyQt4.QtGui  import QMovie
 from PyQt4.QtGui  import QVBoxLayout
 
-import qtUtils
-from qLine import QLine
+from . import qtUtils
+from .qLine import QLine
 
 from utils import constants
 

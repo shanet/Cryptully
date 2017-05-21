@@ -1,10 +1,10 @@
 import base64
-import Queue
+import queue
 
 from crypto.crypto import Crypto
 from crypto.smp import SMP
 
-from message import Message
+from .message import Message
 
 from threading import Thread
 
@@ -32,7 +32,7 @@ class Client(Thread):
         self.outgoingMessageNum = 0
         self.isEncrypted = False
         self.wasHandshakeDone = False
-        self.messageQueue = Queue.Queue()
+        self.messageQueue = queue.Queue()
 
         self.crypto = Crypto()
         self.crypto.generateDHKey()
@@ -142,7 +142,7 @@ class Client(Thread):
 
             # Receive the client's public key
             clientPublicKey = self.__getHandshakeMessagePayload(constants.COMMAND_PUBLIC_KEY)
-            self.crypto.computeDHSecret(long(base64.b64decode(clientPublicKey)))
+            self.crypto.computeDHSecret(int(base64.b64decode(clientPublicKey)))
 
             # Send our public key
             publicKey = base64.b64encode(str(self.crypto.getDHPubKey()))
@@ -174,7 +174,7 @@ class Client(Thread):
 
             # Receive the client's public key
             clientPublicKey = self.__getHandshakeMessagePayload(constants.COMMAND_PUBLIC_KEY)
-            self.crypto.computeDHSecret(long(base64.b64decode(clientPublicKey)))
+            self.crypto.computeDHSecret(int(base64.b64decode(clientPublicKey)))
 
             # Switch to AES encryption for the remainder of the connection
             self.isEncrypted = True

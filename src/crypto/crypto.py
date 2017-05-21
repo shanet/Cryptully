@@ -208,10 +208,10 @@ class Crypto(object):
 
 
     def __octx_to_num(self, data):
-        converted = 0L
+        converted = 0
         length = len(data)
         for i in range(length):
-            converted = converted + ord(data[i]) * (256L ** (length - i - 1))
+            converted = converted + ord(data[i]) * (256 ** (length - i - 1))
         return converted
 
 

@@ -6,7 +6,7 @@ from threading import Thread
 
 from network.connectionManager import ConnectionManager
 from utils import constants
-from waitingMock import WaitingMock
+from .waitingMock import WaitingMock
 
 
 class MockClient(Thread):
@@ -46,7 +46,7 @@ class MockClient(Thread):
 
     def printExceptions(self):
         for exception in self.exceptions:
-            print "\n%s\n%s" % (exception[1], exception[0])
+            print("\n%s\n%s" % (exception[1], exception[0]))
 
 
 class Client1(MockClient):

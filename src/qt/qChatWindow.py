@@ -23,12 +23,12 @@ from PyQt4.QtGui import QToolButton
 from PyQt4.QtGui import QVBoxLayout
 from PyQt4.QtGui import QWidget
 
-from qChatTab import QChatTab
-from qAcceptDialog import QAcceptDialog
-from qHelpDialog import QHelpDialog
-from qSMPInitiateDialog import QSMPInitiateDialog
-from qSMPRespondDialog import QSMPRespondDialog
-import qtUtils
+from .qChatTab import QChatTab
+from .qAcceptDialog import QAcceptDialog
+from .qHelpDialog import QHelpDialog
+from .qSMPInitiateDialog import QSMPInitiateDialog
+from .qSMPRespondDialog import QSMPRespondDialog
+from . import qtUtils
 
 from utils import constants
 from utils import errors
@@ -247,7 +247,7 @@ class QChatWindow(QMainWindow):
                 elif payload == constants.TYPING_STOP_WITH_TEXT:
                     self.statusBar.showMessage("%s has entered text" % sourceNick)
         elif command == constants.COMMAND_SMP_0:
-            print('got request for smp in tab %d' % (tabIndex))
+            print(('got request for smp in tab %d' % (tabIndex)))
         else:
             tab.appendMessage(payload, constants.RECEIVER)
 

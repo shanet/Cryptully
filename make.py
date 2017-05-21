@@ -19,7 +19,7 @@ def deleteDirectory(path):
     except OSError as ose:
         # Ignore 'no such file or directory' errors
         if ose.errno != 2:
-            print ose
+            print(ose)
 
 
 def deleteFile(path):
@@ -27,7 +27,7 @@ def deleteFile(path):
         os.unlink(path)
     except OSError as ose:
         if ose.errno != 2:
-            print ose
+            print(ose)
 
 
 arg = sys.argv[1] if len(sys.argv) >= 2 else None
@@ -36,13 +36,13 @@ if arg == 'dist':
     if len(sys.argv) == 3:
         pyinstallerPath = sys.argv[2]
     else:
-        pyinstallerPath = raw_input("Path to pyinstaller: ")
+        pyinstallerPath = input("Path to pyinstaller: ")
 
     clean()
     subprocess.call(['python2.7', os.path.join(pyinstallerPath, 'pyinstaller.py'), 'cryptully.spec'])
 
 elif arg == 'deb':
-    print "Ensure you have the python-stdeb package installed!"
+    print("Ensure you have the python-stdeb package installed!")
     subprocess.call(['python2.7', 'setup.py', '--command-packages=stdeb.command', 'bdist_deb'])
 
 elif arg == 'rpm':
@@ -66,4 +66,4 @@ elif arg == 'clean':
     clean()
 
 else:
-    print "Invalid option\nPossible options: dist, deb, rpm, install, source, run, test, clean"
+    print("Invalid option\nPossible options: dist, deb, rpm, install, source, run, test, clean")

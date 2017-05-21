@@ -1,3 +1,3 @@
-import cryptully
+from . import cryptully
 
 cryptully.main()

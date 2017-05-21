@@ -3,7 +3,7 @@ from PyQt4.QtGui import QIcon
 from PyQt4.QtGui import QLabel
 from PyQt4.QtGui import QVBoxLayout
 
-from qLinkLabel import QLinkLabel
+from .qLinkLabel import QLinkLabel
 
 class QHelpDialog(QMessageBox):
     def __init__(self, parent=None):
