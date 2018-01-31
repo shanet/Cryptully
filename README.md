@@ -39,7 +39,7 @@ Documentation is available at https://cryptully.readthedocs.io/en/latest/.
 
 ## License
 
-Copyright (C) 2013 Shane Tully
+Copyright (C) 2013-2018 Shane Tully
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
